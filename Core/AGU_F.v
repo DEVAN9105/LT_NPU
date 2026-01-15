@@ -43,7 +43,7 @@ module AGU_F(
     end
     
     //boundary signal
-    always@(posedge CLK) begin
+    always@(*) begin
         if (padding == 1) begin
             if ( ((X + offset_X) == 0) || ((X + offset_X) > ch_stride) ) boundary = 1;
             else boundary = 0;
