@@ -8,7 +8,6 @@ module AGU_F(
     input [7:0] AGU_initial, // Y initial
     input [6:0] width_in,    // Map Width (0~127)
     input [6:0] width_out,
-    input [7:0] ch_in,       // DW ch addr end
     input [1:0] stride,  // Stride
     input [1:0] AGU_offset_X,// DW Max Offset
     input [8:0] AGU_offset_Y,// PW Max Offset (last channel's first addr)
