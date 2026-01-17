@@ -150,28 +150,28 @@ module AGU_F(
     end
     
     //adder
-    always@(*) begin
-        faddr = $signed({1'b0, addr_2}) + X;
+    always@(posedge CLK) begin
+        faddr <= $signed({1'b0, addr_2}) + X;
     end
     ////////// Stage 3 end //////////
     
     //boundary signal
-    wire [7:0] addr_X = faddr - AGU_initial;
+    wire [7:0] addr_X = ($signed({1'b0, addr_2}) + X) - AGU_initial;
     wire boundary_cond = ( (addr_X == 255) || (addr_X > width_in) ) ? 1 : 0;
-    always@(*) begin
+    always@(posedge CLK) begin
         if ( (padding == 1) && boundary_cond) begin
-            boundary = 1;
+            boundary <= 1;
         end
-        else boundary = 0;
+        else boundary <= 0;
     end
     
     //done logic
-    always@(*) begin
+    always@(posedge CLK) begin
         if( (x_count == width_out) && s1_en && s2_en) begin
-            done = 1;
+            done <= 1;
         end
         else begin
-            done = 0;
+            done <= 0;
         end 
     end
     
