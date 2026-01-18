@@ -5,7 +5,7 @@ module AGU_F(
     input en_in,
     input rst,
     input padding_in,              // 0: PW Mode, 1: DW Mode
-    input [7:0] AGU_initial_in, // Y initial
+    input [7:0] AGU_F_initial_in, // Y initial
     input [6:0] width_in_in,    // Map Width (0~127)
     input [6:0] width_out_in,
     input [1:0] stride_in,      // Stride
@@ -19,7 +19,7 @@ module AGU_F(
     ////////// input buffer //////////
     reg en;
     reg padding;
-    reg [7:0] AGU_initial;
+    reg [7:0] AGU_F_initial;
     reg [6:0] width_in;
     reg [6:0] width_out;
     reg [1:0] stride;
@@ -28,7 +28,7 @@ module AGU_F(
     always@(posedge CLK) begin
         en <= en_in;
         padding <= padding_in;
-        AGU_initial <= AGU_initial_in;
+        AGU_F_initial <= AGU_F_initial_in;
         width_in <= width_in_in;
         width_out <= width_out_in;
         stride <= stride_in;
@@ -76,7 +76,7 @@ module AGU_F(
     //adder
     reg [8:0] addr_1;
     always@(*) begin
-        addr_1 = AGU_initial + offset_Y;
+        addr_1 = AGU_F_initial + offset_Y;
     end
     ////////// Stage 1 end //////////
 
@@ -156,7 +156,7 @@ module AGU_F(
     ////////// Stage 3 end //////////
     
     //boundary signal
-    wire [7:0] addr_X = ($signed({1'b0, addr_2}) + X) - AGU_initial;
+    wire [7:0] addr_X = ($signed({1'b0, addr_2}) + X) - AGU_F_initial;
     wire boundary_cond = ( (addr_X == 255) || (addr_X > width_in) ) ? 1 : 0;
     always@(posedge CLK) begin
         if ( (padding == 1) && boundary_cond) begin
