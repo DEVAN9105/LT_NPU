@@ -41,13 +41,13 @@ module AGU_F(
 
     ////////// Stage 1 //////////
     reg [8:0] offset_Y, next_offset_Y;
-    reg s1_en;
+    reg s2_en;
     //counter offset_Y
     always@(*) begin
-        s1_en = 0;
+        s2_en = 0;
         if (padding == 1) begin
             next_offset_Y = 0;
-            s1_en = 1;
+            s2_en = 1;
         end
         else begin
             if (offset_Y < AGU_offset_Y) begin
@@ -55,7 +55,7 @@ module AGU_F(
             end
             else begin
                 next_offset_Y = 0;
-                s1_en = 1;
+                s2_en = 1;
             end
         end
     end
@@ -82,16 +82,16 @@ module AGU_F(
 
     ////////// Stage 2 //////////
     reg [1:0] offset_X, next_offset_X;
-    reg s2_en;
+    reg s3_en;
     //counter offset_X
     always@(*) begin
-        s2_en = 0;
+        s3_en = 0;
         if (offset_X < AGU_offset_X) begin
             next_offset_X = offset_X + 1;
         end
         else begin
             next_offset_X = 0;
-            s2_en = 1;
+            s3_en = 1;
         end
     end
     always@(posedge CLK) begin
@@ -99,7 +99,7 @@ module AGU_F(
             offset_X <= 0;
         end
         else begin
-            if(s1_en) begin
+            if(s2_en) begin
                 offset_X <= next_offset_X;
             end
             else begin
@@ -138,7 +138,7 @@ module AGU_F(
             x_count <= 0;
         end
         else begin
-            if(s1_en && s2_en) begin
+            if(s2_en && s3_en) begin
                 X <= next_X;
                 x_count <= next_x_count;
             end
@@ -167,7 +167,7 @@ module AGU_F(
     
     //done logic
     always@(posedge CLK) begin
-        if( (x_count == width_out) && s1_en && s2_en) begin
+        if( (x_count == width_out) && s2_en && s3_en) begin
             done <= 1;
         end
         else begin
