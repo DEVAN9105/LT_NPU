@@ -2,7 +2,7 @@
 
 //delay 1
 
-module Array_bus(
+module Array_buffer(
     input CLK,
     input [63:0]fdata_0,
     input [63:0]fdata_1,
