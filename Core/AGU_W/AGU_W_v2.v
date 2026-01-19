@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// delay 1
+// delay = 2 cycle
 
 module AGU_W(
     input CLK,

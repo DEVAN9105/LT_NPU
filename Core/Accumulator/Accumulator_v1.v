@@ -1,7 +1,5 @@
 `timescale 1ns / 1ps
 
-//delay = 3
-
 module Accumulator(
     input CLK,
     input rst,

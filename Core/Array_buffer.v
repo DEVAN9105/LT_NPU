@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay 1
+//delay = 1 cycle
 
 module Array_buffer(
     input CLK,

@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//combinational
+//combinational delay = 0 cycle
 
 module Comparator(
     input signed [15:0] comp_a,

@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+//delay = 1 cycle
+
 (* keep_hierarchy = "yes" *)
 module Fdata_buffer(
     input CLK,
