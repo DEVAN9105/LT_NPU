@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 1 cycle
+// delay = 1 cycle
 
 (* keep_hierarchy = "yes" *)
 module Fdata_buffer(
@@ -14,6 +14,7 @@ module Fdata_buffer(
     input [63:0]tile_4,
     input [63:0]tile_5,
     input [63:0]tile_6,
+    input [63:0]tile_7,
     output reg [63:0]fdata_0,
     output reg [63:0]fdata_1,
     output reg [63:0]fdata_2,
@@ -34,6 +35,7 @@ module Fdata_buffer(
             4: mux_out_0 = tile_4;
             5: mux_out_0 = tile_5;
             6: mux_out_0 = tile_6;
+            7: mux_out_0 = tile_7;
             default: mux_out_0 = 0; //tile_sel = 0
         endcase
         //fdata_1
@@ -43,7 +45,8 @@ module Fdata_buffer(
             3: mux_out_1 = tile_3;
             4: mux_out_1 = tile_4;
             5: mux_out_1 = tile_5;
-            6: mux_out_0 = tile_6;
+            6: mux_out_1 = tile_6;
+            7: mux_out_1 = tile_7;
             default: mux_out_1 = 0; //tile_sel = 0
         endcase
         //fdata_2
@@ -53,7 +56,8 @@ module Fdata_buffer(
             3: mux_out_2 = tile_3;
             4: mux_out_2 = tile_4;
             5: mux_out_2 = tile_5;
-            6: mux_out_0 = tile_6;
+            6: mux_out_2 = tile_6;
+            7: mux_out_2 = tile_7;
             default: mux_out_2 = 0; //tile_sel = 0
         endcase
     end
