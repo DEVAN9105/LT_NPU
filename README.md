@@ -1,1 +1,1 @@
-# LT_NPU
+NPU designed by Lagomorpha Tortoise Design House.
