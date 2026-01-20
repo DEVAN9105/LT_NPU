@@ -1,21 +1,21 @@
 `timescale 1ns / 1ps
 
-module PE_tb;
+module tb_PE;
     reg rst;
     reg CLK=0,en;
     reg mode;
     reg [15:0] A;
     reg [15:0] B;
-    wire [31:0] PE_mac_out;
+    wire [31:0] PE_out;
     
     PE DUT (
         .CLK(CLK),
-        .PE_en(en),
+        .en(en),
         .rst(rst),
         .PE_mode(mode),
         .PE_A(A),
         .PE_B(B),
-        .PE_mac_out(PE_mac_out)
+        .PE_out(PE_out)
     );
 
     always #2.5 CLK = ~CLK;
@@ -23,14 +23,14 @@ module PE_tb;
     initial begin
         en = 0;
         rst = 0;
-        mode = 0; //MAC or GAP
+        mode = 1; //MAC or GAP
         A = 0;
         B = 0;
         #15; // 等待 3CLK
         
         en = 1;
         // start testing
-        A = 16'h0100; B = 16'h0700; //7
+        A = 16'h8000; B = 16'h8000; //7
         #5
         A = 16'hFE00; B = 16'h0900; //-18
         #5
