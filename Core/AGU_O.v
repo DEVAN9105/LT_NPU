@@ -6,132 +6,64 @@ module AGU_O(
     input CLK,
     input en_in,
     input rst,
-    input [11:0] AGU_O_initial_in,
-    input [5:0] width_out_in, //64(0~63) => conv 1
-    input [8:0] ch_out_in, //exat length [bias,weight]
-    output reg [11:0] oaddr,
+    input [7:0] AGU_O_initial_in,
+    input [7:0] tile_size_in,
+    output reg [7:0] oaddr,
     output reg done
     );
     
     ////////// input buffer //////////
     reg en;
-    reg [11:0] AGU_O_initial;
-    reg [5:0] width_out;
-    reg [8:0] ch_out;
+    reg [7:0] AGU_O_initial;
+    reg [7:0] tile_size;
     always@(posedge CLK) begin
         en <= en_in;
         AGU_O_initial <= AGU_O_initial_in;
-        width_out <= width_out_in;
-        ch_out <= ch_out_in;
+        tile_size <= tile_size_in;
     end
     ////////// input buffer end //////////
 
-    wire ch_stride = width_out + 1;
-
     ////////// stage 1 //////////
-    reg [6:0] X,next_X;
-    reg s1_done;
-    reg s2_en;
-    always@(posedge CLK) begin
-        s2_en <= s1_done & en;
-    end
+    reg [7:0] addr,next_addr;
+    reg next_done;
+
     //counter
     always@(*) begin
         //avoid latch
-        next_X = X;
-        s1_done = 0;
+        next_addr = addr;
+        next_done = 0;
         
         //counter logic
-        if(X < width_out) begin
-            next_X = X + 1;
+        if(addr < tile_size) begin
+            next_addr = addr + 1;
+            next_done = 0;
         end
         else begin
-            next_X = 0;
-            s1_done = 1;
+            next_addr = 0;
+            next_done = 1;
         end
     end
     always@(posedge CLK) begin
         if(rst == 1) begin
-            X <= 0;
+            addr <= 0;
+            done <= 0;
         end
         else begin
             if(en == 1) begin
-                X <= next_X;
+                addr <= next_addr;
+                done <= next_done;
             end
             else begin
-                X <= X;
+                addr <= addr;
+                done <= done;
             end
         end
     end
 
     // adder
-    reg [7:0] adder_1;
-    always@(posedge CLK) begin
-        if(rst == 1) begin
-            adder_1 <= 0;
-        end
-        else begin
-            adder_1 <= AGU_O_initial + X;
-        end
+    always@(*) begin
+        oaddr <= AGU_O_initial + addr;
     end
     ////////// stage 1 end //////////
-
-    ////////// stage 2 //////////
-    reg [7:0] ch_count, next_ch_count;
-    reg [7:0] Y, next_Y;
-    reg s2_done;
-
-    //counter
-    always@(*) begin
-        next_ch_count = ch_count;
-        s2_done = 0;
-        if(ch_count < ch_out) begin
-            next_ch_count = ch_count + 1;
-            next_Y = Y + ch_stride;
-            s2_done = 0;
-        end
-        else begin
-            next_ch_count = ch_count;
-            next_Y = Y;
-            s2_done = 1;
-        end
-    end
-    always@(posedge CLK) begin
-        if(rst == 1) begin
-            ch_count <= 0;
-            Y <= 0;
-        end
-        else begin
-            if(s2_en == 1) begin
-                ch_count <= next_ch_count;
-                Y <= next_Y;
-            end
-            else begin
-                ch_count <= ch_count;
-                Y <= Y;
-            end
-        end
-    end
-
-    // adder
-    always@(posedge CLK) begin
-        if(rst == 1) begin
-            oaddr <= 0;
-        end
-        else begin
-            oaddr <= adder_1 + Y;
-        end
-    end
-    ////////// stage 2 end //////////
-
-    //done logic
-    always@(*) begin
-        if( s2_done && s1_done) begin
-            done = 1;
-        end
-        else begin
-            done = 0;
-        end
-    end
     
 endmodule
