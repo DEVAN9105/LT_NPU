@@ -22,7 +22,7 @@ module tb_AGU_F;
     // --- Instantiation ---
     AGU_F uut (
         .CLK(CLK), 
-        .en(en),       // [修正 1] 改回正確的 port name ".en"
+        .en_in(en),
         .rst(rst), 
         .padding_in(padding), 
         .AGU_F_initial_in(AGU_initial), 
