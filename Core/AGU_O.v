@@ -59,8 +59,18 @@ module AGU_O(
     end
 
     // adder
-    always@(*) begin
-        oaddr <= AGU_O_initial + addr;
+    always@(posedge CLK) begin
+        if(rst) begin
+            oaddr <= 0;
+        end
+        else begin
+            if(en) begin
+                oaddr <= AGU_O_initial + addr;
+            end
+            else begin
+                oaddr <= oaddr;
+            end
+        end
     end
     ////////// stage 1 end //////////
     

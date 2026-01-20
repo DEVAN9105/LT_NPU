@@ -39,14 +39,14 @@ module tb_AGU_O;
         #100;
         
         // 2. Release Reset
-        @(posedge  CLK); 
+        @(negedge   CLK); 
         rst = 0;
  
         AGU_O_initial_in = 0;
         
 
         // 4. Enable Module
-        @(posedge  CLK);
+        @(negedge   CLK);
         en = 1;
         
         #5;
