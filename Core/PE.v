@@ -9,7 +9,7 @@ module PE(
     input PE_mode,
     input signed [15:0] PE_A,
     input signed [15:0] PE_B,
-    output reg signed [31:0] PE_mac_out
+    output reg signed [31:0] PE_out
     );
     wire signed [31:0] P; //mult_16 output
     
@@ -54,10 +54,10 @@ module PE(
     
     //output reg
     always@(posedge CLK) begin
-        if(rst==1) PE_mac_out <= 0;
+        if(rst==1) PE_out <= 0;
         else begin
-            if(en==1) PE_mac_out <= out_buffer;
-            else PE_mac_out <= PE_mac_out;
+            if(en==1) PE_out <= out_buffer;
+            else PE_out <= PE_out;
         end
     end
 endmodule
