@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 1 cycle
+//delay = 2 cycle
 
 module W_buffer(
     input CLK,
@@ -29,17 +29,17 @@ module W_buffer(
             PE_win_3 <= 0;
         end
         else begin
-            if(en == 0) begin
-                PE_win_0 <= PE_win_0;
-                PE_win_1 <= PE_win_1;
-                PE_win_2 <= PE_win_2;
-                PE_win_3 <= PE_win_3;
-            end
-            else begin
+            if(en) begin
                 PE_win_0 <= wdata_0;
                 PE_win_1 <= wdata_1;
                 PE_win_2 <= wdata_2;
                 PE_win_3 <= wdata_3;
+            end
+            else begin
+                PE_win_0 <= PE_win_0;
+                PE_win_1 <= PE_win_1;
+                PE_win_2 <= PE_win_2;
+                PE_win_3 <= PE_win_3;
             end
         end
     end
@@ -52,17 +52,17 @@ module W_buffer(
             acc_3_bias <= 0;
         end
         else begin
-            if(bias_en == 0) begin
-                acc_0_bias <= acc_0_bias;
-                acc_1_bias <= acc_1_bias;
-                acc_2_bias <= acc_2_bias;
-                acc_3_bias <= acc_3_bias;
-            end
-            else begin
+            if(bias_en) begin
                 acc_0_bias <= wdata_0[63:32];
                 acc_1_bias <= wdata_1[63:32];
                 acc_2_bias <= wdata_2[63:32];
                 acc_3_bias <= wdata_3[63:32];
+            end
+            else begin
+                acc_0_bias <= acc_0_bias;
+                acc_1_bias <= acc_1_bias;
+                acc_2_bias <= acc_2_bias;
+                acc_3_bias <= acc_3_bias;
             end
         end
     end

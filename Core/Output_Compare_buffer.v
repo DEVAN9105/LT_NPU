@@ -15,7 +15,7 @@ module Output_Compare_buffer(
     );
     
     //cluster mode define
-    parameter conv1 = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
     
     ////////// shift register //////////
     reg [63:0] SR_0,SR_1,SR_2;
@@ -29,7 +29,7 @@ module Output_Compare_buffer(
         else begin
             if(en) begin
                 case(mode)
-                    conv1: begin
+                    conv: begin
                         SR_0 <= acc_out; SR_1 <= SR_0; SR_2 <= SR_1;
                     end
                     maxpooling: begin
@@ -55,7 +55,7 @@ module Output_Compare_buffer(
     /*reg comp_en;
     always@(*) begin
         case(mode)
-            conv1,maxpooling: comp_en = en;
+            conv,maxpooling: comp_en = en;
             default: comp_en = 0;
         endcase
     end*/
@@ -81,7 +81,7 @@ module Output_Compare_buffer(
     ////////// output //////////
     always@(posedge CLK) begin
         case(mode)
-            conv1,maxpooling: begin
+            conv,maxpooling: begin
                 core_out <= comp_result;
             end
             default: begin

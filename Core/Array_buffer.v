@@ -16,11 +16,11 @@ module Array_buffer(
     );
     
     //cluster mode define
-    parameter conv1 = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
     
     always@(posedge CLK) begin
         case(mode)
-            conv1, PW, FC: begin
+            conv, PW, FC: begin
                 PE_fin_0 <= {4{fdata_0[63:48]}};
                 PE_fin_1 <= {4{fdata_0[47:32]}};
                 PE_fin_2 <= {4{fdata_0[31:16]}};
