@@ -23,7 +23,7 @@ module AGU_W(
         kernel_L <= kernel_L_in;
     end
     ////////// input buffer end //////////
-
+    
     ////////// stage 1 //////////
     reg [8:0] offset,next_offset;
     reg s1_done;
@@ -61,12 +61,17 @@ module AGU_W(
     end
 
     // adder
-    always@(*) begin
+    always@(posedge CLK) begin
         if(rst == 1) begin
-            Waddr = 0;
+            Waddr <= 0;
         end
         else begin
-            Waddr = AGU_W_initial + offset;
+            if(en) begin
+                Waddr <= AGU_W_initial + offset;
+            end
+            else begin
+                Waddr <= Waddr;
+            end
         end
     end
     ////////// stage 1 end //////////
@@ -100,12 +105,12 @@ module AGU_W(
     ////////// stage 2 end //////////
 
     //done logic
-    always@(*) begin
+    always@(posedge CLK) begin
         if( (w_count == width_out) && s1_done) begin
-            done = 1;
+            done <= 1;
         end
         else begin
-            done = 0;
+            done <= 0;
         end
     end
     
