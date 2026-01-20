@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
-// delay = 2 cycle
+// delay = 1 cycle
 
 module AGU_O(
     input CLK,
-    input en_in,
+    input en,
     input rst,
     input [7:0] AGU_O_initial_in,
     input [7:0] tile_size_in,
@@ -13,11 +13,9 @@ module AGU_O(
     );
     
     ////////// input buffer //////////
-    reg en;
     reg [7:0] AGU_O_initial;
     reg [7:0] tile_size;
     always@(posedge CLK) begin
-        en <= en_in;
         AGU_O_initial <= AGU_O_initial_in;
         tile_size <= tile_size_in;
     end
@@ -49,7 +47,7 @@ module AGU_O(
             done <= 0;
         end
         else begin
-            if(en == 1) begin
+            if(en) begin
                 addr <= next_addr;
                 done <= next_done;
             end

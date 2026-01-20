@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 4 cycle
+//delay = 3 cycle
 
 module Accumulator(
     input CLK,

@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
-// delay = 2 cycle
+// delay 1
 
 module AGU_W(
     input CLK,
-    input en_in,
+    input en,
     input rst,
     input [11:0] AGU_W_initial_in,
     input [5:0] width_out_in, //64(0~63) => conv 1
@@ -14,12 +14,10 @@ module AGU_W(
     );
     
     ////////// input buffer //////////
-    reg en;
     reg [11:0] AGU_W_initial;
     reg [5:0] width_out;
     reg [8:0] kernel_L;
     always@(posedge CLK) begin
-        en <= en_in;
         AGU_W_initial <= AGU_W_initial_in;
         width_out <= width_out_in;
         kernel_L <= kernel_L_in;
