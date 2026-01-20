@@ -22,11 +22,13 @@ module tb_PE;
 
     initial begin
         en = 0;
-        rst = 0;
-        mode = 1; //MAC or GAP
+        rst = 1;
+        mode = 0; //MAC or GAP
         A = 0;
         B = 0;
-        #15; // 等待 3CLK
+        #10;
+        rst = 0;
+        #5;
         
         en = 1;
         // start testing

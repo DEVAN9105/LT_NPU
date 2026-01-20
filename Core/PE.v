@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 4 cycle
+//delay = 3 cycle
 
 module PE(
     input CLK,
@@ -12,6 +12,17 @@ module PE(
     output reg signed [31:0] PE_out
     );
     wire signed [31:0] P; //mult_16 output
+    
+    // SR
+    reg [1:0] en_sr;
+    always@(posedge CLK) begin
+        if(rst) begin
+            en_sr <= 0;
+        end
+        else begin
+            en_sr <= {en_sr[0], en};
+        end
+    end
     
     //Mode define
     parameter MAC = 1'b0, GAP = 1'b1;
@@ -25,18 +36,18 @@ module PE(
                  .P(P)
     );
     
-    //shift_right_4
+    // shift_right_4 0
     reg signed [31:0] A_shift_0, A_shift_1, A_shift;
     always@(posedge CLK) begin
         if(rst==1) A_shift_0 <= 0;
         else A_shift_0 <= $signed({{16{PE_A[15]}}, PE_A}) >>> 4; //>>> is for signed bit
     end
-
+    // shift_right_4 1
     always@(posedge CLK) begin
         if(rst==1) A_shift_1 <= 0;
         else A_shift_1 <= A_shift_0;
     end
-
+    // shift_right_4 2
     always@(posedge CLK) begin
         if(rst==1) A_shift <= 0;
         else A_shift <= A_shift_1;
@@ -56,7 +67,7 @@ module PE(
     always@(posedge CLK) begin
         if(rst==1) PE_out <= 0;
         else begin
-            if(en==1) PE_out <= out_buffer;
+            if(en_sr[1] == 1) PE_out <= out_buffer;
             else PE_out <= PE_out;
         end
     end
