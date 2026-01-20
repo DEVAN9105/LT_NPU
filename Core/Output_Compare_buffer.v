@@ -52,13 +52,6 @@ module Output_Compare_buffer(
     ////////// shift register end //////////
     
     ////////// COMP //////////
-    /*reg comp_en;
-    always@(*) begin
-        case(mode)
-            conv,maxpooling: comp_en = en;
-            default: comp_en = 0;
-        endcase
-    end*/
     wire [63:0] comp_result;
     Comparator comp_0(.comp_a(SR_0[15:0]), 
                       .comp_b(SR_1[15:0]), 
