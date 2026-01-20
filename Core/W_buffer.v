@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 2 cycle
+//delay = 1 cycle
 
 module W_buffer(
     input CLK,
