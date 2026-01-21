@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 4 cycle
+//delay = 3 cycle
 
 module PE(
     input CLK,
@@ -13,7 +13,7 @@ module PE(
     );
     wire signed [31:0] P; //mult_16 output
     
-    // SR
+    ////////// SR //////////
     reg [1:0] en_sr;
     always@(posedge CLK) begin
         if(rst) begin
@@ -23,11 +23,12 @@ module PE(
             en_sr <= {en_sr[0], en};
         end
     end
+    ////////// SR end //////////
     
-    //Mode define
+    // Mode define
     parameter MAC = 1'b0, GAP = 1'b1;
 
-    //mult_16
+    ////////// mult_16 //////////
     mult_16 mult(.CLK(CLK),
                  .A(PE_A),
                  .B(PE_B),
@@ -35,25 +36,17 @@ module PE(
                  .SCLR(rst),
                  .P(P)
     );
+    ////////// mult_16 end //////////
     
-    // shift_right_4 0
-    reg signed [31:0] A_shift_0, A_shift_1, A_shift;
-    always@(posedge CLK) begin
-        if(rst==1) A_shift_0 <= 0;
-        else A_shift_0 <= $signed({{16{PE_A[15]}}, PE_A}) >>> 4; //>>> is for signed bit
-    end
-    // shift_right_4 1
-    always@(posedge CLK) begin
-        if(rst==1) A_shift_1 <= 0;
-        else A_shift_1 <= A_shift_0;
-    end
-    // shift_right_4 2
+    ////////// shift_right_4 //////////
+    reg signed [31:0] A_shift;
     always@(posedge CLK) begin
         if(rst==1) A_shift <= 0;
-        else A_shift <= A_shift_1;
+        else A_shift <= {{12{PE_A[15]}}, PE_A, 4'b0};
     end
+    ////////// shift_right_4 end //////////
 
-    //output mux
+    ////////// output mux //////////
     reg signed [31:0]out_buffer;
     always@(*) begin
         case(PE_mode)
@@ -62,13 +55,21 @@ module PE(
             default: out_buffer = 0;
         endcase
     end
+    ////////// output mux end //////////
     
-    //output reg
+    ////////// output reg //////////
     always@(posedge CLK) begin
         if(rst==1) PE_out <= 0;
         else begin
-            if(en_sr[1] == 1) PE_out <= out_buffer;
-            else PE_out <= PE_out;
+            if(PE_mode) begin
+                if(en_sr[0] == 1) PE_out <= out_buffer;
+                else PE_out <= PE_out;
+            end
+            else begin
+                if(en_sr[1] == 1) PE_out <= out_buffer;
+                else PE_out <= PE_out;
+            end
         end
     end
+    ////////// output reg end //////////
 endmodule
