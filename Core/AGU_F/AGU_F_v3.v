@@ -39,6 +39,7 @@ module AGU_F(
     end
     ////////// input buffer end //////////
     
+    // ch_stride define
     wire [7:0] ch_stride = width_in + 1; //width + 1 (Max 128)
     
     // adder delay chain
