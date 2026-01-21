@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 3 cycle
+// delay = 4 cycle / 2 cycle
 
 module PE(
     input CLK,
