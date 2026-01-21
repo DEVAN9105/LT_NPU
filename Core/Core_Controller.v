@@ -38,6 +38,8 @@ module Core_Controller(
     output reg OC_en, output reg OC_rst,
     // W_storage
     output reg W_storage_en,
+    // Tile_buffer_loader
+    output reg TBL_en, output reg TBL_rst,
     // done signal
     output reg core_done
     );
@@ -66,7 +68,7 @@ module Core_Controller(
                 next_state = proccessing;
             end
             proccessing: begin
-                if(AGU_O_done) begin
+                if(AGU_F_done) begin
                     next_state = finish;
                 end
                 else begin
@@ -74,7 +76,12 @@ module Core_Controller(
                 end
             end
             finish: begin
-                next_state = idle;
+                if(AGU_O_done) begin
+                    next_state = idle;
+                end
+                else begin
+                    next_state = finish;
+                end
             end
             default: begin
                 next_state = idle;
