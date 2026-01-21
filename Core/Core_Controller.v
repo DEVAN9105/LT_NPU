@@ -5,37 +5,92 @@
 module Core_Controller(
     input CLK, input rst, input en,
     input [2:0] mode,
-    input [8:0] tile_sel,
     input padding,
-    input ReLU_en,
-    input [6:0] width_in,
-    input [6:0] width_out,
-    input [7:0] ch_in,
-    input [7:0] ch_out,
-    input [7:0] tile_size,
-    input [63:0] tile_in,
-    input [7:0] tile_in_addr,
-    input [63:0] tile_store,
-    input [7:0] tile_store_addr,
-    input ena, input enb,
-    output reg [63:0] tile_out,
-    output reg [7:0] tile_out_addr,
+    // AGU_F
+    input AGU_F_done,
+    output reg AGU_F_en, output reg AGU_F_rst,
+    output reg [7:0] AGU_F_initial,
+    output reg [1:0] AGU_F_offset_X,
+    output reg [7:0] AGU_F_offset_Y,
+    output reg [1:0] stride,
+    // AGU_O
+    input AGU_W_done,
+    output reg AGU_W_en, output reg AGU_W_rst,
+    output reg [11:0] AGU_W_initial,
+    output reg [8:0] kernel_L,
+    // Accumulator
+    output reg acc_en, output reg acc_rst,
+    output reg rst_bias, output reg load_bias,
+    // AGU_O
+    output reg AGU_O_en, output reg AGU_O_rst,
+    output reg [7:0] AGU_O_initial,
+    // Array_buffer
+    output reg Array_buffer_en, output reg Array_buffer_rst,
+    // Fdata_buffer
+    output reg Fdata_buffer_en, output reg Fdata_buffer_rst,
+    // PE
+    output reg PE_en, output reg PE_rst,
+    output reg PE_mode,
+    // W_buffer
+    output reg W_buffer_en, output reg W_buffer_rst,
+    output reg bias_en,
+    // Output_Compare_buffer
+    output reg OC_en, output reg OC_rst,
+    // W_storage
+    output reg W_storage_en,
+    // done signal
     output reg core_done
     );
     
-    
-    ////////// input buffer //////////
-    reg [7:0] AGU_O_initial;
-    reg [7:0] tile_size;
-    always@(posedge CLK) begin
-        AGU_O_initial <= AGU_O_initial_in;
-        tile_size <= tile_size_in;
-    end
-    ////////// input buffer end //////////
+    // mode define
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 31, GAP = 4, FC = 5;
 
-    ////////// stage 1 //////////
-    reg [7:0] addr,next_addr;
-    reg next_done;
+    ////////// FSM //////////
+    parameter idle = 0, set_up = 1, proccessing = 2, finish = 3;
+    reg [1:0] state, next_state;
+
+    always@(*) begin
+        //avoid latch
+        next_state = state;
+
+        case(state)
+            idle: begin
+                if(en) begin
+                    next_state = set_up;
+                end
+                else begin
+                    next_state = idle;
+                end
+            end
+            set_up: begin
+                next_state = proccessing;
+            end
+            proccessing: begin
+                if(AGU_O_done) begin
+                    next_state = finish;
+                end
+                else begin
+                    next_state = proccessing;
+                end
+            end
+            finish: begin
+                next_state = idle;
+            end
+            default: begin
+                next_state = idle;
+            end
+        endcase
+    end
+    always@(posedge CLK) begin
+        if(rst == 1) begin
+            state <= idle;
+        end
+        else begin
+            state <= next_state;
+        end
+    end
+
+    ////////// FSM end //////////
 
     //counter
     always@(*) begin
