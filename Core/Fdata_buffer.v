@@ -23,7 +23,7 @@ module Fdata_buffer(
     );
     
     //cluster mode define
-    parameter conv1 = 0, maxpooling = 1, DW = 2, PW = 31, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 31, GAP = 4, FC = 5;
     
     //tile selecting
     reg [63:0]mux_out_0,mux_out_1,mux_out_2;
