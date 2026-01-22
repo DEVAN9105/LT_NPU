@@ -260,32 +260,58 @@ module Core_Controller(
     ////////// FSM end //////////
 
     ////////// Enable //////////
-    reg [1:0] F_en_count;
-    always@(posedge CLK) begin
-        if(rst) begin
-            F_en_count <= 0;
-        end
-        else begin
-            if(state == set_up) begin
-                F_en_count <= 1;
-            end
-            else if(state == proccessing) begin
-                if(F_en_count < 2) begin
-                    F_en_count <= F_en_count + 1;
-                end
-                else begin
-                    F_en_count <= F_en_count;
-                end
+    reg [1:0] conv_count, next_conv_count;
+    reg SR_en;
+    always@(*) begin
+        if(state == proccessing) begin
+            if(conv_count == 0) begin
+                SR_en = 1;
             end
             else begin
-                F_en_count <= 0;
+                SR_en = 0;
+            end
+        end
+        else begin
+            SR_en = 0;
+        end
+    end
+    always@(*) begin
+        next_conv_count = conv_count;
+        case(mode)
+            conv: begin
+                if(conv_count < 2) begin
+                    next_conv_count = conv_count + 1;
+                end
+                else begin
+                    next_conv_count = 0;
+                end
+            end
+            default: begin
+                next_conv_count = 0;
+            end
+        endcase
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            conv_count <= 0;
+        end
+        else begin
+            if(state == proccessing) begin
+                conv_count <= next_conv_count;
+            end
+            else begin
+                conv_count <= conv_count;
             end
         end
     end
     ////////// Enable end //////////
 
-
     ////////// Pipeline Delay Chain //////////
+    reg [10:0] SR_0;
+    reg [3:0] SR_1;
+    reg [2:0] SR_2;
+    reg [9:0] out_count;
+    reg [1:0] OC_count;
 
     ////////// Pipeline Delay Chain end //////////
     
