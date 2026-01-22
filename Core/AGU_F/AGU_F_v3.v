@@ -131,7 +131,7 @@ module AGU_F(
             offset_X <= 0;
         end
         else begin
-            if(s1_done) begin
+            if(s2_en) begin
                 offset_X <= next_offset_X;
             end
             else begin

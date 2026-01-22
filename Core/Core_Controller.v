@@ -6,6 +6,10 @@ module Core_Controller(
     input CLK, input rst, input en,
     input [2:0] mode,
     input padding,
+    input [6:0] width_in,
+    input [6:0] width_out,
+    input [7:0] ch_in,
+    input [7:0] ch_out,
     // AGU_F
     input AGU_F_done,
     output reg AGU_F_en, output reg AGU_F_rst,
@@ -45,7 +49,45 @@ module Core_Controller(
     );
     
     // mode define
-    parameter conv = 0, maxpooling = 1, DW = 2, PW = 31, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+
+    ////////// kernel counter //////////
+    reg [7:0] k_count, next_k_count;
+    reg [7:0]kernel_L;
+    always@(*) begin
+        case(mode)
+            conv: kernel_L = 8;
+            maxpooling, DW: kernel_L = 2;
+            PW, FC: kernel_L = ch_out;
+            GAP: kernel_L = 0;
+            default: kernel_L = 0;
+        endcase
+    end
+    always@(*) begin
+        //avoid latch
+        next_k_count = k_count;
+
+        if(k_count < kernel_L) begin
+            next_k_count = k_count + 1;
+        end
+        else begin
+            next_k_count = 0;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst == 1) begin
+            k_count <= 0;
+        end
+        else begin
+            if(AGU_W_en) begin
+                k_count <= next_k_count;
+            end
+            else begin
+                k_count <= k_count;
+            end
+        end
+    end
+    ////////// kernel counter end //////////
 
     ////////// FSM //////////
     parameter idle = 0, set_up = 1, proccessing = 2, finish = 3;
