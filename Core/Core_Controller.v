@@ -46,8 +46,8 @@ module Core_Controller(
     
     ////////// mode define & data generate //////////
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
-    parameter idle = 0, set_up = 1, proccessing = 2, finish = 3;
-    reg [1:0] state, next_state;
+    parameter idle = 0, set_up = 1, proccessing = 2, ending = 3, finish = 4;
+    reg [2:0] state, next_state;
     wire [7:0] ch_stride = width_in + 1; //width + 1 (Max 128)
     ////////// mode define & data generate end //////////
 
@@ -196,13 +196,13 @@ module Core_Controller(
             end
         end
     end
+    ////////// Stage 3 end //////////
 
     ////////// FSM //////////
-    
-
     always@(*) begin
         //avoid latch
         next_state = state;
+        core_done = 0;
 
         case(state)
             idle: begin
@@ -217,15 +217,27 @@ module Core_Controller(
                 next_state = proccessing;
             end
             proccessing: begin
-                if(AGU_F_done) begin
+                if(s3_en) begin
+                    next_state = set_up;
+                end
+                else if(s3_done) begin
                     next_state = finish;
                 end
                 else begin
                     next_state = proccessing;
                 end
             end
-            finish: begin
+            ending: begin
                 if(AGU_O_done) begin
+                    next_state = finish;
+                end
+                else begin
+                    next_state = ending;
+                end
+            end
+            finish: begin
+                core_done = 1;
+                if(rst) begin
                     next_state = idle;
                 end
                 else begin
@@ -245,7 +257,36 @@ module Core_Controller(
             state <= next_state;
         end
     end
-
     ////////// FSM end //////////
+
+    ////////// Enable //////////
+    reg [1:0] F_en_count;
+    always@(posedge CLK) begin
+        if(rst) begin
+            F_en_count <= 0;
+        end
+        else begin
+            if(state == set_up) begin
+                F_en_count <= 1;
+            end
+            else if(state == proccessing) begin
+                if(F_en_count < 2) begin
+                    F_en_count <= F_en_count + 1;
+                end
+                else begin
+                    F_en_count <= F_en_count;
+                end
+            end
+            else begin
+                F_en_count <= 0;
+            end
+        end
+    end
+    ////////// Enable end //////////
+
+
+    ////////// Pipeline Delay Chain //////////
+
+    ////////// Pipeline Delay Chain end //////////
     
 endmodule
