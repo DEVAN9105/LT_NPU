@@ -11,36 +11,25 @@ module Core_Controller(
     input [7:0] ch_in,
     input [7:0] ch_out,
     // AGU_F
-    input AGU_F_done,
-    output reg AGU_F_en, output reg AGU_F_rst,
     output [7:0] AGU_F_initial,
-    // AGU_O
+    // AGU_W
     input AGU_W_done,
-    output reg AGU_W_en, output reg AGU_W_rst,
     output reg [11:0] AGU_W_initial,
     // Accumulator
-    output reg acc_en, output reg acc_rst,
     output reg rst_bias, output reg load_bias,
     // AGU_O
-    output reg AGU_O_en, output reg AGU_O_rst,
     output reg [7:0] AGU_O_initial,
-    // Array_buffer
-    output reg Array_buffer_en, output reg Array_buffer_rst,
-    // Fdata_buffer
-    output reg Fdata_buffer_en, output reg Fdata_buffer_rst,
     // PE
-    output reg PE_en, output reg PE_rst,
     output reg PE_mode,
     // W_buffer
-    output reg W_buffer_en, output reg W_buffer_rst,
     output reg bias_en,
-    // Output_Compare_buffer
-    output reg OC_en, output reg OC_rst,
-    // W_storage
-    output reg W_storage_en,
-    // Tile_buffer_loader
-    output reg TBL_en, output reg TBL_rst,
+    // pipeline delay chain
+    output reg [10:0] SR_0;
+    output reg [3:0] SR_1;
+    output reg [2:0] SR_2;
+    output reg [9:0] out_count;
     // done signal
+    output reg core_output_en,
     output reg core_done
     );
     
@@ -307,11 +296,45 @@ module Core_Controller(
     ////////// Enable end //////////
 
     ////////// Pipeline Delay Chain //////////
-    reg [10:0] SR_0;
-    reg [3:0] SR_1;
-    reg [2:0] SR_2;
-    reg [9:0] out_count;
     reg [1:0] OC_count;
+    reg [9:0] next_out_count;
+    reg [9:0] out_L; // output wait length
+    reg SR_1_en, SR_2_en;
+    always@(*) begin
+        case(mode)
+            conv: begin
+                out_L = 8; // 9
+            end
+            maxpooling: begin
+                out_L = 0; // not working
+            end
+            DW: begin
+                out_L = 2; // 3
+            end
+            PW: begin
+                out_L = ch_in;
+            end
+            GAP: begin
+                out_L = 3; // 4
+            end
+            default: begin
+                SR_1_en = SR_en;
+                SR_2_en = 0;
+                OC_count = 0;
+            end
+        endcase
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            SR_0 <= 0;
+            SR_1 <= 0;
+            SR_2 <= 0;
+        end
+        else begin
+            SR_0 <= {SR_0[9:0], SR_en};
+            SR_1 <= 
+        end
+    end
 
     ////////// Pipeline Delay Chain end //////////
     

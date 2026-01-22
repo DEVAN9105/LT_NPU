@@ -18,7 +18,7 @@ module Array_buffer(
     );
     
     // mode define
-    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
     
     ////////// convolution counter //////////
     reg [1:0] conv_count, next_conv_count;
@@ -84,7 +84,7 @@ module Array_buffer(
                     end
                 endcase
             end
-            PW, FC: begin
+            PW: begin
                 PE_fin_0 <= {4{fdata_0[63:48]}};
                 PE_fin_1 <= {4{fdata_0[47:32]}};
                 PE_fin_2 <= {4{fdata_0[31:16]}};

@@ -15,7 +15,7 @@ module Output_Compare_buffer(
     );
     
     //cluster mode define
-    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
     
     ////////// shift register //////////
     reg [63:0] SR_0,SR_1,SR_2;

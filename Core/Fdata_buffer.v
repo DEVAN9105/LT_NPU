@@ -23,7 +23,7 @@ module Fdata_buffer(
     );
     
     //cluster mode define
-    parameter conv = 0, maxpooling = 1, DW = 2, PW = 31, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
     
     //tile selecting
     reg [63:0]mux_out_0,mux_out_1,mux_out_2;
@@ -69,7 +69,7 @@ module Fdata_buffer(
             fdata_3 <= 64'd0;
         end
         else if(en) begin
-            if (mode == GAP || mode == FC) begin
+            if (mode == GAP) begin
                 //Pass-through
                 fdata_0 <= tile_1;
                 fdata_1 <= tile_2;
