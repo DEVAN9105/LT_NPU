@@ -13,23 +13,20 @@ module Core_Controller(
     // AGU_F
     output [7:0] AGU_F_initial,
     // AGU_W
-    input AGU_W_done,
-    output reg [11:0] AGU_W_initial,
+    output [11:0] AGU_W_initial,
     // Accumulator
     output reg rst_bias, output reg load_bias,
     // AGU_O
-    output reg [7:0] AGU_O_initial,
+    input AGU_O_done,
     // PE
     output reg PE_mode,
-    // W_buffer
-    output reg bias_en,
     // pipeline delay chain
-    output reg [10:0] SR_0;
-    output reg [3:0] SR_1;
-    output reg [2:0] SR_2;
-    output reg [9:0] out_count;
+    output reg [10:0] SR_0,
+    output reg [3:0] SR_1,
+    output reg [2:0] SR_2,
+    output reg [9:0] out_count,
     // done signal
-    output reg core_output_en,
+    output core_output_en,
     output reg core_done
     );
     
@@ -206,11 +203,11 @@ module Core_Controller(
                 next_state = proccessing;
             end
             proccessing: begin
-                if(s3_en) begin
-                    next_state = set_up;
+                if(s3_en && s3_done) begin
+                    next_state = ending;
                 end
-                else if(s3_done) begin
-                    next_state = finish;
+                else if(s3_en) begin
+                    next_state = set_up;
                 end
                 else begin
                     next_state = proccessing;
@@ -296,10 +293,11 @@ module Core_Controller(
     ////////// Enable end //////////
 
     ////////// Pipeline Delay Chain //////////
-    reg [1:0] OC_count;
     reg [9:0] next_out_count;
     reg [9:0] out_L; // output wait length
     reg SR_1_en, SR_2_en;
+
+    // out_count
     always@(*) begin
         case(mode)
             conv: begin
@@ -318,12 +316,72 @@ module Core_Controller(
                 out_L = 3; // 4
             end
             default: begin
-                SR_1_en = SR_en;
-                SR_2_en = 0;
-                OC_count = 0;
+                out_L = 0;
             end
         endcase
     end
+    always@(*) begin
+        next_out_count = out_count;
+        SR_1_en = 0;
+        if(out_count < out_L) begin
+            next_out_count = out_count + 1;
+            SR_1_en = 0;
+        end
+        else begin
+            next_out_count = 0;
+            SR_1_en = 1;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            out_count <= 0;
+        end
+        else begin
+            if(SR_0[10]) begin
+                out_count <= next_out_count;
+            end
+            else begin
+                out_count <= out_count;
+            end
+        end
+    end
+
+    // oc_count
+    reg [1:0] OC_count, next_OC_count;
+    always@(*) begin
+        next_OC_count = OC_count;
+        case(mode)
+            conv: begin
+                if(OC_count < 2) begin
+                    next_OC_count = OC_count + 1;
+                    SR_2_en = 0;
+                end
+                else begin
+                    next_OC_count = 0;
+                    SR_2_en = 1;
+                end
+            end
+            default: begin
+                next_OC_count = 0;
+                SR_2_en = 1;
+            end
+        endcase
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            OC_count <= 0;
+        end
+        else begin
+            if(SR_1[3]) begin
+                OC_count <= next_OC_count;
+            end
+            else begin
+                OC_count <= OC_count;
+            end
+        end
+    end
+
+    // delay chains
     always@(posedge CLK) begin
         if(rst) begin
             SR_0 <= 0;
@@ -331,11 +389,27 @@ module Core_Controller(
             SR_2 <= 0;
         end
         else begin
-            SR_0 <= {SR_0[9:0], SR_en};
-            SR_1 <= 
+            case(mode)
+                maxpooling: begin
+                    SR_0 <= {7'd0, SR_0[2:0], SR_en};
+                    SR_1 <= {SR_0[3], 3'd0};
+                    SR_2 <= {SR_1[1:0], SR_2_en};
+                end
+                GAP: begin
+                    SR_0 <= {SR_0[7], 2'd0, SR_0[6:0], SR_en};
+                    SR_1 <= {SR_1[2:0], SR_1_en};
+                    SR_2 <= {SR_2[1:0], SR_2_en};
+                end
+                default: begin
+                    SR_0 <= {SR_0[9:0], SR_en};
+                    SR_1 <= {SR_1[2:0], SR_1_en};
+                    SR_2 <= {SR_2[1:0], SR_2_en};
+                end
+            endcase
         end
     end
 
+    assign core_output_en = SR_2[2];
     ////////// Pipeline Delay Chain end //////////
     
 endmodule
