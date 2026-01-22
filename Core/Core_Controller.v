@@ -13,15 +13,11 @@ module Core_Controller(
     // AGU_F
     input AGU_F_done,
     output reg AGU_F_en, output reg AGU_F_rst,
-    output reg [7:0] AGU_F_initial,
-    output reg [1:0] AGU_F_offset_X,
-    output reg [7:0] AGU_F_offset_Y,
-    output reg [1:0] stride,
+    output [7:0] AGU_F_initial,
     // AGU_O
     input AGU_W_done,
     output reg AGU_W_en, output reg AGU_W_rst,
     output reg [11:0] AGU_W_initial,
-    output reg [8:0] kernel_L,
     // Accumulator
     output reg acc_en, output reg acc_rst,
     output reg rst_bias, output reg load_bias,
@@ -48,13 +44,22 @@ module Core_Controller(
     output reg core_done
     );
     
-    // mode define
+    ////////// mode define & data generate //////////
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+    parameter idle = 0, set_up = 1, proccessing = 2, finish = 3;
+    reg [1:0] state, next_state;
+    wire [7:0] ch_stride = width_in + 1; //width + 1 (Max 128)
+    ////////// mode define & data generate end //////////
 
-    ////////// kernel counter //////////
+    ////////// Stage 1 (kernel counter) //////////
+    wire s1_en = (state == proccessing);
     reg [7:0] k_count, next_k_count;
     reg [7:0]kernel_L;
+    reg s1_done, s2_en;
     always@(*) begin
+        //set s2_en
+        s2_en = s1_done & s1_en;
+        //set kernel_L
         case(mode)
             conv: kernel_L = 8;
             maxpooling, DW: kernel_L = 2;
@@ -66,12 +71,15 @@ module Core_Controller(
     always@(*) begin
         //avoid latch
         next_k_count = k_count;
+        s1_done = 0;
 
         if(k_count < kernel_L) begin
             next_k_count = k_count + 1;
+            s1_done = 0;
         end
         else begin
             next_k_count = 0;
+            s1_done = 1;
         end
     end
     always@(posedge CLK) begin
@@ -79,7 +87,7 @@ module Core_Controller(
             k_count <= 0;
         end
         else begin
-            if(AGU_W_en) begin
+            if(s1_en) begin
                 k_count <= next_k_count;
             end
             else begin
@@ -87,11 +95,110 @@ module Core_Controller(
             end
         end
     end
-    ////////// kernel counter end //////////
+    ////////// Stage 1 end //////////
+
+    ////////// Stage 2 (width counter) //////////
+    reg [6:0] width_count, next_width_count;
+    reg s2_done, s3_en;
+    always@(*) begin
+        s3_en = s2_done & s2_en;
+    end
+    always@(*) begin
+        //avoid latch
+        next_width_count = width_count;
+        s2_done = 0;
+
+        if(width_count < width_out) begin
+            next_width_count = width_count + 1;
+            s2_done = 0;
+        end
+        else begin
+            next_width_count = 0;
+            s2_done = 1;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst == 1) begin
+            width_count <= 0;
+        end
+        else begin
+            if(s2_en) begin
+                width_count <= next_width_count;
+            end
+            else begin
+                width_count <= width_count;
+            end
+        end
+    end
+
+    // F_initial counter
+    reg [7:0] F_initial;
+    assign AGU_F_initial = F_initial;
+    always@(posedge CLK) begin
+        if(rst) begin
+            F_initial <= 0;
+        end
+        else begin
+            if(s3_en) begin
+                F_initial <= F_initial + ch_stride;
+            end
+            else begin
+                F_initial <= F_initial;
+            end
+        end
+    end
+
+    // W_initial counter
+    reg [11:0] W_initial;
+    assign AGU_W_initial = W_initial;
+    always@(posedge CLK) begin
+        if(rst) begin
+            W_initial <= 0;
+        end
+        else begin
+            if(s3_en) begin
+                W_initial <= W_initial + ch_out;
+            end
+            else begin
+                W_initial <= W_initial;
+            end
+        end
+    end
+    ////////// Stage 2 end //////////
+
+    ////////// Stage 3 (channel counter) //////////
+    reg [7:0] ch_count, next_ch_count;
+    reg s3_done;
+    always@(*) begin
+        //avoid latch
+        next_ch_count = ch_count;
+        s3_done = 0;
+
+        if(ch_count < ch_in) begin
+            next_ch_count = ch_count + 1;
+            s3_done = 0;
+        end
+        else begin
+            next_ch_count = 0;
+            s3_done = 1;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst == 1) begin
+            ch_count <= 0;
+        end
+        else begin
+            if(s3_en) begin
+                ch_count <= next_ch_count;
+            end
+            else begin
+                ch_count <= ch_count;
+            end
+        end
+    end
 
     ////////// FSM //////////
-    parameter idle = 0, set_up = 1, proccessing = 2, finish = 3;
-    reg [1:0] state, next_state;
+    
 
     always@(*) begin
         //avoid latch
@@ -140,54 +247,5 @@ module Core_Controller(
     end
 
     ////////// FSM end //////////
-
-    //counter
-    always@(*) begin
-        //avoid latch
-        next_addr = addr;
-        next_done = 0;
-        
-        //counter logic
-        if(addr < tile_size) begin
-            next_addr = addr + 1;
-            next_done = 0;
-        end
-        else begin
-            next_addr = 0;
-            next_done = 1;
-        end
-    end
-    always@(posedge CLK) begin
-        if(rst == 1) begin
-            addr <= 0;
-            done <= 0;
-        end
-        else begin
-            if(en) begin
-                addr <= next_addr;
-                done <= next_done;
-            end
-            else begin
-                addr <= addr;
-                done <= done;
-            end
-        end
-    end
-
-    // adder
-    always@(posedge CLK) begin
-        if(rst) begin
-            oaddr <= 0;
-        end
-        else begin
-            if(en) begin
-                oaddr <= AGU_O_initial + addr;
-            end
-            else begin
-                oaddr <= oaddr;
-            end
-        end
-    end
-    ////////// stage 1 end //////////
     
 endmodule
