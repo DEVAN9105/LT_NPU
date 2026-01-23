@@ -4,7 +4,7 @@
 
 module AGU_F(
     input CLK,
-    input en_in,
+    input en,
     input rst,
     input padding_in,              // 0: PW Mode, 1: DW Mode
     input [7:0] AGU_F_initial_in, // Y initial
@@ -19,7 +19,6 @@ module AGU_F(
     ); 
     
     ////////// input buffer //////////
-    reg en;
     reg padding;
     reg [7:0] AGU_F_initial;
     reg [6:0] width_in;
@@ -28,7 +27,6 @@ module AGU_F(
     reg [1:0] AGU_offset_X;
     reg [8:0] AGU_offset_Y;
     always@(posedge CLK) begin
-        en <= en_in;
         padding <= padding_in;
         AGU_F_initial <= AGU_F_initial_in;
         width_in <= width_in_in;
@@ -98,7 +96,7 @@ module AGU_F(
             adder_1 <= 0;
         end
         else begin
-            if(adder_en[0]) begin
+            if(en) begin
                 adder_1 <= AGU_F_initial + offset_Y;
             end
             else begin
