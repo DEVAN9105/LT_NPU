@@ -79,15 +79,16 @@ module Accumulator(
     // compare chain
     wire signed [15:0] PE_out_0_trunc = PE_out_0[15:0];
     wire signed [15:0] PE_out_1_trunc = PE_out_1[15:0];
-    wire signed [15:0] comp_result_1;
     reg signed [15:0] PE_out_2_trunc;
+    wire signed [15:0] comp_1_out;
+    reg signed [15:0] comp_result_1;
     always@(posedge CLK) begin
         if(rst) begin
             PE_out_2_trunc <= 0;
         end
         else begin
             if(en) begin
-            PE_out_2_trunc <= PE_out_2[15:0];
+                PE_out_2_trunc <= PE_out_2[15:0];
             end
             else begin
                 PE_out_2_trunc <= PE_out_2_trunc;
@@ -96,12 +97,18 @@ module Accumulator(
     end
     // comp_1
     Comparator comp_1(
-        .CLK(CLK),  
-        .rst(rst),
         .comp_a(PE_out_0_trunc), 
         .comp_b(PE_out_1_trunc), 
-        .comp_out(comp_result_1[15:0])
+        .comp_out(comp_1_out)
     );
+    always@(posedge CLK) begin
+        if(rst) begin
+            comp_result_1 <= 0;
+        end
+        else begin
+            comp_result_1 <= comp_1_out;
+        end
+    end
     ////////// Stage 1 end //////////
 
     ////////// Stage 2 //////////
@@ -111,14 +118,21 @@ module Accumulator(
         adder_result <= add_buffer_10 + add_buffer_11;
     end
     // compare chain
-    wire signed [15:0] comp_result_2;
+    wire signed [15:0] comp_2_out;
+    reg signed [15:0] comp_result_2;
     Comparator comp_2(
-        .CLK(CLK),  
-        .rst(rst),
         .comp_a(comp_result_1), 
         .comp_b(PE_out_2_trunc), 
-        .comp_out(comp_result_2[15:0])
+        .comp_out(comp_2_out)
     );
+    always@(posedge CLK) begin
+        if(rst) begin
+            comp_result_2 <= 0;
+        end
+        else begin
+            comp_result_2 <= comp_2_out;
+        end
+    end
     ////////// Stage 2 end //////////
     
     ////////// bias buffer //////////
@@ -162,29 +176,32 @@ module Accumulator(
         end
     end
     // running comparator
-    reg signed [15:0] comp_result;
-    wire signed [15:0] comp_result_3;
+    reg signed [15:0] comp_result_3, comp_result;
+    wire signed [15:0] comp_3_out;
     Comparator comp_3(
         .CLK(CLK),  
         .rst(rst),
         .comp_a(comp_result_2), 
         .comp_b(comp_result), 
-        .comp_out(comp_result_3[15:0])
+        .comp_out(comp_3_out)
     );
     always@(posedge CLK) begin
         if(rst) begin
-            comp_result <= 0;
+            comp_result_3 <= 0;
         end
         else begin
-            if(rst_bias_sr[1]) begin
-                comp_result <= comp_result_2;
-            end
-            else if(en_sr[1]) begin
-                comp_result <= comp_result_3;
-            end
-            else begin
-                comp_result <= comp_result;
-            end
+            comp_result_3 <= comp_3_out;
+        end
+    end
+    always@(*) begin
+        if(rst_bias_sr[1]) begin
+            comp_result <= comp_result_2;
+        end
+        else if(en_sr[1]) begin
+            comp_result <= comp_result_3;
+        end
+        else begin
+            comp_result <= comp_result;
         end
     end
     ////////// Stage 3 end //////////
