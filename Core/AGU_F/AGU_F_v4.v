@@ -56,7 +56,7 @@ module AGU_F(
             GAP: begin
                 padding <= 0;
                 stride_Y <= ch_stride;
-                AGU_offset_X <= 0;
+                AGU_offset_X <= 3;
             end
             default: begin
                 padding <= 0;
