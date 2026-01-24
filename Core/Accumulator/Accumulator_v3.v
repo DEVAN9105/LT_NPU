@@ -6,6 +6,7 @@ module Accumulator(
     input CLK,
     input rst,
     input en,
+    input [2:0]mode,
     input load_bias,
     input ReLU_en,
     input [7:0] kernel_L;
@@ -16,6 +17,8 @@ module Accumulator(
     input signed [31:0]PE_out_3,
     output reg signed [15:0]acc_out
     );
+    // mode define
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
     ////////// Stage 1 counter //////////
     reg [7:0] acc_count, next_acc_count;
@@ -169,11 +172,14 @@ module Accumulator(
         .comp_out(comp_result_3[15:0])
     );
     always@(posedge CLK) begin
-        if(rst_bias) begin
-            comp_result <= comp_result_2;
+        if(rst) begin
+            comp_result <= 0;
         end
         else begin
-            if(en_sr[1]) begin
+            if(rst_bias) begin
+                comp_result <= comp_result_2;
+            end
+            else if(en_sr[1]) begin
                 comp_result <= comp_result_3;
             end
             else begin
@@ -181,10 +187,9 @@ module Accumulator(
             end
         end
     end
-
     ////////// Stage 3 end //////////
     
-    ////////// Truncate //////////
+    ////////// acc_result Truncate //////////
     reg signed [15:0] acc_out_truncated;
     always@(*) begin
         if(accumulator_reg[47:16] != {32{accumulator_reg[15]}}) begin
@@ -200,7 +205,7 @@ module Accumulator(
             acc_out_truncated <= accumulator_reg[15:0];
         end
     end
-    ////////// Truncate end //////////
+    ////////// acc_result Truncate end //////////
 
     ////////// Output register && ReLU //////////
     always@(posedge CLK) begin
@@ -208,17 +213,24 @@ module Accumulator(
             acc_out <= 0;
         end
         else begin
-            if(ReLU_en == 1) begin
-                if(acc_out_truncated > 0) begin
-                    acc_out <= acc_out_truncated;
+            case(mode)
+            maxpooling: begin
+                acc_out <= comp_result;
+            end
+            default: begin
+                if(ReLU_en == 1) begin
+                    if(acc_out_truncated > 0) begin
+                        acc_out <= acc_out_truncated;
+                    end
+                    else begin
+                        acc_out <= 0;
+                    end
                 end
                 else begin
-                    acc_out <= 0;
+                    acc_out <= acc_out_truncated;
                 end
             end
-            else begin
-                acc_out <= acc_out_truncated;
-            end
+            endcase
         end
     end
     ////////// Output register end //////////

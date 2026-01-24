@@ -31,7 +31,7 @@ module Core_Controller(
     );
     
     ////////// mode define & data generate //////////
-    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4, FC = 5;
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
     parameter idle = 0, set_up = 1, proccessing = 2, ending = 3, finish = 4;
     reg [2:0] state, next_state;
     wire [7:0] ch_stride = width_in + 1; //width + 1 (Max 128)
