@@ -10,6 +10,8 @@ module AGU_F(
     input [8:0] AGU_F_initial_in, // Y initial
     input [6:0] width_in_in,    // Map Width (0~127)
     input [6:0] width_out_in,
+    input [8:0] ch_in_in,
+    input [8:0] ch_out_in,
     input [1:0] stride_in,      // Stride
     input [1:0] AGU_offset_X_in,// DW Max Offset
     input [8:0] AGU_offset_Y_in,// PW Max Offset (last channel's first addr)
@@ -23,6 +25,8 @@ module AGU_F(
     reg [8:0] AGU_F_initial;
     reg [6:0] width_in;
     reg [6:0] width_out;
+    reg [8:0] ch_in;
+    reg [8:0] ch_out;
     reg [1:0] stride;
     reg [1:0] AGU_offset_X;
     reg [8:0] AGU_offset_Y;
@@ -31,6 +35,8 @@ module AGU_F(
         AGU_F_initial <= AGU_F_initial_in;
         width_in <= width_in_in;
         width_out <= width_out_in;
+        ch_in <= ch_in_in;
+        ch_out <= ch_out_in;
         stride <= stride_in;
         AGU_offset_X <= AGU_offset_X_in;
         AGU_offset_Y <= AGU_offset_Y_in;
@@ -41,17 +47,18 @@ module AGU_F(
     wire [7:0] ch_stride = width_in + 1; //width + 1 (Max 128)
     
     // adder delay chain
-    reg [1:0] adder_en;
+    reg [2:0] adder_en;
     always@(posedge CLK) begin
         if(rst) begin
             adder_en <= 0;
         end
         else begin
-            adder_en <= {adder_en[0], en};
+            adder_en <= {adder_en[1:0], en};
         end
     end
 
     ////////// Stage 1 //////////
+    reg [8:0] ch_count_0, next_ch_count_0;
     reg [8:0] offset_Y, next_offset_Y;
     reg s1_done;
     reg s2_en;
@@ -62,15 +69,18 @@ module AGU_F(
     always@(*) begin
         if (padding == 1) begin
             next_offset_Y = 0;
+            next_ch_count_0 = 0;
             s1_done = 1;
         end
         else begin
-            if (offset_Y < AGU_offset_Y) begin
+            if (ch_count_0 < ch_in) begin
                 next_offset_Y = offset_Y + ch_stride;
+                next_ch_count_0 = ch_count_0 + 1;
                 s1_done = 0;
             end
             else begin
                 next_offset_Y = 0;
+                next_ch_count_0 = 0;
                 s1_done = 1;
             end
         end
@@ -78,13 +88,16 @@ module AGU_F(
     always@(posedge CLK) begin        
         if(rst) begin
             offset_Y <= 0;
+            ch_count_0 <= 0;
         end
         else begin
             if(en) begin
                 offset_Y <= next_offset_Y;
+                ch_count_0 <= next_ch_count_0;
             end
             else begin
                 offset_Y <= offset_Y;
+                ch_count_0 <= ch_count_0;
             end
         end
     end
@@ -159,6 +172,10 @@ module AGU_F(
     reg [7:0] x_count,next_x_count;
     reg signed [7:0] X, next_X;
     reg s3_done;
+    reg s4_en;
+    always@(posedge CLK) begin
+        s4_en <= s3_done & s3_en;
+    end
     //counter X & x_count
     always@(*) begin
         // Default Assignments (防止 Latch)
@@ -170,8 +187,8 @@ module AGU_F(
             next_x_count = x_count + 1;
         end
         else begin
-            next_X = X;
-            next_x_count = x_count;
+            next_X = 0 - padding_in;
+            next_x_count = 0;
             s3_done = 1;
         end
     end
@@ -193,24 +210,59 @@ module AGU_F(
     end
     
     //adder
+    reg [8:0] adder_3;
     always@(posedge CLK) begin
         if(rst) begin
-            faddr <= AGU_F_initial;
+            adder_3 <= 0;
         end
         else begin
             if(adder_en[1]) begin
-                faddr <= $signed({1'b0, adder_2}) + X;
+                adder_3 <= $signed({1'b0, adder_2}) + X;
             end
             else begin
-                faddr <= faddr;
+                adder_3 <= adder_3;
             end
         end
     end
     ////////// Stage 3 end //////////
 
     ////////// Stage 4 //////////
-    reg []
-
+    reg [8:0] ch_count_1, next_ch_count_1;
+    reg [8:0] Y, next_Y;
+    reg s4_done;
+    //counter Y & ch_count_1
+    always@(*) begin
+        // Default Assignments (防止 Latch)
+        next_Y = Y;
+        next_ch_count_1 = ch_count_1;
+        s4_done = 0;
+        if (ch_count_1 < ch_out) begin
+            next_Y = Y + ch_stride;
+            next_ch_count_1 = ch_count_1 + 1;
+        end
+        else begin
+            next_Y = 0;
+            next_ch_count_1 = 0;
+            s4_done = 1;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            Y <= 0;
+            ch_count_1 <= 0;
+        end
+        else begin
+            if(s4_en) begin
+                Y <= next_Y;
+                ch_count_1 <= next_ch_count_1;
+            end
+            else begin
+                Y <= Y;
+                ch_count_1 <= ch_count_1;
+            end
+        end
+    end
+    ////////// Stage 4 end //////////
     
     //boundary signal
     wire [7:0] addr_X = ($signed({1'b0, adder_2}) + X) - AGU_F_initial;
@@ -224,7 +276,7 @@ module AGU_F(
     
     //done logic
     always@(posedge CLK) begin
-        if( s3_done && s3_en) begin
+        if( s4_done && s4_en) begin
             done <= 1;
         end
         else begin
