@@ -176,7 +176,7 @@ module Accumulator(
         end
     end
     // running comparator
-    reg signed [15:0] comp_result_3, comp_result;
+    reg signed [15:0] comp_result;
     wire signed [15:0] comp_3_out;
     Comparator comp_3(
         .CLK(CLK),  
@@ -187,21 +187,18 @@ module Accumulator(
     );
     always@(posedge CLK) begin
         if(rst) begin
-            comp_result_3 <= 0;
+            comp_result <= 16'h8000;
         end
         else begin
-            comp_result_3 <= comp_3_out;
-        end
-    end
-    always@(*) begin
-        if(rst_bias_sr[1]) begin
-            comp_result <= comp_result_2;
-        end
-        else if(en_sr[1]) begin
-            comp_result <= comp_result_3;
-        end
-        else begin
-            comp_result <= comp_result;
+            if(rst_bias_sr[1]) begin
+                comp_result <= comp_result_2;
+            end
+            else if(en_sr[1]) begin
+                comp_result <= comp_3_out;
+            end
+            else begin
+                comp_result <= comp_result;
+            end
         end
     end
     ////////// Stage 3 end //////////
