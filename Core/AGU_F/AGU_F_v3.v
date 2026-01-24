@@ -7,7 +7,7 @@ module AGU_F(
     input en,
     input rst,
     input padding_in,              // 0: PW Mode, 1: DW Mode
-    input [7:0] AGU_F_initial_in, // Y initial
+    input [8:0] AGU_F_initial_in, // Y initial
     input [6:0] width_in_in,    // Map Width (0~127)
     input [6:0] width_out_in,
     input [1:0] stride_in,      // Stride
@@ -20,7 +20,7 @@ module AGU_F(
     
     ////////// input buffer //////////
     reg padding;
-    reg [7:0] AGU_F_initial;
+    reg [8:0] AGU_F_initial;
     reg [6:0] width_in;
     reg [6:0] width_out;
     reg [1:0] stride;
@@ -52,6 +52,7 @@ module AGU_F(
     end
 
     ////////// Stage 1 //////////
+    reg [8:0] ch_count_0, next_ch_count_0;
     reg [8:0] offset_Y, next_offset_Y;
     reg s1_done;
     reg s2_en;
@@ -209,8 +210,8 @@ module AGU_F(
     ////////// Stage 3 end //////////
 
     ////////// Stage 4 //////////
+    reg []
 
-    
     
     //boundary signal
     wire [7:0] addr_X = ($signed({1'b0, adder_2}) + X) - AGU_F_initial;
