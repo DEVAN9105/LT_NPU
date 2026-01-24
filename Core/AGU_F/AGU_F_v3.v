@@ -207,10 +207,6 @@ module AGU_F(
         end
     end
     ////////// Stage 3 end //////////
-
-    ////////// Stage 4 //////////
-    reg []
-
     
     //boundary signal
     wire [7:0] addr_X = ($signed({1'b0, adder_2}) + X) - AGU_F_initial;
