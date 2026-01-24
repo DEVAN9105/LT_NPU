@@ -12,7 +12,7 @@ module AGU_F(
     input [7:0] ch_out_in,      // channel may vary per layer
     input [2:0] mode,
     input [1:0] stride_X_in,
-    output reg [8:0] faddr,
+    output reg [7:0] faddr,
     output reg boundary,
     output reg done
     ); 
