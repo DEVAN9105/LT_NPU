@@ -8,6 +8,7 @@ module Accumulator(
     input en,
     input load_bias,
     input ReLU_en,
+    input [7:0] kernel_L;
     input signed [31:0]bias,
     input signed [31:0]PE_out_0,
     input signed [31:0]PE_out_1,
@@ -15,14 +16,55 @@ module Accumulator(
     input signed [31:0]PE_out_3,
     output reg signed [15:0]acc_out
     );
-    
-    // SR
-    reg [1:0] rst_bias_sr;
-    reg [1:0] acc_en_sr;
-    always@(posedge CLK) begin
-        rst_bias_sr <= {rst_bias_sr[0], rst_bias};
-        acc_en_sr <= {acc_en_sr[0], acc_en};
+
+    ////////// Stage 1 counter //////////
+    reg [7:0] acc_count, next_acc_count;
+
+    // reset bias
+    reg rst_bias;
+    always@(*) begin
+        if(acc_count == 0) begin
+            rst_bias = 1;
+        end
+        else begin
+            rst_bias = 0;
+        end
     end
+
+    // acc_count
+    always@(*) begin
+        next_acc_count = acc_count;
+        if(acc_count < kernel_L) begin
+            next_acc_count = acc_count + 1;
+        end
+        else begin
+            next_acc_count = 0;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            acc_count <= 0;
+        end
+        else begin
+            if(en) begin
+                acc_count <= next_acc_count;
+            end
+            else begin
+                acc_count <= acc_count;
+            end
+        end
+    end
+    //////////// Stage 1 counter end //////////
+
+
+    ////////// SR //////////
+    reg rst_bias_sr;
+    reg [1:0] en_sr;
+    always@(posedge CLK) begin
+        rst_bias_sr <= rst_bias;
+        en_sr <= {en_sr[0], en};
+    end
+    ////////// SR end //////////
     
     ////////// Stage 1 ////////// 
 
@@ -42,8 +84,12 @@ module Accumulator(
             PE_out_2_trunc <= 0;
         end
         else begin
-            if(en)
+            if(en) begin
             PE_out_2_trunc <= PE_out_2[15:0];
+            end
+            else begin
+                PE_out_2_trunc <= PE_out_2_trunc;
+            end
         end
     end
 
