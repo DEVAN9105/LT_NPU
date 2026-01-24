@@ -67,17 +67,16 @@ module Accumulator(
     ////////// SR end //////////
     
     ////////// Stage 1 ////////// 
-
     // adder tree
     reg signed [32:0] add_buffer_10, add_buffer_11;
     always@(posedge CLK) begin
         add_buffer_10 <= PE_out_0 + PE_out_1;
         add_buffer_11 <= PE_out_2 + PE_out_3;
     end
-
-    // compare tree
+    // compare chain
     wire signed [15:0] PE_out_0_trunc = PE_out_0[15:0];
     wire signed [15:0] PE_out_1_trunc = PE_out_1[15:0];
+    wire signed [15:0] comp_result_1;
     reg signed [15:0] PE_out_2_trunc;
     always@(posedge CLK) begin
         if(rst) begin
@@ -92,16 +91,32 @@ module Accumulator(
             end
         end
     end
-
-    
+    // comp_1
+    Comparator comp_1(
+        .CLK(CLK),  
+        .rst(rst),
+        .comp_a(PE_out_0_trunc), 
+        .comp_b(PE_out_1_trunc), 
+        .comp_out(comp_result_1[15:0])
+    );
     ////////// Stage 1 end //////////
 
-    ////////// Stage 2 adder tree //////////
+    ////////// Stage 2 //////////
+    // adder tree
     reg signed [33:0] adder_result;
     always@(posedge CLK) begin
         adder_result <= add_buffer_10 + add_buffer_11;
     end
-    ////////// Stage 2 adder tree end //////////
+    // compare chain
+    wire signed [15:0] comp_result_2;
+    Comparator comp_2(
+        .CLK(CLK),  
+        .rst(rst),
+        .comp_a(comp_result_1), 
+        .comp_b(PE_out_2_trunc), 
+        .comp_out(comp_result_2[15:0])
+    );
+    ////////// Stage 2 end //////////
     
     ////////// bias buffer //////////
     reg signed [31:0] bias_buffer;
@@ -120,7 +135,8 @@ module Accumulator(
     end
     ////////// bias buffer end //////////
 
-    ////////// Stage 3 accumulate //////////
+    ////////// Stage 3 //////////
+    // accumulate
     (* use_dsp = "yes" *) reg signed [47:0] accumulator_reg;
     wire signed [47:0] bias_ext = {{16{bias_buffer[31]}}, bias_buffer};
     wire signed [47:0] adder_result_ext = {{14{adder_result[33]}}, adder_result};
@@ -130,7 +146,7 @@ module Accumulator(
         end
         else begin
             if(acc_en_sr[1]) begin
-                if(rst_bias_sr[1] == 1) begin
+                if(rst_bias_sr == 1) begin
                     accumulator_reg <= adder_result_ext + bias_ext;
                 end
                 else begin
@@ -142,7 +158,31 @@ module Accumulator(
             end
         end
     end
-    ////////// Stage 3 accumulate end //////////
+    // running comparator
+    reg signed [15:0] comp_result;
+    wire signed [15:0] comp_result_3;
+    Comparator comp_3(
+        .CLK(CLK),  
+        .rst(rst),
+        .comp_a(comp_result_2), 
+        .comp_b(comp_result), 
+        .comp_out(comp_result_3[15:0])
+    );
+    always@(posedge CLK) begin
+        if(rst_bias) begin
+            comp_result <= comp_result_2;
+        end
+        else begin
+            if(en_sr[1]) begin
+                comp_result <= comp_result_3;
+            end
+            else begin
+                comp_result <= comp_result;
+            end
+        end
+    end
+
+    ////////// Stage 3 end //////////
     
     ////////// Truncate //////////
     reg signed [15:0] acc_out_truncated;
