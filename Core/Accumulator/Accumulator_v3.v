@@ -9,7 +9,7 @@ module Accumulator(
     input [2:0]mode,
     input load_bias,
     input ReLU_en,
-    input [7:0] kernel_L;
+    input [7:0] kernel_L,
     input signed [31:0]bias,
     input signed [31:0]PE_out_0,
     input signed [31:0]PE_out_1,
@@ -61,10 +61,10 @@ module Accumulator(
 
 
     ////////// SR //////////
-    reg rst_bias_sr;
+    reg [1:0]rst_bias_sr;
     reg [1:0] en_sr;
     always@(posedge CLK) begin
-        rst_bias_sr <= rst_bias;
+        rst_bias_sr <= {rst_bias_sr[0], rst_bias};
         en_sr <= {en_sr[0], en};
     end
     ////////// SR end //////////
@@ -148,8 +148,8 @@ module Accumulator(
             accumulator_reg <= 0;
         end
         else begin
-            if(acc_en_sr[1]) begin
-                if(rst_bias_sr == 1) begin
+            if(en_sr[1]) begin
+                if(rst_bias_sr[1] == 1) begin
                     accumulator_reg <= adder_result_ext + bias_ext;
                 end
                 else begin
@@ -176,7 +176,7 @@ module Accumulator(
             comp_result <= 0;
         end
         else begin
-            if(rst_bias) begin
+            if(rst_bias_sr[1]) begin
                 comp_result <= comp_result_2;
             end
             else if(en_sr[1]) begin
