@@ -53,12 +53,12 @@ module tb_AGU_F;
         // Xilinx 預設 GSR 時間約為 100ns。不加這行，前面的操作都會無效。
         
         // --- Parameters ---
-        mode = GAP;
-        stride = 1;
-        width_in = 3;           // Width 0~3 (ch_stride = 4)
-        width_out = 0; 
-        ch_in = 39;
-        ch_out = 39;               
+        mode = DW;
+        stride = 2;
+        width_in = 15;           // Width 0~3 (ch_stride = 4)
+        width_out = 7; 
+        ch_in = 3;
+        ch_out = 3;               
         
         #100;
 

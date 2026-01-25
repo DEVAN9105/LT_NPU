@@ -6,22 +6,29 @@ module tb_AGU_W;
     reg CLK;
     reg en;
     reg rst;
+    reg [2:0] mode;
     reg [11:0] AGU_W_initial;
     reg [5:0] width_out; // Max Index for reuse loop
-    reg [8:0] kernel_L;     // Block Length
+    reg [7:0] ch_in;
+    reg [7:0] ch_out;
 
     // --- Outputs ---
     wire [11:0] Waddr;
     wire done;
+    
+    // mode define
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
     // --- Instantiation ---
     AGU_W uut (
         .CLK(CLK), 
         .en(en), 
         .rst(rst), 
+        .mode(mode),
         .AGU_W_initial_in(AGU_W_initial), 
         .width_out_in(width_out), 
-        .kernel_L_in(kernel_L), 
+        .ch_in_in(ch_in),
+        .ch_out_in(ch_out),
         .Waddr(Waddr), 
         .done(done)
     );
@@ -39,14 +46,11 @@ module tb_AGU_W;
         // 1. 初始化
         en = 0;
         rst = 1;
-        AGU_W_initial = 100; // 從地址 100 開始
-        kernel_L = 4;           // 每個 Block 長度 3 (例如 1 Bias + 3 Weights)
-        
-        // 設定迴圈參數 (使用 Max Index)
-        // 測試情境：
-        // 每個 Block 重複讀 2 次 (Index 0, 1) -> width_out = 1
-        // 總共讀 2 個 Block (Index 0, 1)     -> ch_out = 1
-        width_out = 3; //0~
+        mode = DW;
+        AGU_W_initial = 0; // 從地址 100 開始
+        width_out = 7;
+        ch_in = 11;
+        ch_out = 1;
 
         // Reset
         #100;
@@ -54,6 +58,10 @@ module tb_AGU_W;
         #20;
         
         $display("Config: Length=3, Reuse(width)=2 times, Blocks(ch)=2");
+        /*en = 1;
+        #5;
+        en = 0;
+        #10;*/
         en = 1;
 
         // 等待直到 Done 訊號拉高
