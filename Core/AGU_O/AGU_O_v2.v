@@ -15,7 +15,6 @@ module AGU_O(
     
     ////////// input buffer //////////
     reg [7:0] AGU_O_initial;
-    reg [7:0] tile_size;
     reg [6:0] width_out;
     reg [7:0] ch_out;
     wire [7:0] ch_stride = width_out + 1;
@@ -151,7 +150,7 @@ module AGU_O(
             done <= 0;
         end
         else begin
-            if(s2_done & s2_en) begin
+            if(s2_done && s2_en) begin
                 done <= 1;
             end
             else begin
