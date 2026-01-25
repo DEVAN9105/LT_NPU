@@ -1,30 +1,62 @@
 `timescale 1ns / 1ps
 
-// delay 1
+// delay = 3
 
 module AGU_W(
     input CLK,
     input en,
     input rst,
+    input [2:0] mode,
     input [11:0] AGU_W_initial_in,
     input [5:0] width_out_in, //64(0~63) => conv 1
-    input [8:0] kernel_L_in, //exat length [bias,weight]
+    input [7:0] ch_in_in,
+    input [7:0] ch_out_in,    //channel may vary per layer
     output reg [11:0] Waddr,
     output reg done
     );
     
-    ////////// input buffer //////////
+    // mode define
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
+
+    ////////// input buffer ////////// (2 cycle)
     reg [11:0] AGU_W_initial;
     reg [5:0] width_out;
-    reg [8:0] kernel_L;
+    reg [7:0] ch_in;
+    reg [7:0] ch_out;
+    reg [7:0] kernel_L;
     always@(posedge CLK) begin
         AGU_W_initial <= AGU_W_initial_in;
         width_out <= width_out_in;
-        kernel_L <= kernel_L_in;
+        ch_in <= ch_in_in;
+        ch_out <= ch_out_in;
     end
+    // kernel_L define
+    always@(posedge CLK) begin
+        case (mode)
+            conv: kernel_L <= 8;
+            maxpooling: kernel_L <= 0;
+            DW: kernel_L <= 2;
+            PW: kernel_L <= ch_in;
+            GAP: kernel_L <= 0;
+            default: kernel_L <= 0;
+        endcase
+    end
+    wire [11:0] k_stride = kernel_L + 1;
     ////////// input buffer end //////////
+
+    ////////// en SR //////////
+    reg [1:0] adder_en;
+    always@(posedge CLK) begin
+        if(rst == 1) begin
+            adder_en <= 0;
+        end
+        else begin
+            adder_en <= {adder_en[0], en};
+        end
+    end
+    ////////// en SR end //////////
     
-    ////////// stage 1 //////////
+    ////////// Stage 1 //////////
     reg [8:0] offset,next_offset;
     reg s1_done;
     reg s2_en;
@@ -38,20 +70,20 @@ module AGU_W(
         s1_done = 0;
         
         //counter logic
-        if(offset < (kernel_L - 1)) begin
+        if(offset < kernel_L) begin
             next_offset = offset + 1;
         end
         else begin
-            next_offset = 1;
+            next_offset = 0;
             s1_done = 1;
         end
     end
     always@(posedge CLK) begin
-        if(rst == 1) begin
+        if(rst) begin
             offset <= 0;
         end
         else begin
-            if(en == 1) begin
+            if(en) begin
                 offset <= next_offset;
             end
             else begin
@@ -61,40 +93,47 @@ module AGU_W(
     end
 
     // adder
+    reg [11:0] adder_1;
     always@(posedge CLK) begin
-        if(rst == 1) begin
-            Waddr <= 0;
+        if(rst) begin
+            adder_1 <= 0;
         end
         else begin
             if(en) begin
-                Waddr <= AGU_W_initial + offset;
+                adder_1 <= AGU_W_initial + offset;
             end
             else begin
-                Waddr <= Waddr;
+                adder_1 <= adder_1;
             end
         end
     end
-    ////////// stage 1 end //////////
+    ////////// Stage 1 end //////////
 
-    ////////// stage 2 //////////
-    //counter ch_count & k_count
+    ////////// Stage 2 //////////
+    //counter w_count
     reg [5:0] w_count,next_w_count;
-    reg [11:0] 
+    reg s2_done;
+    reg s3_en;
+    always@(posedge CLK) begin
+        s3_en <= s2_done & s2_en;
+    end
     always@(*) begin
         next_w_count = w_count;
+        s2_done = 0;
         if(w_count < width_out) begin
             next_w_count = w_count + 1;
         end
         else begin
             next_w_count = 0;
+            s2_done = 1;
         end
     end
     always@(posedge CLK) begin
-        if(rst == 1) begin
+        if(rst) begin
             w_count <= 0;
         end
         else begin
-            if(s2_en == 1) begin
+            if(s2_en) begin
                 w_count <= next_w_count;
             end
             else begin
@@ -102,11 +141,82 @@ module AGU_W(
             end
         end
     end
-    ////////// stage 2 end //////////
+
+    // adder reg
+    reg [11:0] adder_2;
+    always@(posedge CLK) begin
+        if(rst == 1) begin
+            adder_2 <= 0;
+        end
+        else begin
+            if(adder_en[0]) begin
+                adder_2 <= adder_1;
+            end
+            else begin
+                adder_2 <= adder_2;
+            end
+        end
+    end
+    ////////// Stage 2 end //////////
+
+    ////////// Stage 3 //////////
+    reg [7:0] ch_count,next_ch_count;
+    reg [11:0] L, next_L;
+    reg s3_done;
+    //counter ch_count & L
+    always@(*) begin
+        //avoid latch
+        next_ch_count = ch_count;
+        next_L = L;
+        s3_done = 0;
+
+        //counter logic
+        if(ch_count < ch_out) begin
+            next_ch_count = ch_count + 1;
+            next_L = L + k_stride;
+        end
+        else begin
+            next_ch_count = 0;
+            next_L = 0;
+            s3_done = 1;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            ch_count <= 0;
+            L <= 0;
+        end
+        else begin
+            if(s3_en) begin
+                ch_count <= next_ch_count;
+                L <= next_L;
+            end
+            else begin
+                ch_count <= ch_count;
+                L <= L;
+            end
+        end
+    end
+
+    //adder
+    always@(posedge CLK) begin
+        if(rst) begin
+            Waddr <= 0;
+        end
+        else begin
+            if(adder_en[1]) begin
+                Waddr <= adder_2 + L;
+            end
+            else begin
+                Waddr <= Waddr;
+            end
+        end
+    end
+    ////////// Stage 3 end //////////
 
     //done logic
     always@(posedge CLK) begin
-        if( (w_count == width_out) && s1_done) begin
+        if( s3_done && s3_en) begin
             done <= 1;
         end
         else begin
