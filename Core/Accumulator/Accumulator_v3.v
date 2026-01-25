@@ -9,16 +9,31 @@ module Accumulator(
     input [2:0]mode,
     input load_bias,
     input ReLU_en,
-    input [7:0] kernel_L,
+    input [7:0] ch_in,
     input signed [31:0]bias,
     input signed [31:0]PE_out_0,
     input signed [31:0]PE_out_1,
     input signed [31:0]PE_out_2,
     input signed [31:0]PE_out_3,
-    output reg signed [15:0]acc_out
+    output reg signed [15:0]acc_out,
+    output acc_done
     );
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
+
+    ////////// signal generate //////////
+    reg [7:0] kernel_L;
+    always@(posedge CLK) begin
+        case(mode)
+            conv: kernel_L <= 8;
+            maxpooling: kernel_L <= 2;
+            DW: kernel_L <= 2;
+            PW: kernel_L <= ch_in;
+            GAP: kernel_L <= 3;
+            default: kernel_L <= 0;
+        endcase
+    end
+    ////////// signal generate end //////////
 
     ////////// Stage 1 counter //////////
     reg [7:0] acc_count, next_acc_count;
@@ -35,25 +50,31 @@ module Accumulator(
     end
 
     // acc_count
+    reg done, next_done;
     always@(*) begin
         next_acc_count = acc_count;
+        next_done = 0;
         if(acc_count < kernel_L) begin
             next_acc_count = acc_count + 1;
         end
         else begin
             next_acc_count = 0;
+            next_done = 1;
         end
     end
     always@(posedge CLK) begin
         if(rst) begin
             acc_count <= 0;
+            done <= 0;
         end
         else begin
             if(en) begin
                 acc_count <= next_acc_count;
+                done <= next_done;
             end
             else begin
                 acc_count <= acc_count;
+                done <= next_done;
             end
         end
     end
@@ -61,12 +82,22 @@ module Accumulator(
 
 
     ////////// SR //////////
-    reg [1:0]rst_bias_sr;
+    reg [1:0] rst_bias_sr;
     reg [1:0] en_sr;
+    reg [2:0] done_sr;
     always@(posedge CLK) begin
-        rst_bias_sr <= {rst_bias_sr[0], rst_bias};
-        en_sr <= {en_sr[0], en};
+        if(rst) begin
+            rst_bias_sr <= 0;
+            en_sr <= 0;
+            done_sr <= 0;
+        end
+        else begin
+            rst_bias_sr <= {rst_bias_sr[0], rst_bias};
+            en_sr <= {en_sr[0], en};
+            done_sr <= {done_sr[1:0], done};
+        end
     end
+    assign acc_done = done_sr[2];
     ////////// SR end //////////
     
     ////////// Stage 1 ////////// 
@@ -106,7 +137,12 @@ module Accumulator(
             comp_result_1 <= 0;
         end
         else begin
-            comp_result_1 <= comp_1_out;
+            if(en) begin
+                comp_result_1 <= comp_1_out;
+            end
+            else begin
+                comp_result_1 <= comp_result_1;
+            end
         end
     end
     ////////// Stage 1 end //////////
@@ -130,7 +166,12 @@ module Accumulator(
             comp_result_2 <= 0;
         end
         else begin
-            comp_result_2 <= comp_2_out;
+            if(en_sr[0]) begin
+                comp_result_2 <= comp_2_out;
+            end
+            else begin
+                comp_result_2 <= comp_result_2;
+            end
         end
     end
     ////////// Stage 2 end //////////
@@ -163,7 +204,7 @@ module Accumulator(
         end
         else begin
             if(en_sr[1]) begin
-                if(rst_bias_sr[1] == 1) begin
+                if(rst_bias_sr[1]) begin
                     accumulator_reg <= adder_result_ext + bias_ext;
                 end
                 else begin
@@ -179,8 +220,6 @@ module Accumulator(
     reg signed [15:0] comp_result;
     wire signed [15:0] comp_3_out;
     Comparator comp_3(
-        .CLK(CLK),  
-        .rst(rst),
         .comp_a(comp_result_2), 
         .comp_b(comp_result), 
         .comp_out(comp_3_out)
