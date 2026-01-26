@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-//delay = 4 cycle
+//delay = 5 cycle
 
 module Accumulator(
     input CLK,
@@ -84,7 +84,7 @@ module Accumulator(
     ////////// SR //////////
     reg [1:0] rst_bias_sr;
     reg [1:0] en_sr;
-    reg [2:0] done_sr;
+    reg [3:0] done_sr;
     always@(posedge CLK) begin
         if(rst) begin
             rst_bias_sr <= 0;
@@ -94,10 +94,10 @@ module Accumulator(
         else begin
             rst_bias_sr <= {rst_bias_sr[0], rst_bias};
             en_sr <= {en_sr[0], en};
-            done_sr <= {done_sr[1:0], done};
+            done_sr <= {done_sr[2:0], done};
         end
     end
-    assign acc_done = done_sr[2];
+    assign acc_done = done_sr[3];
     ////////// SR end //////////
     
     ////////// Stage 1 ////////// 
@@ -244,7 +244,7 @@ module Accumulator(
     
     ////////// acc_result Truncate //////////
     reg signed [15:0] acc_out_truncated;
-    always@(*) begin
+    always@(posedge CLK) begin
         if(accumulator_reg[47:16] != {32{accumulator_reg[15]}}) begin
             //overflow
             if(accumulator_reg[47] == 0) begin
