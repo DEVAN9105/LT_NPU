@@ -218,14 +218,14 @@ module AGU_F(
             next_x_count = x_count + 1;
         end
         else begin
-            next_X = 0 - padding;
+            next_X = $signed(0 - padding);
             next_x_count = 0;
             s3_done = 1;
         end
     end
     always@(posedge CLK) begin
         if(rst) begin
-            X <= 0 - padding;
+            X <= $signed(0 - padding);
             x_count <= 0;
         end
         else begin
