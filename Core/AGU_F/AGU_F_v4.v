@@ -104,15 +104,15 @@ module AGU_F(
             s1_done = 1;
         end
         else begin
-            if (ch_count_0 < ch_in) begin
-                next_offset_Y = offset_Y + ch_stride;
-                next_ch_count_0 = ch_count_0 + 1;
-                s1_done = 0;
-            end
-            else begin
+            if (ch_count_0 == ch_in) begin
                 next_offset_Y = 0;
                 next_ch_count_0 = 0;
                 s1_done = 1;
+            end
+            else begin
+                next_offset_Y = offset_Y + ch_stride;
+                next_ch_count_0 = ch_count_0 + 1;
+                s1_done = 0;
             end
         end
     end
@@ -159,13 +159,13 @@ module AGU_F(
     end
     //counter offset_X
     always@(*) begin
-        if (offset_X < AGU_offset_X) begin
-            next_offset_X = offset_X + 1;
-            s2_done = 0;
-        end
-        else begin
+        if (offset_X == AGU_offset_X) begin
             next_offset_X = 0;
             s2_done = 1;
+        end
+        else begin
+            next_offset_X = offset_X + 1;
+            s2_done = 0;
         end
     end
     always@(posedge CLK) begin
@@ -213,14 +213,15 @@ module AGU_F(
         next_X = X;
         next_x_count = x_count;
         s3_done = 0;
-        if (x_count < width_out) begin
-            next_X = X + stride_X;
-            next_x_count = x_count + 1;
-        end
-        else begin
+        if (x_count == width_out) begin
             next_X = $signed(0 - padding);
             next_x_count = 0;
             s3_done = 1;
+        end
+        else begin
+            next_X = X + stride_X;
+            next_x_count = x_count + 1;
+            s3_done = 0;
         end
     end
     always@(posedge CLK) begin
@@ -267,14 +268,15 @@ module AGU_F(
         next_Y = Y;
         next_ch_count_1 = ch_count_1;
         s4_done = 0;
-        if (ch_count_1 < ch_out) begin
-            next_Y = Y + stride_Y;
-            next_ch_count_1 = ch_count_1 + 1;
-        end
-        else begin
+        if (ch_count_1 == ch_out) begin
             next_Y = 0;
             next_ch_count_1 = 0;
             s4_done = 1;
+        end
+        else begin
+            next_Y = Y + stride_Y;
+            next_ch_count_1 = ch_count_1 + 1;
+            s4_done = 0;
         end
     end
     always@(posedge CLK) begin
