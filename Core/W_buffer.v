@@ -15,10 +15,6 @@ module W_buffer(
     output reg [63:0]PE_win_1,
     output reg [63:0]PE_win_2,
     output reg [63:0]PE_win_3,
-    output reg [31:0]acc_0_bias,
-    output reg [31:0]acc_1_bias,
-    output reg [31:0]acc_2_bias,
-    output reg [31:0]acc_3_bias
     );
     
     always@(posedge CLK) begin
@@ -40,29 +36,6 @@ module W_buffer(
                 PE_win_1 <= PE_win_1;
                 PE_win_2 <= PE_win_2;
                 PE_win_3 <= PE_win_3;
-            end
-        end
-    end
-
-    always@(posedge CLK) begin
-        if(rst == 1) begin
-            acc_0_bias <= 0;
-            acc_1_bias <= 0;
-            acc_2_bias <= 0;
-            acc_3_bias <= 0;
-        end
-        else begin
-            if(bias_en) begin
-                acc_0_bias <= wdata_0[63:32];
-                acc_1_bias <= wdata_1[63:32];
-                acc_2_bias <= wdata_2[63:32];
-                acc_3_bias <= wdata_3[63:32];
-            end
-            else begin
-                acc_0_bias <= acc_0_bias;
-                acc_1_bias <= acc_1_bias;
-                acc_2_bias <= acc_2_bias;
-                acc_3_bias <= acc_3_bias;
             end
         end
     end
