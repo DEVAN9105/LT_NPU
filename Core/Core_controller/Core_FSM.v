@@ -8,6 +8,7 @@ module Core_FSM(
     input rst,
     input AGU_O_done,
     output reg [1:0] state,
+    output reg Core_en_counter_en,
     output reg core_done,
     output reg core_rst
     );
@@ -42,6 +43,7 @@ module Core_FSM(
         core_done = 0;
         core_rst = 0;
         cc_en = 0;
+        Core_en_counter_en = 0;
 
         case(state)
             idle: begin
@@ -63,6 +65,7 @@ module Core_FSM(
                 end
             end
             processing: begin
+                Core_en_counter_en = 1;
                 if(AGU_O_done) begin
                     next_state = finish;
                 end
