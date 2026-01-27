@@ -7,9 +7,9 @@ module Core_en_counter(
     input en_in,
     input rst,
     input [2:0] mode,
-    input [5:0] width_out_in, //64(0~63) => conv 1
+    input [5:0] width_out_in,
     input [7:0] ch_in_in,
-    input [7:0] ch_out_in,    //channel may vary per layer
+    input [7:0] ch_out_in,
     output reg SR_0_en
     /*output [7:0] offset_out,
     output [5:0] w_count_out,
