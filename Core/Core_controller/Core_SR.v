@@ -7,8 +7,8 @@ module Core_SR(
     input acc_done,
     input [2:0] mode,
     input [1:0] state,
-    output reg [11:0] SR_0,
-    output reg [7:0] SR_1
+    output reg [12:0] SR_0,
+    output reg [5:0] SR_1
     );
 
     ////////// parameter define //////////
@@ -19,13 +19,13 @@ module Core_SR(
     ////////// SR_0 //////////
     always@(posedge CLK) begin
         if (rst) begin
-            SR_0 <= 12'b0;
+            SR_0 <= 13'b0;
         end
         else if (en) begin
             case(mode)
                 maxpooling, GAP: begin
                     if(state == 2) begin 
-                        SR_0 <= {SR_0[8], 2'b0, SR_0[7:0], en};
+                        SR_0 <= {SR_0[12], SR_0[8], 2'b0, SR_0[7:0], en};
                     end
                     else begin
                         SR_0 <= SR_0;
@@ -33,7 +33,7 @@ module Core_SR(
                 end
                 default: begin
                     if(state == 2) begin 
-                        SR_0 <= {SR_0[10:0], en};
+                        SR_0 <= {SR_0[11:0], en};
                     end
                     else begin
                         SR_0 <= SR_0;
@@ -47,11 +47,11 @@ module Core_SR(
     ////////// SR_1 //////////
     always@(posedge CLK) begin
         if(rst) begin
-            SR_1 <= 8'b0;
+            SR_1 <= 6'b0;
         end
         else begin
             if(state == 2) begin
-                SR_1 <= {SR_1[6:0], acc_done};
+                SR_1 <= {SR_1[4:0], acc_done};
             end
             else begin
                 SR_1 <= SR_1;
