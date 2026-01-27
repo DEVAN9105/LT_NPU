@@ -104,7 +104,7 @@ module Core(
     .CLK(CLK),
     .en_in(Core_en_counter_en),
     .rst(core_rst),
-    .mode(mode),
+    .mode_in(mode),
     .width_out_in(width_out),
     .ch_in_in(ch_in),
     .ch_out_in(ch_out),
@@ -120,7 +120,7 @@ module Core(
     .rst(core_rst),
     .en(SR_0_en),
     .acc_done(acc_done),
-    .mode(mode),
+    .mode_in(mode),
     .state(state),
     .SR_0(SR_0),
     .SR_1(SR_1)
@@ -145,7 +145,7 @@ module Core(
         .width_out_in(width_out),
         .ch_in_in(ch_in),
         .ch_out_in(ch_out),
-        .mode(mode),
+        .mode_in(mode),
         .stride_X_in(stride_X),
         .faddr(faddr),
         .boundary(boundary)
@@ -156,7 +156,7 @@ module Core(
         .CLK(CLK),
         .en(SR_0[1]),
         .rst(core_rst),
-        .mode(mode),
+        .mode_in(mode),
         .AGU_W_initial_in(AGU_W_initial),
         .width_out_in(width_out),
         .ch_in_in(ch_in),
@@ -169,7 +169,7 @@ module Core(
         .CLK(CLK),
         .en(SR_0[6]),
         .rst(core_rst),
-        .mode(mode),
+        .mode_in(mode),
         .AGU_B_initial_in(AGU_B_initial),
         .width_out_in(width_out),
         .ch_in_in(ch_in),
@@ -199,7 +199,7 @@ module Core(
         .rst(core_rst),
         .en(SR_0[6]),
         .tile_sel(tile_sel), //3*tile
-        .mode(mode), //function
+        .mode_in(mode), //function
         .boundary(boundary),
         .tile_1(tile_1),
         .tile_2(tile_2),
@@ -223,7 +223,7 @@ module Core(
         .fdata_1(fdata_1),
         .fdata_2(fdata_2),
         .fdata_3(fdata_3),
-        .mode(mode),
+        .mode_in(mode),
         .PE_fin_0(PE_fin_0),
         .PE_fin_1(PE_fin_1),
         .PE_fin_2(PE_fin_2),
@@ -342,7 +342,7 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_0[12]),
-        .mode(mode),
+        .mode_in(mode),
         .load_bias(SR_0[12]),
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
@@ -358,7 +358,7 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_0[12]),
-        .mode(mode),
+        .mode_in(mode),
         .load_bias(SR_0[12]),
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
@@ -373,7 +373,7 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_0[12]),
-        .mode(mode),
+        .mode_in(mode),
         .load_bias(SR_0[12]),
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
@@ -388,7 +388,7 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_0[12]),
-        .mode(mode),
+        .mode_in(mode),
         .load_bias(SR_0[12]),
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
@@ -409,5 +409,6 @@ module Core(
     .acc_out({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
     .core_out(tile_out)
     );
+    ////////// Output buffer end //////////
     
 endmodule
