@@ -37,10 +37,10 @@ module Core(
     // B_storage
     output B_storage_en,
     output [7:0] baddr,
-    input [63:0] bdata_0,
-    input [63:0] bdata_1,
-    input [63:0] bdata_2,
-    input [63:0] bdata_3,
+    input [31:0] bdata_0,
+    input [31:0] bdata_1,
+    input [31:0] bdata_2,
+    input [31:0] bdata_3,
     // output tile buffer
     output tile_out_en,
     output [7:0] tile_out_addr,
@@ -247,7 +247,7 @@ module Core(
     );
 
     // B_buffer
-    wire [63:0] bias_0, bias_1, bias_2, bias_3;
+    wire [31:0] bias_0, bias_1, bias_2, bias_3;
     B_buffer b_buffer(
     .CLK(CLK),
     .rst(core_rst),
