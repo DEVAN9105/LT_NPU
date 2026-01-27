@@ -25,7 +25,7 @@ module Core_SR(
             case(mode)
                 maxpooling, GAP: begin
                     if(state == 2) begin 
-                        SR_0 <= {SR_0[8], 2'b0, SR_0[7:0], acc_done};
+                        SR_0 <= {SR_0[8], 2'b0, SR_0[7:0], en};
                     end
                     else begin
                         SR_0 <= SR_0;
@@ -33,7 +33,7 @@ module Core_SR(
                 end
                 default: begin
                     if(state == 2) begin 
-                        SR_0 <= {SR_0[10:0], acc_done};
+                        SR_0 <= {SR_0[10:0], en};
                     end
                     else begin
                         SR_0 <= SR_0;
