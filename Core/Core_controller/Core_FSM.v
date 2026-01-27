@@ -17,6 +17,17 @@ module Core_FSM(
     parameter idle = 0, set_up = 1, processing = 2,finish = 3;
     ////////// state define end //////////
 
+    ////////// reset //////////
+    always@(posedge CLK) begin
+        if(state == idle) begin
+            core_rst <= 1;
+        end
+        else begin
+            core_rst <= 0;
+        end
+    end
+    ////////// reset end //////////
+
     ////////// control counter //////////
     reg [4:0] control_count;
     reg cc_en;
@@ -41,13 +52,11 @@ module Core_FSM(
         //avoid latch
         next_state = state;
         core_done = 0;
-        core_rst = 0;
         cc_en = 0;
         Core_en_counter_en = 0;
 
         case(state)
             idle: begin
-                core_rst = 1;
                 if(en) begin
                     next_state = set_up;
                 end

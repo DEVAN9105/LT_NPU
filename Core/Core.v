@@ -6,6 +6,7 @@ module Core(
     // control signal
     input [2:0] mode_in,
     input [8:0] tile_sel_in,
+    input [1:0] stride_X_in,
     input ReLU_en_in,
     // AGU initial
     input [11:0] AGU_W_initial_in,
@@ -55,6 +56,7 @@ module Core(
     reg [2:0] mode;
     reg [8:0] tile_sel;
     reg ReLU_en;
+    reg [1:0] stride_X;
     reg [6:0] width_in;
     reg [6:0] width_out;
     reg [7:0] ch_in;
@@ -66,6 +68,7 @@ module Core(
     always@(posedge CLK) begin
         mode <= mode_in;
         tile_sel <= tile_sel_in;
+        stride_X <= stride_X_in;
         ReLU_en <= ReLU_en_in;
         width_in <= width_in_in;
         width_out <= width_out_in;
@@ -133,7 +136,6 @@ module Core(
 
     ////////// AGU //////////
     // AGU_F
-    wire [1:0] stride_X;
     wire boundary;
     AGU_F agu_f(
         .CLK(CLK),
