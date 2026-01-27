@@ -167,7 +167,7 @@ module Core(
     // AGU_B
     AGU_B agu_b(
         .CLK(CLK),
-        .en(SR_0[6]),
+        .en_in(SR_0[6]),
         .rst(core_rst),
         .mode_in(mode),
         .AGU_B_initial_in(AGU_B_initial),
