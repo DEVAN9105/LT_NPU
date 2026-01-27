@@ -10,7 +10,7 @@ module AGU_F(
     input [7:0] width_out_in,   // down sampling
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,      // channel may vary per layer
-    input [2:0] mode,
+    input [2:0] mode_in,
     input [1:0] stride_X_in,
     output reg [7:0] faddr,
     output reg boundary,
@@ -22,6 +22,7 @@ module AGU_F(
 
     ////////// input buffer & parameter generate //////////
     reg padding;
+    reg [2:0] mode;
     reg [7:0] width_in;
     reg [7:0] width_out;
     reg [7:0] ch_in;
@@ -66,6 +67,7 @@ module AGU_F(
         endcase
     end
     always@(posedge CLK) begin
+        mode <= mode_in;
         stride_X <= stride_X_in;
         width_in <= width_in_in;
         width_out <= width_out_in;
