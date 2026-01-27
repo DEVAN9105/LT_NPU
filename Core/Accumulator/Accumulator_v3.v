@@ -6,7 +6,7 @@ module Accumulator(
     input CLK,
     input rst,
     input en,
-    input [2:0]mode,
+    input [2:0]mode_in,
     input load_bias,
     input ReLU_en,
     input [7:0] ch_in,
@@ -23,6 +23,10 @@ module Accumulator(
 
     ////////// input buffer & signal generate //////////
     reg [7:0] kernel_L;
+    reg [2:0] mode;
+    always@(posedge CLK) begin
+        mode <= mode_in;
+    end
     always@(posedge CLK) begin
         case(mode)
             conv: kernel_L <= 8;
