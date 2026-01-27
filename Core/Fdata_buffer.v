@@ -8,7 +8,7 @@ module Fdata_buffer(
     input rst,
     input en,
     input [8:0]tile_sel, //3*tile
-    input [2:0]mode, //function
+    input [2:0]mode_in, //function
     input boundary,
     input [63:0]tile_1,
     input [63:0]tile_2,
@@ -24,6 +24,13 @@ module Fdata_buffer(
     
     //cluster mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
+
+    ////////// input buffer //////////
+    reg [2:0] mode;
+    always@(posedge CLK) begin
+        mode <= mode_in;
+    end
+     ////////// input buffer end //////////
     
     //tile selecting
     reg [63:0]mux_out_0,mux_out_1,mux_out_2;
