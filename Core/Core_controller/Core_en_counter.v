@@ -6,7 +6,7 @@ module Core_en_counter(
     input CLK,
     input en_in,
     input rst,
-    input [2:0] mode,
+    input [2:0] mode_in,
     input [5:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
@@ -21,11 +21,13 @@ module Core_en_counter(
 
     ////////// input buffer ////////// (2 cycle)
     reg en;
+    reg [2:0] mode;
     reg [5:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [7:0] kernel_L;
     always@(posedge CLK) begin
+        mode <= mode_in;
         en <= en_in;
         width_out <= width_out_in;
         ch_in <= ch_in_in;
