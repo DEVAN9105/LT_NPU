@@ -84,7 +84,7 @@ module Fdata_buffer(
                 fdata_3 <= tile_4;
             end
             else begin
-                // (Conv/Pool/DW) + Padding
+                // (Conv/Pool/DW) + Padding & PW
                 fdata_0 <= (boundary) ? 64'd0 : mux_out_0;
                 fdata_1 <= (boundary) ? 64'd0 : mux_out_1;
                 fdata_2 <= (boundary) ? 64'd0 : mux_out_2;
