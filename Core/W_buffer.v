@@ -6,7 +6,6 @@ module W_buffer(
     input CLK,
     input rst,
     input en,
-    input bias_en,
     input [63:0]wdata_0,
     input [63:0]wdata_1,
     input [63:0]wdata_2,
