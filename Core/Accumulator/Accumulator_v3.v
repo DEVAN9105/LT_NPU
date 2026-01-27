@@ -11,17 +11,17 @@ module Accumulator(
     input ReLU_en,
     input [7:0] ch_in,
     input signed [31:0]bias,
-    input signed [31:0]PE_out_0,
-    input signed [31:0]PE_out_1,
-    input signed [31:0]PE_out_2,
-    input signed [31:0]PE_out_3,
+    input signed [31:0]PE_out_0_in,
+    input signed [31:0]PE_out_1_in,
+    input signed [31:0]PE_out_2_in,
+    input signed [31:0]PE_out_3_in,
     output reg signed [15:0]acc_out,
     output acc_done
     );
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
-    ////////// signal generate //////////
+    ////////// input buffer & signal generate //////////
     reg [7:0] kernel_L;
     always@(posedge CLK) begin
         case(mode)
@@ -32,6 +32,13 @@ module Accumulator(
             GAP: kernel_L <= 3;
             default: kernel_L <= 0;
         endcase
+    end
+    reg signed [32:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
+    always@(posedge CLK) begin
+        PE_out_0 <= {{1{PE_out_0_in[31]}}, PE_out_0_in};
+        PE_out_1 <= {{1{PE_out_1_in[31]}}, PE_out_1_in};
+        PE_out_2 <= {{1{PE_out_2_in[31]}}, PE_out_2_in};
+        PE_out_3 <= {{1{PE_out_3_in[31]}}, PE_out_3_in};
     end
     ////////// signal generate end //////////
 
