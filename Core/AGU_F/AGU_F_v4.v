@@ -10,7 +10,7 @@ module AGU_F(
     input [7:0] width_out_in,   // down sampling
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,      // channel may vary per layer
-    input [2:0] mode,
+    input [2:0] mode_in,
     input [1:0] stride_X_in,
     output reg [7:0] faddr,
     output reg boundary,
@@ -22,6 +22,7 @@ module AGU_F(
 
     ////////// input buffer & parameter generate //////////
     reg padding;
+    reg [2:0] mode;
     reg [7:0] width_in;
     reg [7:0] width_out;
     reg [7:0] ch_in;
@@ -66,6 +67,7 @@ module AGU_F(
         endcase
     end
     always@(posedge CLK) begin
+        mode <= mode_in;
         stride_X <= stride_X_in;
         width_in <= width_in_in;
         width_out <= width_out_in;
@@ -104,15 +106,15 @@ module AGU_F(
             s1_done = 1;
         end
         else begin
-            if (ch_count_0 < ch_in) begin
-                next_offset_Y = offset_Y + ch_stride;
-                next_ch_count_0 = ch_count_0 + 1;
-                s1_done = 0;
-            end
-            else begin
+            if (ch_count_0 == ch_in) begin
                 next_offset_Y = 0;
                 next_ch_count_0 = 0;
                 s1_done = 1;
+            end
+            else begin
+                next_offset_Y = offset_Y + ch_stride;
+                next_ch_count_0 = ch_count_0 + 1;
+                s1_done = 0;
             end
         end
     end
@@ -159,13 +161,13 @@ module AGU_F(
     end
     //counter offset_X
     always@(*) begin
-        if (offset_X < AGU_offset_X) begin
-            next_offset_X = offset_X + 1;
-            s2_done = 0;
-        end
-        else begin
+        if (offset_X == AGU_offset_X) begin
             next_offset_X = 0;
             s2_done = 1;
+        end
+        else begin
+            next_offset_X = offset_X + 1;
+            s2_done = 0;
         end
     end
     always@(posedge CLK) begin
@@ -213,19 +215,20 @@ module AGU_F(
         next_X = X;
         next_x_count = x_count;
         s3_done = 0;
-        if (x_count < width_out) begin
-            next_X = X + stride_X;
-            next_x_count = x_count + 1;
-        end
-        else begin
-            next_X = 0 - padding;
+        if (x_count == width_out) begin
+            next_X = $signed(0 - padding);
             next_x_count = 0;
             s3_done = 1;
+        end
+        else begin
+            next_X = X + stride_X;
+            next_x_count = x_count + 1;
+            s3_done = 0;
         end
     end
     always@(posedge CLK) begin
         if(rst) begin
-            X <= 0 - padding;
+            X <= $signed(0 - padding);
             x_count <= 0;
         end
         else begin
@@ -267,14 +270,15 @@ module AGU_F(
         next_Y = Y;
         next_ch_count_1 = ch_count_1;
         s4_done = 0;
-        if (ch_count_1 < ch_out) begin
-            next_Y = Y + stride_Y;
-            next_ch_count_1 = ch_count_1 + 1;
-        end
-        else begin
+        if (ch_count_1 == ch_out) begin
             next_Y = 0;
             next_ch_count_1 = 0;
             s4_done = 1;
+        end
+        else begin
+            next_Y = Y + stride_Y;
+            next_ch_count_1 = ch_count_1 + 1;
+            s4_done = 0;
         end
     end
     always@(posedge CLK) begin

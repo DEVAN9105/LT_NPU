@@ -2,26 +2,33 @@
 
 // delay = 3
 
-module F_en_counter(
+module Core_en_counter(
     input CLK,
-    input en,
+    input en_in,
     input rst,
-    input [2:0] mode,
-    input [5:0] width_out_in, //64(0~63) => conv 1
+    input [2:0] mode_in,
+    input [5:0] width_out_in,
     input [7:0] ch_in_in,
-    input [7:0] ch_out_in,    //channel may vary per layer
+    input [7:0] ch_out_in,
     output reg SR_0_en
+    /*output [7:0] offset_out,
+    output [5:0] w_count_out,
+    output [7:0] ch_count_out*/
     );
     
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
     ////////// input buffer ////////// (2 cycle)
+    reg en;
+    reg [2:0] mode;
     reg [5:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [7:0] kernel_L;
     always@(posedge CLK) begin
+        mode <= mode_in;
+        en <= en_in;
         width_out <= width_out_in;
         ch_in <= ch_in_in;
         ch_out <= ch_out_in;
@@ -30,10 +37,10 @@ module F_en_counter(
     always@(posedge CLK) begin
         case (mode)
             conv: kernel_L <= 8;
-            maxpooling: kernel_L <= 0;
+            maxpooling: kernel_L <= 2;
             DW: kernel_L <= 2;
             PW: kernel_L <= ch_in;
-            GAP: kernel_L <= 0;
+            GAP: kernel_L <= 3;
             default: kernel_L <= 0;
         endcase
     end
@@ -43,7 +50,7 @@ module F_en_counter(
     ////////// en SR //////////
     reg [1:0] adder_en;
     always@(posedge CLK) begin
-        if(rst == 1) begin
+        if(rst) begin
             adder_en <= 0;
         end
         else begin
@@ -53,12 +60,10 @@ module F_en_counter(
     ////////// en SR end //////////
     
     ////////// Stage 1 //////////
-    reg [8:0] offset,next_offset;
+    reg [7:0] offset,next_offset;
     reg s1_done;
-    reg s2_en;
-    always@(*) begin
-        s2_en = s1_done & en;
-    end
+    wire s2_en;
+    assign s2_en = s1_done & en;
     //counter
     always@(*) begin
         //avoid latch
@@ -91,17 +96,16 @@ module F_en_counter(
 
     ////////// Stage 2 //////////
     //counter w_count
-    reg [5:0] w_count,next_w_count;
+    reg [6:0] w_count,next_w_count;
     reg s2_done;
-    reg s3_en;
-    always@(*) begin
-        s3_en = s2_done & s2_en;
-    end
+    wire s3_en;
+    assign s3_en = s2_done & s2_en;
     always@(*) begin
         next_w_count = w_count;
         s2_done = 0;
         if(w_count < width_out) begin
             next_w_count = w_count + 1;
+            s2_done = 0;
         end
         else begin
             next_w_count = 0;
@@ -124,7 +128,7 @@ module F_en_counter(
     ////////// Stage 2 end //////////
 
     ////////// Stage 3 //////////
-    reg [7:0] ch_count,next_ch_count;
+    reg [8:0] ch_count,next_ch_count;
     reg s3_done;
     //counter ch_count & L
     always@(*) begin
@@ -135,6 +139,7 @@ module F_en_counter(
         //counter logic
         if(ch_count < ch_out) begin
             next_ch_count = ch_count + 1;
+            s3_done = 0;
         end
         else begin
             next_ch_count = 0;
@@ -158,12 +163,27 @@ module F_en_counter(
 
     //done logic
     always@(posedge CLK) begin
-        if( s3_done && s3_en) begin
+        if(rst) begin
             SR_0_en <= 0;
         end
         else begin
-            SR_0_en <= 1;
+            if(en_in) begin
+                if( s3_done && s3_en) begin
+                    SR_0_en <= 0;
+                end
+                else begin
+                    SR_0_en <= 1;
+                end
+            end
+            else begin
+                SR_0_en <= SR_0_en;
+            end
         end
     end
+    
+    // debug
+    /*assign offset_out = offset;
+    assign w_count_out = w_count;
+    assign ch_count_out = ch_count;*/
     
 endmodule

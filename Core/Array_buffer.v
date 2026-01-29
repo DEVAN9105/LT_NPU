@@ -10,7 +10,7 @@ module Array_buffer(
     input [63:0]fdata_1,
     input [63:0]fdata_2,
     input [63:0]fdata_3,
-    input [2:0]mode,
+    input [2:0]mode_in,
     output reg [63:0] PE_fin_0,
     output reg [63:0] PE_fin_1,
     output reg [63:0] PE_fin_2,
@@ -20,6 +20,13 @@ module Array_buffer(
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
     
+    ////////// input buffer //////////
+    reg [2:0] mode;
+    always@(posedge CLK) begin
+        mode <= mode_in;
+    end
+    ////////// input buffer end //////////
+
     ////////// convolution counter //////////
     reg [1:0] conv_count, next_conv_count;
     always@(*) begin

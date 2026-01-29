@@ -6,7 +6,6 @@ module W_buffer(
     input CLK,
     input rst,
     input en,
-    input bias_en,
     input [63:0]wdata_0,
     input [63:0]wdata_1,
     input [63:0]wdata_2,
@@ -14,7 +13,7 @@ module W_buffer(
     output reg [63:0]PE_win_0,
     output reg [63:0]PE_win_1,
     output reg [63:0]PE_win_2,
-    output reg [63:0]PE_win_3,
+    output reg [63:0]PE_win_3
     );
     
     always@(posedge CLK) begin

@@ -6,7 +6,7 @@ module AGU_B(
     input CLK,
     input en_in,
     input rst,
-    input [2:0] mode,
+    input [2:0] mode_in,
     input [7:0] AGU_B_initial_in,
     input [6:0] width_out_in,
     input [7:0] ch_in_in,
@@ -19,6 +19,7 @@ module AGU_B(
 
     ////////// input buffer //////////
     reg en;
+    reg [2:0] mode;
     reg [7:0] AGU_B_initial;
     reg [6:0] width_out;
     reg [7:0] ch_in;
@@ -26,6 +27,7 @@ module AGU_B(
     reg [7:0] kernel_L;
     always@(posedge CLK) begin
         en <= en_in;
+        mode <= mode_in;
         AGU_B_initial <= AGU_B_initial_in;
         width_out <= width_out_in;
         ch_in <= ch_in_in;

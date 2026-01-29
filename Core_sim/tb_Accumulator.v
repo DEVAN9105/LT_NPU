@@ -28,8 +28,8 @@ module tb_Accumulator;
         .CLK(CLK), .rst(rst), .en(en), .mode(mode), 
         .load_bias(load_bias), .ReLU_en(ReLU_en), .ch_in(ch_in), 
         .bias(bias), 
-        .PE_out_0(PE_out_0), .PE_out_1(PE_out_1), 
-        .PE_out_2(PE_out_2), .PE_out_3(PE_out_3), 
+        .PE_out_0_in(PE_out_0), .PE_out_1_in(PE_out_1), 
+        .PE_out_2_in(PE_out_2), .PE_out_3_in(PE_out_3), 
         .acc_out(acc_out),
         .acc_done(acc_done)
     );
