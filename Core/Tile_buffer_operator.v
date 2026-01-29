@@ -6,172 +6,150 @@ module Tile_buffer_operator(
     input clkb,
     input [6:0] ena,
     input [6:0] enb,
-    input [6:0] wea,
-    input [4:0] mux_sel,
+    input mux_sel,
     // tile in
-    input [7:0] tile_in_addr,
-    // tile read
-    input [7:0] tile_read_addr,
+    input we_in,
+    input [7:0] addr_in,
+    input [63:0] data_in,
+    input we_cycle,
+    input [7:0] addr_cycle,
+    input [63:0] data_cycle,
+    // tile cal
+    input [7:0] addr_cal,
+    input [63:0] data_cal_0,
+    input [63:0] data_cal_1,
+    input [63:0] data_cal_2,
     // tile store
-    input [7:0] tile_store_addr,
+    input we_store,
+    input [7:0] addr_store,
+    input [63:0] data_store,
     // tile out
-    input [7:0] tile_out_addr,
-    // tile data in
-    input [63:0] tile_1_in,
-    input [63:0] tile_2_in,
-    input [63:0] tile_3_in,
-    input [63:0] tile_4_in,
-    input [63:0] tile_5_in,
-    input [63:0] tile_6_in,
-    input [63:0] tile_7_in,
-    // tile data out
-    output [63:0] tile_1_out,
-    output [63:0] tile_2_out,
-    output [63:0] tile_3_out,
-    output [63:0] tile_4_out,
-    output [63:0] tile_5_out,
-    output [63:0] tile_6_out,
-    output [63:0] tile_7_out
+    input [7:0] addr_out,
+    output [63:0] data_out
     );
 
     ////////// tile 1 //////////
-    Tile_buffer tile_buffer_1(
+    wire [63:0] data_1_out;
+    Tile_buffer_sdp tile_buffer_1(
         .clka(clka),
         .ena(ena[0]),
-        .wea(wea[0]),
-        .addra(tile_in_addr),
-        .dina(tile_1_in),
+        .wea(we_in),
+        .addra(addr_in),
+        .dina(data_in),
         .clkb(clkb),
         .enb(enb[0]),
-        .addrb(tile_store_addr),
-        .doutb(tile_1_out)
+        .addrb(addr_cal),
+        .doutb(data_1_out)
     );
     ////////// tile 1 end //////////
 
     ////////// tile 2 //////////
-    Tile_buffer tile_buffer_2(
+    wire [63:0] data_2_out;
+    Tile_buffer_sdp tile_buffer_2(
         .clka(clka),
         .ena(ena[1]),
-        .wea(wea[1]),
-        .addra(tile_in_addr),
-        .dina(tile_2_in),
+        .wea(we_in),
+        .addra(addr_in),
+        .dina(data_in),
         .clkb(clkb),
         .enb(enb[1]),
-        .addrb(tile_store_addr),
-        .doutb(tile_2_out)
+        .addrb(addr_cal),
+        .doutb(data_2_out)
     );
     ////////// tile 2 end //////////
 
     ////////// tile 3 //////////
-    reg [7:0] addra_3;
-    always@(*) begin
-        if(mux_sel[0]) begin
-            addra_3 = tile_store_addr;
-        end
-        else begin
-            addra_3 = tile_in_addr;
-        end
-    end
-    Tile_buffer tile_buffer_3(
+    wire [63:0] data_3_out;
+    Tile_buffer_sdp tile_buffer_3(
         .clka(clka),
         .ena(ena[2]),
-        .wea(wea[2]),
-        .addra(addra_3),
-        .dina(tile_3_in),
+        .wea(we_store),
+        .addra(addr_store),
+        .dina(data_store),
         .clkb(clkb),
         .enb(enb[2]),
-        .addrb(tile_store_addr),
-        .doutb(tile_3_out)
+        .addrb(addr_cal),
+        .doutb(data_3_out)
     );
     ////////// tile 3 end //////////
 
     ////////// tile 4 //////////
-    reg [7:0] addra_4;
-    always@(*) begin
-        if(mux_sel[1]) begin
-            addra_4 = tile_store_addr;
-        end
-        else begin
-            addra_4 = tile_in_addr;
-        end
-    end
-    Tile_buffer tile_buffer_4(
+    wire [63:0] data_4_out;
+    Tile_buffer_sdp tile_buffer_4(
         .clka(clka),
         .ena(ena[3]),
-        .wea(wea[3]),
-        .addra(addra_4),
-        .dina(tile_4_in),
+        .wea(we_store),
+        .addra(addr_store),
+        .dina(data_store),
         .clkb(clkb),
         .enb(enb[3]),
-        .addrb(tile_store_addr),
-        .doutb(tile_4_out)
+        .addrb(addr_cal),
+        .doutb(data_4_out)
     );
     ////////// tile 4 end //////////
 
     ////////// tile 5 //////////
-    reg [7:0] addra_5;
-    always@(*) begin
-        if(mux_sel[2]) begin
-            addra_5 = tile_store_addr;
-        end
-        else begin
-            addra_5 = tile_in_addr;
-        end
-    end
-    Tile_buffer tile_buffer_5(
+    wire [63:0] data_5_out;
+    Tile_buffer_sdp tile_buffer_5(
         .clka(clka),
         .ena(ena[4]),
-        .wea(wea[4]),
-        .addra(addra_5),
-        .dina(tile_5_in),
+        .wea(we_store),
+        .addra(addr_store),
+        .dina(data_store),
         .clkb(clkb),
         .enb(enb[4]),
-        .addrb(tile_store_addr),
-        .doutb(tile_5_out)
+        .addrb(addr_cal),
+        .doutb(data_5_out)
     );
     ////////// tile 5 end //////////
 
     ////////// tile 6 //////////
     reg [7:0] addra_6, addrb_6;
+    reg [63:0] data_6_in;
+    wire [63:0] data_6_out;
     always@(*) begin
-        if(mux_sel[3]) begin
-            addra_6 = tile_store_addr;
+        if(mux_sel) begin
+            addra_6 = addr_in;
+            data_6_in = data_in;
         end
         else begin
-            addra_6 = tile_in_addr;
+            addra_6 = addr_store;
+            data_6_in = data_store;
         end
     end
     always@(*) begin
-        if(mux_sel[4]) begin
-            addrb_6 = tile_in_addr;
+        if(mux_sel) begin
+            addrb_6 = addr_out;
         end
         else begin
-            addrb_6 = tile_store_addr;
+            addrb_6 = addr_cal;
         end
     end
-    Tile_buffer tile_buffer_6(
+    Tile_buffer_tdp tile_buffer_6(
         .clka(clka),
         .ena(ena[5]),
-        .wea(wea[5]),
+        .wea(we_in),
         .addra(addra_6),
-        .dina(tile_6_in),
+        .dina(data_6_in),
         .clkb(clkb),
         .enb(enb[5]),
+        .web(we_cycle),
         .addrb(addrb_6),
-        .doutb(tile_6_out)
+        .doutb(data_6_out)
     );
     ////////// tile 6 end //////////
 
     ////////// tile 7 //////////
-    Tile_buffer tile_buffer_7(
+    Tile_buffer_sdp tile_buffer_7(
         .clka(clka),
         .ena(ena[6]),
         .wea(wea[6]),
-        .addra(tile_store_addr),
-        .dina(tile_7_in),
+        .addra(addr_store),
+        .dina(data_store),
         .clkb(clkb),
         .enb(enb[6]),
-        .addrb(tile_out_addr),
-        .doutb(tile_7_out)
+        .addrb(addr_out),
+        .doutb(data_out)
     );
+    ////////// tile 7 end //////////
 endmodule
