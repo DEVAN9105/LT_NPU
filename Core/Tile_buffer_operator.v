@@ -11,9 +11,13 @@ module Tile_buffer_operator(
     input we_in,
     input [7:0] addr_in,
     input [63:0] data_in,
-    input we_cycle,
-    input [7:0] addr_cycle,
-    input [63:0] data_cycle,
+    // tile cycle
+    input we_cycle_0,
+    input we_cycle_1,
+    input [7:0] addr_cycle_0,
+    input [7:0] addr_cycle_1,
+    input [63:0] data_cycle_0,
+    input [63:0] data_cycle_1,
     // tile cal
     input [7:0] addr_cal,
     input [63:0] data_cal_0,
