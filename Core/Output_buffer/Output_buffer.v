@@ -11,16 +11,26 @@ module Output_buffer(
     );
     
     ////////// output //////////
+    reg [63:0] out_0;
     always@(posedge CLK) begin
         if(rst) begin
             core_out <= 0;
+            out_0 <= 0;
+        end
+        else begin
+            core_out <= out_0;
+        end
+    end
+    always@(posedge CLK) begin
+        if(rst) begin
+            out_0 <= 0;
         end
         else begin
             if(en) begin
-                core_out <= acc_out;
+                out_0 <= acc_out;
             end
             else begin
-                core_out <= core_out;
+                out_0 <= out_0;
             end
         end
     end

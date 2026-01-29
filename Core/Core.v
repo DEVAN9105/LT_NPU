@@ -101,14 +101,14 @@ module Core(
     // en_counter
     wire SR_0_en;
     Core_en_counter core_en_counter(
-    .CLK(CLK),
-    .en_in(Core_en_counter_en),
-    .rst(core_rst),
-    .mode_in(mode),
-    .width_out_in(width_out),
-    .ch_in_in(ch_in),
-    .ch_out_in(ch_out),
-    .SR_0_en(SR_0_en)
+        .CLK(CLK),
+        .en_in(Core_en_counter_en),
+        .rst(core_rst),
+        .mode_in(mode),
+        .width_out_in(width_out),
+        .ch_in_in(ch_in),
+        .ch_out_in(ch_out),
+        .SR_0_en(SR_0_en)
     );
 
     // SR
@@ -116,14 +116,14 @@ module Core(
     wire [12:0] SR_0;
     wire [5:0] SR_1;
     Core_SR SR(
-    .CLK(CLK),
-    .rst(core_rst),
-    .en(SR_0_en),
-    .acc_done(acc_done),
-    .mode_in(mode),
-    .state(state),
-    .SR_0(SR_0),
-    .SR_1(SR_1)
+        .CLK(CLK),
+        .rst(core_rst),
+        .en(SR_0_en),
+        .acc_done(acc_done),
+        .mode_in(mode),
+        .state(state),
+        .SR_0(SR_0),
+        .SR_1(SR_1)
     );
     ////////// Controller end //////////
 
@@ -131,7 +131,7 @@ module Core(
     assign tile_in_en = SR_0[4];
     assign W_storage_en = SR_0[4];
     assign B_storage_en = SR_0[9];
-    assign tile_out_en = SR_1[5];
+    assign tile_out_en = SR_1[2];
     ////////// output signal end //////////
 
     ////////// AGU //////////
@@ -180,7 +180,7 @@ module Core(
     // AGU_O
     AGU_O agu_o(
         .CLK(CLK),
-        .en(SR_1[2]),
+        .en(SR_1[0]),
         .rst(core_rst),
         .AGU_O_initial_in(AGU_O_initial),
         .width_out_in(width_out),
@@ -405,7 +405,7 @@ module Core(
     Output_buffer output_buffer(
     .CLK(CLK),
     .rst(core_rst),
-    .en(SR_1[4]),
+    .en(SR_1[0]),
     .acc_out({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
     .core_out(tile_out)
     );

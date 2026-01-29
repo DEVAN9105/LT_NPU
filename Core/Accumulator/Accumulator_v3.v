@@ -17,10 +17,14 @@ module Accumulator(
     input signed [31:0]PE_out_3_in,
     output reg signed [15:0]acc_out,
     output acc_done
+    /*,
+    output [7:0] acc_count_tb,
+    output rst_bias_tb,
+    output [33:0] adder_result_tb*/
     );
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
-
+    
     ////////// input buffer & signal generate //////////
     reg [7:0] kernel_L;
     reg [2:0] mode;
@@ -38,11 +42,11 @@ module Accumulator(
         endcase
     end
     reg signed [32:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
-    always@(posedge CLK) begin
-        PE_out_0 <= {{1{PE_out_0_in[31]}}, PE_out_0_in};
-        PE_out_1 <= {{1{PE_out_1_in[31]}}, PE_out_1_in};
-        PE_out_2 <= {{1{PE_out_2_in[31]}}, PE_out_2_in};
-        PE_out_3 <= {{1{PE_out_3_in[31]}}, PE_out_3_in};
+    always@(*) begin
+        PE_out_0 = {{1{PE_out_0_in[31]}}, PE_out_0_in};
+        PE_out_1 = {{1{PE_out_1_in[31]}}, PE_out_1_in};
+        PE_out_2 = {{1{PE_out_2_in[31]}}, PE_out_2_in};
+        PE_out_3 = {{1{PE_out_3_in[31]}}, PE_out_3_in};
     end
     ////////// signal generate end //////////
 
@@ -108,8 +112,10 @@ module Accumulator(
             done_sr <= {done_sr[1:0], done};
         end
     end
-    assign acc_done = done_sr[2];
+    assign acc_done = done_sr[1];
     ////////// SR end //////////
+    
+    
     
     ////////// Stage 1 ////////// 
     // adder tree
@@ -186,6 +192,8 @@ module Accumulator(
         end
     end
     ////////// Stage 2 end //////////
+    
+    
     
     ////////// bias buffer //////////
     reg signed [31:0] bias_buffer;
@@ -298,5 +306,9 @@ module Accumulator(
         end
     end
     ////////// Output register end //////////
+    
+    /*assign acc_count_tb = acc_count;
+    assign rst_bias_tb = rst_bias_sr[1];
+    assign adder_result_tb = adder_result;*/
     
 endmodule
