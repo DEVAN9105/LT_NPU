@@ -4,34 +4,152 @@
 module Tile_buffer_operator(
     input clka,
     input clkb,
-    input [6:0] ena,
-    input [6:0] enb,
-    input [2:0] mux_sel,
+    input en,
+    input rst,
+    // tile assign
+    input [11:0] tile_Core,
+    input [8:0] tile_CIU,
     // tile in
-    input we_in,
+    input valid_in,
     input [7:0] addr_in,
-    input [63:0] data_in,
+    input [63:0] din_in,
     // tile cycle
-    input we_cycle_0,
-    input we_cycle_1,
+    input valid_cycle_0,
+    input valid_cycle_1,
     input [7:0] addr_cycle_0,
     input [7:0] addr_cycle_1,
     input [63:0] din_cycle_0,
     input [63:0] din_cycle_1,
     output [63:0] dout_cycle,
+    // tile out
+    input [7:0] addr_out,
+    output [63:0] dout_out,
     // tile cal
     input [7:0] addr_cal,
     output reg [63:0] dout_cal_0,
     output reg [63:0] dout_cal_1,
     output reg [63:0] dout_cal_2,
+    output reg [63:0] dout_cal_3,
     // tile store
-    input we_store,
+    input valid_store,
     input [7:0] addr_store,
-    input [63:0] din_store,
-    // tile out
-    input [7:0] addr_out,
-    output [63:0] data_out
+    input [63:0] din_store
     );
+
+    ////////// decode //////////
+    // ena
+    reg [6:0] ena_in, en_cycle, ena_out, ena;
+    always@(*) begin
+        // tile in
+        case(tile_CIU[8:6])
+            1: ena_in = 7'b0000001;
+            2: ena_in = 7'b0000010;
+            3: ena_in = 7'b0000100;
+            4: ena_in = 7'b0001000;
+            5: ena_in = 7'b0010000;
+            6: ena_in = 7'b0100000;
+            7: ena_in = 7'b1000000;
+            default: ena_in = 7'b0000000;
+        endcase
+        // tile cycle
+        case(tile_CIU[5:3])
+            1: en_cycle = 7'b0000001;
+            2: en_cycle = 7'b0000010;
+            3: en_cycle = 7'b0000100;
+            4: en_cycle = 7'b0001000;
+            5: en_cycle = 7'b0010000;
+            6: en_cycle = 7'b0100000;
+            7: en_cycle = 7'b1000000;
+            default: en_cycle = 7'b0000000;
+        endcase
+        // tile out
+        case(tile_CIU[2:0])  
+            1: ena_out = 7'b0000001;
+            2: ena_out = 7'b0000010;
+            3: ena_out = 7'b0000100;
+            4: ena_out = 7'b0001000;
+            5: ena_out = 7'b0010000;
+            6: ena_out = 7'b0100000;
+            7: ena_out = 7'b1000000;
+            default: ena_out = 7'b0000000;
+        endcase
+    end
+    always@(posedge clka) begin
+        if(rst) begin
+            ena <= 7'd0;
+        end
+        else begin
+            if(en) begin
+                ena = ena_in | en_cycle | ena_out;
+            end
+            else begin
+                ena <= 7'd0;
+            end
+        end
+    end
+
+    // enb
+    reg [6:0] enb_cal_0, enb_cal_1, enb_cal_2, enb_store, enb;
+    always@(*) begin
+        enb = enb_cal_0 | enb_cal_1 | enb_cal_2 | enb_store;
+        // tile cal
+        case(tile_Core[11:9])
+            1: enb_cal_0 = 7'b0000001;
+            2: enb_cal_0 = 7'b0000010;
+            3: enb_cal_0 = 7'b0000100;
+            4: enb_cal_0 = 7'b0001000;
+            5: enb_cal_0 = 7'b0010000;
+            6: enb_cal_0 = 7'b0100000;
+            7: enb_cal_0 = 7'b1000000;
+            default: enb_cal_0 = 7'b0000000;
+        endcase
+        case(tile_Core[8:6])
+            1: enb_cal_1 = 7'b0000001;
+            2: enb_cal_1 = 7'b0000010;
+            3: enb_cal_1 = 7'b0000100;
+            4: enb_cal_1 = 7'b0001000;
+            5: enb_cal_1 = 7'b0010000;
+            6: enb_cal_1 = 7'b0100000;
+            7: enb_cal_1 = 7'b1000000;
+            default: enb_cal_1 = 7'b0000000;
+        endcase
+        case(tile_Core[8:6])
+            1: enb_cal_2 = 7'b0000001;
+            2: enb_cal_2 = 7'b0000010;
+            3: enb_cal_2 = 7'b0000100;
+            4: enb_cal_2 = 7'b0001000;
+            5: enb_cal_2 = 7'b0010000;
+            6: enb_cal_2 = 7'b0100000;
+            7: enb_cal_2 = 7'b1000000;
+            default: enb_cal_2 = 7'b0000000;
+        endcase
+        // tile store
+        case(tile_Core[5:3])
+            1: enb_store = 7'b0000001;
+            2: enb_store = 7'b0000010;
+            3: enb_store = 7'b0000100;
+            4: enb_store = 7'b0001000;
+            5: enb_store = 7'b0010000;
+            6: enb_store = 7'b0100000;
+            7: enb_store = 7'b1000000;
+            default: enb_store = 7'b0000000;
+        endcase
+    end
+    always@(posedge clkb) begin
+        if(rst) begin
+            enb <= 7'd0;
+        end
+        else begin
+            if(en) begin
+                enb = enb_cal_0 | enb_cal_1 | enb_cal_2 | en_cycle | enb_store;
+            end
+            else begin
+                enb <= enb;
+            end
+        end
+    end
+    // 
+    ////////// decode end //////////
 
     ////////// tile 1 //////////
     wire [63:0] dout_1;
