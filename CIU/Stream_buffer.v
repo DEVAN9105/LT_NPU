@@ -6,7 +6,7 @@ module Stream_buffer(
     input en,
     input [7:0] addr_cycle,
     input [63:0] dout_cycle,
-    output [71:0] stream_initial
+    output reg [71:0] stream_initial
     );
 
     ////////// address buffer ////////// (2 cycle delay)
