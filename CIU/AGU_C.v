@@ -108,7 +108,7 @@ module AGU_C(
         end
         else begin
             next_ch = 0;
-            next_Y = Y;
+            next_Y = 0;
             s2_done = 1;
         end
     end
