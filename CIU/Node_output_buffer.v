@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module CI_buffer(
+module Node_output_buffer(
 
     );
 endmodule
