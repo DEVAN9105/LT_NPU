@@ -9,7 +9,6 @@ module AGU_O(
     input [7:0] AGU_O_initial_in,
     input [6:0] width_out_in,
     input [7:0] ch_out_in,
-    input [7:0] AGU_O_stride_in,
     output reg [7:0] oaddr,
     output reg done
     );
@@ -18,12 +17,12 @@ module AGU_O(
     reg [7:0] AGU_O_initial;
     reg [6:0] width_out;
     reg [7:0] ch_out;
-    reg [7:0] AGU_O_stride;
+    reg [7:0] ch_stride;
     always@(posedge CLK) begin
         AGU_O_initial <= AGU_O_initial_in;
         width_out <= width_out_in;
         ch_out <= ch_out_in;
-        AGU_O_stride <= AGU_O_stride_in;
+        ch_stride <= width_out_in + 1; //stride = width_out
     end
     ////////// input buffer end //////////
 
@@ -104,7 +103,7 @@ module AGU_O(
         s2_done = 0;
         if(ch < ch_out) begin
             next_ch = ch + 1;
-            next_Y = Y + AGU_O_stride;
+            next_Y = Y + ch_stride;
             s2_done = 0;
         end
         else begin
