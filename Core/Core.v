@@ -12,7 +12,6 @@ module Core(
     input [11:0] AGU_W_initial_in,
     input [7:0] AGU_B_initial_in,
     input [7:0] AGU_O_initial_in,
-    input [7:0] AGU_O_stride_in,
     // tile size
     input [6:0] width_in_in,
     input [6:0] width_out_in,
@@ -64,7 +63,6 @@ module Core(
     reg [11:0] AGU_W_initial;
     reg [7:0] AGU_B_initial;
     reg [7:0] AGU_O_initial;
-    reg [7:0] AGU_O_stride;
     always@(posedge CLK) begin
         mode <= mode_in;
         tile_sel <= tile_sel_in;
@@ -77,7 +75,6 @@ module Core(
         AGU_W_initial <= AGU_W_initial_in;
         AGU_B_initial <= AGU_B_initial_in;
         AGU_O_initial <= AGU_O_initial_in;
-        AGU_O_stride <= AGU_O_stride_in;
     end
     ////////// input buffer end //////////
 
@@ -185,7 +182,6 @@ module Core(
         .AGU_O_initial_in(AGU_O_initial),
         .width_out_in(width_out),
         .ch_out_in(ch_out),
-        .AGU_O_stride_in(AGU_O_stride),
         .oaddr(tile_out_addr),
         .done(AGU_O_done)
     );
