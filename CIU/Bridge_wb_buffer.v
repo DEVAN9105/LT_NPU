@@ -3,11 +3,11 @@
 module Bridge_wb_buffer(
     input CLK,
     input rst,
-    input en_in,
+    input en_wb_in,
     input [63:0] dout_wb,
     output reg [63:0] bridge_wb,
     // addr buffer
-    output en_out,
+    output en_wb,
     input [7:0] addr_wb_in,
     output reg [7:0] addr_wb
     );
@@ -19,10 +19,10 @@ module Bridge_wb_buffer(
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[1:0], en_wb};
+            en_SR <= {en_SR[1:0], en_wb_in};
         end
     end
-    assign en_out = en_SR[2];
+    assign en_wb = en_SR[2];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////
@@ -31,7 +31,7 @@ module Bridge_wb_buffer(
             addr_wb <= 0;
         end
         else begin
-            if (en_in) begin
+            if (en_wb_in) begin
                 addr_wb <= addr_wb_in;
             end
             else begin
