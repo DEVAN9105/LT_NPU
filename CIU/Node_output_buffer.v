@@ -10,7 +10,7 @@ module Node_output_buffer(
     input [63:0] dout_out,
     output reg [63:0] GLB_in,
     // addr buffer
-    output en_out,
+    output en_wb,
     input [7:0] addr_out_in,
     output reg [7:0] addr_out
     );
@@ -25,7 +25,7 @@ module Node_output_buffer(
             en_SR <= {en_SR[1:0], en_in};
         end
     end
-    assign en_out = en_SR[2];
+    assign en_wb = en_SR[2];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////

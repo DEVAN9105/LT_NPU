@@ -28,7 +28,7 @@ module CIU_node#(
     output reg [63:0] din_cycle_a,
     output reg [63:0] din_cycle_b,
     ////////// load //////////
-    input [75:0] glb_out,
+    input [75:0] glb_load,
     output [75:0] node_out, // we + destination + addr + data
     output valid_in,
     output [7:0] addr_in,
@@ -41,8 +41,9 @@ module CIU_node#(
     input [63:0] node_in_a,
     input [63:0] node_in_b,
     input [63:0] dout_out,
-    output [63:0] glb_in,
-    output en_out,
+    // GLB write back
+    output [63:0] glb_wb,
+    output en_wb,
     ////////// done //////////
     output cycle_done
     );
@@ -140,7 +141,7 @@ module CIU_node#(
         .CLK(CLK),
         .rst(rst),
         .en(load_en),
-        .GLB_out(glb_out),
+        .GLB_out(glb_load),
         .node_out(node_out),
         .valid_in(valid_in),
         .addr_in(addr_in),
@@ -158,9 +159,9 @@ module CIU_node#(
         .node_in_a(node_in_a),
         .node_in_b(node_in_b),
         .dout_out(dout_out),
-        .GLB_in(glb_in),
+        .GLB_in(glb_wb),
         // addr buffer
-        .en_out(en_out),
+        .en_wb(en_wb),
         .addr_out_in(addr_out_in),
         .addr_out(addr_out)
     );
