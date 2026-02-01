@@ -149,21 +149,21 @@ module CIU_node#(
     );
     ////////// Node input buffer end //////////
 
-    ////////// Node output buffer //////////
-    wire en_in = write_back_en | en_a | en_b;
-    Node_output_buffer node_output_buffer(
+    ////////// Node write back buffer //////////
+    wire en_wb_in = write_back_en | en_a | en_b;
+    Node_wb_buffer node_wb_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en_in(en_in),
+        .en_wb_in(en_wb_in),
         .node_sel(node_sel),
-        .node_in_a(node_in_a),
-        .node_in_b(node_in_b),
-        .dout_out(dout_out),
-        .GLB_in(glb_wb),
+        .node_wb_a(node_wb_a),
+        .node_wb_b(node_wb_b),
+        .dout_wb(dout_wb),
+        .glb_wb(glb_wb),
         // addr buffer
         .en_wb(en_wb),
-        .addr_out_in(addr_out_in),
-        .addr_out(addr_out)
+        .addr_wb_in(addr_wb_in),
+        .addr_wb(addr_wb)
     );
-    ////////// Node output buffer end //////////
+    ////////// Node write back buffer end //////////
 endmodule

@@ -145,11 +145,11 @@ module CIU_bridge#(
     Bridge_wb_buffer bridge_wb_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en_in(write_back_en),
+        .en_wb_in(write_back_en),
         .dout_wb(dout_wb),
         .bridge_wb(bridge_wb),
         // addr buffer
-        .en_out(en_wb),
+        .en_wb(en_wb),
         .addr_out_in(addr_wb_in),
         .addr_out(addr_wb)
     );

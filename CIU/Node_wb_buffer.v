@@ -3,7 +3,7 @@
 module Node_wb_buffer(
     input CLK,
     input rst,
-    input en_wb,
+    input en_wb_in,
     input [1:0] node_sel, // 00: none, 01: dout_out, 10: node_wb_a, 11: node_wb_b
     input [63:0] node_wb_a,
     input [63:0] node_wb_b,
@@ -22,7 +22,7 @@ module Node_wb_buffer(
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[1:0], en_wb};
+            en_SR <= {en_SR[1:0], en_wb_in};
         end
     end
     assign en_wb = en_SR[2];
@@ -34,7 +34,7 @@ module Node_wb_buffer(
             addr_wb <= 0;
         end
         else begin
-            if (en_wb) begin
+            if (en_wb_in) begin
                 addr_wb <= addr_wb_in;
             end
             else begin
