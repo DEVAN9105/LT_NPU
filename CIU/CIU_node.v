@@ -6,7 +6,7 @@ module CIU_node(
     input cycle_en,
     input load_en,
     input write_back_en,
-    input node_sel,
+    input [1:0] node_sel,
     // AGU parameters
     input [7:0] width_out,
     input [7:0] ch_out,
