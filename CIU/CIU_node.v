@@ -15,12 +15,12 @@ module CIU_node#(
     input [7:0] AGU_O_initial, // initial address for AGU_C
     ////////// cycle //////////
     // stream buffer
-    input [63:0] dout_cycle,
     input [71:0] stream_a_in,
     output [71:0] stream_a_out,
     input [71:0] stream_b_in,
     output [71:0] stream_b_out,
     // tile buffer operator
+    input [63:0] dout_cycle,
     output valid_cycle_a,
     output valid_cycle_b,
     output reg [7:0] addr_cycle_a,
