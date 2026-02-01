@@ -1,18 +1,18 @@
 `timescale 1ns / 1ps
 
-module Node_output_buffer(
+module Node_wb_buffer(
     input CLK,
     input rst,
-    input en_in,
-    input [1:0] node_sel, // 00: none, 01: dout_out, 10: node_in_a, 11: node_in_b
-    input [63:0] node_in_a,
-    input [63:0] node_in_b,
-    input [63:0] dout_out,
-    output reg [63:0] GLB_in,
+    input en_wb,
+    input [1:0] node_sel, // 00: none, 01: dout_out, 10: node_wb_a, 11: node_wb_b
+    input [63:0] node_wb_a,
+    input [63:0] node_wb_b,
+    input [63:0] dout_wb,
+    output reg [63:0] glb_wb,
     // addr buffer
     output en_wb,
-    input [7:0] addr_out_in,
-    output reg [7:0] addr_out
+    input [7:0] addr_wb_in,
+    output reg [7:0] addr_wb
     );
 
     ////////// valid SR //////////
@@ -22,7 +22,7 @@ module Node_output_buffer(
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[1:0], en_in};
+            en_SR <= {en_SR[1:0], en_wb};
         end
     end
     assign en_wb = en_SR[2];
@@ -31,14 +31,14 @@ module Node_output_buffer(
     ///////// addr buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
-            addr_out <= 0;
+            addr_wb <= 0;
         end
         else begin
-            if (en_in) begin
-                addr_out <= addr_out_in;
+            if (en_wb) begin
+                addr_wb <= addr_wb_in;
             end
             else begin
-                addr_out <= addr_out;
+                addr_wb <= addr_wb;
             end
         end
     end
@@ -47,19 +47,19 @@ module Node_output_buffer(
     ///////// GLB_in buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
-            GLB_in <= 0;
+            glb_wb <= 0;
         end
         else begin
             if (en_SR[2]) begin
                 case (node_sel)
-                    2'b01: GLB_in <= dout_out;
-                    2'b10: GLB_in <= node_in_a;
-                    2'b11: GLB_in <= node_in_b;
-                    default: GLB_in <= 0;
+                    2'b01: glb_wb <= dout_wb;
+                    2'b10: glb_wb <= node_wb_a;
+                    2'b11: glb_wb <= node_wb_b;
+                    default: glb_wb <= 0;
                 endcase
             end
             else begin
-                GLB_in <= GLB_in;
+                glb_wb <= glb_wb;
             end
         end
     end

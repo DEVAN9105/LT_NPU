@@ -7,10 +7,10 @@ module Tile_buffer_operator(
     // tile assign
     input [2:0] tile_sel_cycle_in,
     input [19:0] tile_assign_in,
-    // tile in
-    input valid_in,
-    input [7:0] addr_in,
-    input [63:0] din_in,
+    // tile load
+    input valid_load,
+    input [7:0] addr_load,
+    input [63:0] din_load,
     // tile cycle
     input valid_cycle_a,
     input valid_cycle_b,
@@ -19,10 +19,10 @@ module Tile_buffer_operator(
     input [63:0] din_cycle_a,
     input [63:0] din_cycle_b,
     output reg [63:0] dout_cycle,
-    // tile out
-    input en_out,
-    input [7:0] addr_out,
-    output [63:0] dout_out,
+    // tile wb
+    input en_wb,
+    input [7:0] addr_wb,
+    output [63:0] dout_wb,
     // tile cal
     input valid_cal,
     input [7:0] addr_cal,
@@ -48,7 +48,7 @@ module Tile_buffer_operator(
     ////////// input buffer end ///////////
 
     ////////// define function //////////
-    parameter none = 3'd0, cal = 3'd1, in = 3'd2, cycle = 3'd3, store = 3'd4;
+    parameter none = 3'd0, cal = 3'd1, load = 3'd2, cycle = 3'd3, store = 3'd4;
     ////////// define function end /////////
 
     ////////// tile 1 //////////
@@ -70,13 +70,13 @@ module Tile_buffer_operator(
                 addrb_1 = addr_cal;
                 dinb_1 = 64'd0;
             end
-            in: begin
+            load: begin
                 ena_1 = 1;
                 enb_1 = 0;
-                wea_1 = valid_in;
+                wea_1 = valid_load;
                 web_1 = 0;
-                addra_1 = addr_in;
-                dina_1 = din_in;
+                addra_1 = addr_load;
+                dina_1 = din_load;
                 addrb_1 = 8'd0;
                 dinb_1 = 64'd0;
             end
@@ -148,13 +148,13 @@ module Tile_buffer_operator(
                 addrb_2 = addr_cal;
                 dinb_2 = 64'd0;
             end
-            in: begin
+            load: begin
                 ena_2 = 1;
                 enb_2 = 0;
-                wea_2 = valid_in;
+                wea_2 = valid_load;
                 web_2 = 0;
-                addra_2 = addr_in;
-                dina_2 = din_in;
+                addra_2 = addr_load;
+                dina_2 = din_load;
                 addrb_2 = 8'd0;
                 dinb_2 = 64'd0;
             end
@@ -226,13 +226,13 @@ module Tile_buffer_operator(
                 addrb_3 = addr_cal;
                 dinb_3 = 64'd0;
             end
-            in: begin
+            load: begin
                 ena_3 = 1;
                 enb_3 = 0;
-                wea_3 = valid_in;
+                wea_3 = valid_load;
                 web_3 = 0;
-                addra_3 = addr_in;
-                dina_3 = din_in;
+                addra_3 = addr_load;
+                dina_3 = din_load;
                 addrb_3 = 8'd0;
                 dinb_3 = 64'd0;
             end
@@ -304,13 +304,13 @@ module Tile_buffer_operator(
                 addrb_4 = addr_cal;
                 dinb_4 = 64'd0;
             end
-            in: begin
+            load: begin
                 ena_4 = 1;
                 enb_4 = 0;
-                wea_4 = valid_in;
+                wea_4 = valid_load;
                 web_4 = 0;
-                addra_4 = addr_in;
-                dina_4 = din_in;
+                addra_4 = addr_load;
+                dina_4 = din_load;
                 addrb_4 = 8'd0;
                 dinb_4 = 64'd0;
             end
@@ -382,13 +382,13 @@ module Tile_buffer_operator(
                 addrb_5 = addr_cal;
                 dinb_5 = 64'd0;
             end
-            in: begin
+            load: begin
                 ena_5 = 1;
                 enb_5 = 0;
-                wea_5 = valid_in;
+                wea_5 = valid_load;
                 web_5 = 0;
-                addra_5 = addr_in;
-                dina_5 = din_in;
+                addra_5 = addr_load;
+                dina_5 = din_load;
                 addrb_5 = 8'd0;
                 dinb_5 = 64'd0;
             end
@@ -460,13 +460,13 @@ module Tile_buffer_operator(
                 addrb_6 = addr_cal;
                 dinb_6 = 64'd0;
             end
-            in: begin
+            load: begin
                 ena_6 = 1;
                 enb_6 = 0;
-                wea_6 = valid_in;
+                wea_6 = valid_load;
                 web_6 = 0;
-                addra_6 = addr_in;
-                dina_6 = din_in;
+                addra_6 = addr_load;
+                dina_6 = din_load;
                 addrb_6 = 8'd0;
                 dinb_6 = 64'd0;
             end
@@ -537,11 +537,11 @@ module Tile_buffer_operator(
             end
             2: begin // out
                 ena_7 = 0;
-                enb_7 = en_out;
+                enb_7 = en_wb;
                 wea_7 = 0;
                 addra_7 = 8'd0;
                 dina_7 = 64'd0;
-                addrb_7 = addr_out;
+                addrb_7 = addr_wb;
             end
             default: begin
                 ena_7 = 0;
@@ -563,7 +563,7 @@ module Tile_buffer_operator(
         .clkb(clkb),
         .enb(enb_7),
         .addrb(addrb_7),
-        .doutb(dout_out)
+        .doutb(dout_wb)
     );
     ////////// tile 7 end //////////
 
