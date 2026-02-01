@@ -1,14 +1,13 @@
 `timescale 1ns / 1ps
 
-module CIU_node#(
-    parameter [2:0] CIU_ID = 3'd3
+module CIU_bridge#(
+    parameter [2:0] CIU_ID = 3'd1
 )(
     input CLK,
     input rst,
     input cycle_en,
     input load_en,
     input write_back_en,
-    input [1:0] node_sel,
     // AGU parameters
     input [7:0] width_out,
     input [7:0] ch_out,
@@ -133,30 +132,26 @@ module CIU_node#(
     );
     ////////// CI buffer end //////////
 
-    ////////// Node input buffer //////////
-    Node_input_buffer node_input_buffer #(
+    ////////// Bridge input buffer //////////
+    Bridge_input_buffer bridge_input_buffer #(
         .CIU_ID(CIU_ID)
     )(
         .CLK(CLK),
         .rst(rst),
         .en(load_en),
         .GLB_out(glb_out),
-        .node_out(node_out),
         .valid_in(valid_in),
         .addr_in(addr_in),
         .din_in(din_in)
     );
-    ////////// Node input buffer end //////////
+    ////////// Bridge input buffer end //////////
 
-    ////////// Node output buffer //////////
+    ////////// Bridge output buffer //////////
     wire en_in = write_back_en | en_a | en_b;
-    Node_output_buffer node_output_buffer(
+    Bridge_output_buffer bridge_output_buffer(
         .CLK(CLK),
         .rst(rst),
         .en_in(en_in),
-        .node_sel(node_sel),
-        .node_in_a(node_in_a),
-        .node_in_b(node_in_b),
         .dout_out(dout_out),
         .GLB_in(glb_in),
         // addr buffer
@@ -164,5 +159,5 @@ module CIU_node#(
         .addr_out_in(addr_out_in),
         .addr_out(addr_out)
     );
-    ////////// Node output buffer end //////////
+    ////////// Bridge output buffer end //////////
 endmodule
