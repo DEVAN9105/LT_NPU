@@ -1,15 +1,15 @@
 `timescale 1ns / 1ps
 
-module Bridge_output_buffer(
+module Bridge_wb_buffer(
     input CLK,
     input rst,
     input en_in,
-    input [63:0] dout_out,
-    output reg [63:0] bridge_out,
+    input [63:0] dout_wb,
+    output reg [63:0] bridge_wb,
     // addr buffer
     output en_out,
-    input [7:0] addr_out_in,
-    output reg [7:0] addr_out
+    input [7:0] addr_wb_in,
+    output reg [7:0] addr_wb
     );
 
     ////////// valid SR //////////
@@ -19,7 +19,7 @@ module Bridge_output_buffer(
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[1:0], en_in};
+            en_SR <= {en_SR[1:0], en_wb};
         end
     end
     assign en_out = en_SR[2];
@@ -28,33 +28,33 @@ module Bridge_output_buffer(
     ///////// addr buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
-            addr_out <= 0;
+            addr_wb <= 0;
         end
         else begin
             if (en_in) begin
-                addr_out <= addr_out_in;
+                addr_wb <= addr_wb_in;
             end
             else begin
-                addr_out <= addr_out;
+                addr_wb <= addr_wb;
             end
         end
     end
     ///////// addr buffer end//////////
 
-    ///////// bridge_out buffer //////////
+    ///////// bridge_wb buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
-            bridge_out <= 0;
+            bridge_wb <= 0;
         end
         else begin
             if (en_SR[2]) begin
-                bridge_out <= dout_out;
+                bridge_wb <= dout_wb;
             end
             else begin
-                bridge_out <= bridge_out;
+                bridge_wb <= bridge_wb;
             end
         end
     end
-    ///////// bridge_out buffer end//////////
+    ///////// bridge_wb buffer end//////////
 
 endmodule

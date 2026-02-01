@@ -27,16 +27,16 @@ module CIU_bridge#(
     output reg [63:0] din_cycle_b,
     input [63:0] dout_cycle,
     ////////// load //////////
-    input [75:0] bridge_in,
-    output valid_in,
-    output [7:0] addr_in,
-    output [63:0] din_in,
+    input [75:0] bridge_load,
+    output valid_load,
+    output [7:0] addr_load,
+    output [63:0] din_load,
     ////////// write back //////////
-    input [7:0] addr_out_in,
-    output [7:0] addr_out,
-    input [63:0] dout_out,
+    input [7:0] addr_wb_in,
+    output [7:0] addr_wb,
+    input [63:0] dout_wb,
     output [63:0] bridge_out,
-    output en_out,
+    output en_wb,
     ////////// done //////////
     output cycle_done
     );
@@ -134,25 +134,25 @@ module CIU_bridge#(
         .CLK(CLK),
         .rst(rst),
         .en(load_en),
-        .bridge_in(bridge_in),
-        .valid_in(valid_in),
-        .addr_in(addr_in),
-        .din_in(din_in)
+        .bridge_load(bridge_load),
+        .valid_load(valid_load),
+        .addr_load(addr_load),
+        .din_load(din_load)
     );
     ////////// Bridge input buffer end //////////
 
     ////////// Bridge output buffer //////////
-    wire en_in = write_back_en;
+    wire en_wb = write_back_en;
     Bridge_output_buffer bridge_output_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en_in(en_in),
-        .dout_out(dout_out),
-        .bridge_out(bridge_out),
+        .en_in(en_wb),
+        .dout_wb(dout_wb),
+        .bridge_wb(bridge_wb),
         // addr buffer
-        .en_out(en_out),
-        .addr_out_in(addr_out_in),
-        .addr_out(addr_out)
+        .en_out(en_wb),
+        .addr_out_in(addr_wb_in),
+        .addr_out(addr_wb)
     );
     ////////// Bridge output buffer end //////////
 endmodule
