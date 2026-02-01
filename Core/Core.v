@@ -41,9 +41,9 @@ module Core(
     input [31:0] bdata_2,
     input [31:0] bdata_3,
     // output tile buffer
-    output tile_out_en,
-    output [7:0] tile_out_addr,
-    output [63:0] tile_out,
+    output valid_store,
+    output [7:0] addr_store,
+    output [63:0] din_store,
     // core done
     output core_done
     );
@@ -128,7 +128,7 @@ module Core(
     assign tile_in_en = SR_0[4];
     assign W_storage_en = SR_0[4];
     assign B_storage_en = SR_0[9];
-    assign tile_out_en = SR_1[2];
+    assign valid_store = SR_1[2];
     ////////// output signal end //////////
 
     ////////// AGU //////////
@@ -182,7 +182,7 @@ module Core(
         .AGU_O_initial_in(AGU_O_initial),
         .width_out_in(width_out),
         .ch_out_in(ch_out),
-        .oaddr(tile_out_addr),
+        .oaddr(addr_store),
         .done(AGU_O_done)
     );
     ////////// AGU end //////////
@@ -403,7 +403,7 @@ module Core(
     .rst(core_rst),
     .en(SR_1[0]),
     .acc_out({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
-    .core_out(tile_out)
+    .core_out(din_store)
     );
     ////////// Output buffer end //////////
     
