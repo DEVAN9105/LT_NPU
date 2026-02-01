@@ -14,7 +14,6 @@ module CIU_bridge#(
     input [7:0] AGU_O_initial, // initial address for AGU_C
     ////////// cycle //////////
     // stream buffer
-    input [63:0] dout_cycle,
     input [71:0] stream_a_in,
     output [71:0] stream_a_out,
     input [71:0] stream_b_in,
@@ -26,6 +25,7 @@ module CIU_bridge#(
     output reg [7:0] addr_cycle_b,
     output reg [63:0] din_cycle_a,
     output reg [63:0] din_cycle_b,
+    input [63:0] dout_cycle,
     ////////// load //////////
     input [75:0] bridge_in,
     output valid_in,

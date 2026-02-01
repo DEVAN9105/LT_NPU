@@ -20,7 +20,7 @@ module Tile_buffer_operator(
     input [63:0] din_cycle_b,
     output reg [63:0] dout_cycle,
     // tile out
-    input valid_out,
+    input en_out,
     input [7:0] addr_out,
     output [63:0] dout_out,
     // tile cal
@@ -537,7 +537,7 @@ module Tile_buffer_operator(
             end
             2: begin // out
                 ena_7 = 0;
-                enb_7 = valid_out;
+                enb_7 = en_out;
                 wea_7 = 0;
                 addra_7 = 8'd0;
                 dina_7 = 64'd0;
