@@ -18,8 +18,8 @@ module Core(
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
     // input tile buffer
-    output tile_in_en,
-    output [7:0] faddr,
+    output valid_cal,
+    output [7:0] addr_cal,
     input [63:0] tile_1,
     input [63:0] tile_2,
     input [63:0] tile_3,
@@ -125,7 +125,7 @@ module Core(
     ////////// Controller end //////////
 
     ////////// output signal //////////
-    assign tile_in_en = SR_0[4];
+    assign valid_cal = SR_0[4];
     assign W_storage_en = SR_0[4];
     assign B_storage_en = SR_0[9];
     assign valid_store = SR_1[2];
@@ -144,7 +144,7 @@ module Core(
         .ch_out_in(ch_out),
         .mode_in(mode),
         .stride_X_in(stride_X),
-        .faddr(faddr),
+        .faddr(addr_cal),
         .boundary(boundary)
     );
 

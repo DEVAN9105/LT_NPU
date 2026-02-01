@@ -20,9 +20,11 @@ module Tile_buffer_operator(
     input [63:0] din_cycle_b,
     output reg [63:0] dout_cycle,
     // tile out
+    input valid_out,
     input [7:0] addr_out,
     output [63:0] dout_out,
     // tile cal
+    input valid_cal,
     input [7:0] addr_cal,
     output [63:0] tile_1,
     output [63:0] tile_2,
@@ -45,6 +47,10 @@ module Tile_buffer_operator(
     end
     ////////// input buffer end ///////////
 
+    ////////// define function //////////
+    parameter none = 3'd0, cal = 3'd1, in = 3'd2, cycle = 3'd3, store = 3'd4;
+    ////////// define function end /////////
+
     ////////// tile 1 //////////
     reg ena_1, enb_1;
     reg wea_1, web_1;
@@ -54,9 +60,9 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[19:17])
-            1: begin
+            cal: begin
                 ena_1 = 0;
-                enb_1 = 1;
+                enb_1 = valid_cal;
                 wea_1 = 0;
                 web_1 = 0;
                 addra_1 = 8'd0;
@@ -64,7 +70,7 @@ module Tile_buffer_operator(
                 addrb_1 = addr_cal;
                 dinb_1 = 64'd0;
             end
-            2: begin
+            in: begin
                 ena_1 = 1;
                 enb_1 = 0;
                 wea_1 = valid_in;
@@ -74,7 +80,7 @@ module Tile_buffer_operator(
                 addrb_1 = 8'd0;
                 dinb_1 = 64'd0;
             end
-            3: begin
+            cycle: begin
                 ena_1 = 1;
                 enb_1 = 1;
                 wea_1 = valid_cycle_a;
@@ -84,7 +90,7 @@ module Tile_buffer_operator(
                 addrb_1 = addr_cycle_b;
                 dinb_1 = din_cycle_b;
             end
-            4: begin
+            store: begin
                 ena_1 = 0;
                 enb_1 = 1;
                 wea_1 = 0;
@@ -132,9 +138,9 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[16:14])
-            1: begin
+            cal: begin
                 ena_2 = 0;
-                enb_2 = 1;
+                enb_2 = valid_cal;
                 wea_2 = 0;
                 web_2 = 0;
                 addra_2 = 8'd0;
@@ -142,7 +148,7 @@ module Tile_buffer_operator(
                 addrb_2 = addr_cal;
                 dinb_2 = 64'd0;
             end
-            2: begin
+            in: begin
                 ena_2 = 1;
                 enb_2 = 0;
                 wea_2 = valid_in;
@@ -152,7 +158,7 @@ module Tile_buffer_operator(
                 addrb_2 = 8'd0;
                 dinb_2 = 64'd0;
             end
-            3: begin
+            cycle: begin
                 ena_2 = 1;
                 enb_2 = 1;
                 wea_2 = valid_cycle_a;
@@ -162,7 +168,7 @@ module Tile_buffer_operator(
                 addrb_2 = addr_cycle_b;
                 dinb_2 = din_cycle_b;
             end
-            4: begin
+            store: begin
                 ena_2 = 0;
                 enb_2 = 1;
                 wea_2 = 0;
@@ -210,9 +216,9 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[13:11])
-            1: begin
+            cal: begin
                 ena_3 = 0;
-                enb_3 = 1;
+                enb_3 = valid_cal;
                 wea_3 = 0;
                 web_3 = 0;
                 addra_3 = 8'd0;
@@ -220,7 +226,7 @@ module Tile_buffer_operator(
                 addrb_3 = addr_cal;
                 dinb_3 = 64'd0;
             end
-            2: begin
+            in: begin
                 ena_3 = 1;
                 enb_3 = 0;
                 wea_3 = valid_in;
@@ -230,7 +236,7 @@ module Tile_buffer_operator(
                 addrb_3 = 8'd0;
                 dinb_3 = 64'd0;
             end
-            3: begin
+            cycle: begin
                 ena_3 = 1;
                 enb_3 = 1;
                 wea_3 = valid_cycle_a;
@@ -240,7 +246,7 @@ module Tile_buffer_operator(
                 addrb_3 = addr_cycle_b;
                 dinb_3 = din_cycle_b;
             end
-            4: begin
+            store: begin
                 ena_3 = 0;
                 enb_3 = 1;
                 wea_3 = 0;
@@ -288,9 +294,9 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[10:8])
-            1: begin
+            cal: begin
                 ena_4 = 0;
-                enb_4 = 1;
+                enb_4 = valid_cal;
                 wea_4 = 0;
                 web_4 = 0;
                 addra_4 = 8'd0;
@@ -298,7 +304,7 @@ module Tile_buffer_operator(
                 addrb_4 = addr_cal;
                 dinb_4 = 64'd0;
             end
-            2: begin
+            in: begin
                 ena_4 = 1;
                 enb_4 = 0;
                 wea_4 = valid_in;
@@ -308,7 +314,7 @@ module Tile_buffer_operator(
                 addrb_4 = 8'd0;
                 dinb_4 = 64'd0;
             end
-            3: begin
+            cycle: begin
                 ena_4 = 1;
                 enb_4 = 1;
                 wea_4 = valid_cycle_a;
@@ -318,7 +324,7 @@ module Tile_buffer_operator(
                 addrb_4 = addr_cycle_b;
                 dinb_4 = din_cycle_b;
             end
-            4: begin
+            store: begin
                 ena_4 = 0;
                 enb_4 = 1;
                 wea_4 = 0;
@@ -366,9 +372,9 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[7:5])
-            1: begin
+            cal: begin
                 ena_5 = 0;
-                enb_5 = 1;
+                enb_5 = valid_cal;
                 wea_5 = 0;
                 web_5 = 0;
                 addra_5 = 8'd0;
@@ -376,7 +382,7 @@ module Tile_buffer_operator(
                 addrb_5 = addr_cal;
                 dinb_5 = 64'd0;
             end
-            2: begin
+            in: begin
                 ena_5 = 1;
                 enb_5 = 0;
                 wea_5 = valid_in;
@@ -386,7 +392,7 @@ module Tile_buffer_operator(
                 addrb_5 = 8'd0;
                 dinb_5 = 64'd0;
             end
-            3: begin
+            cycle: begin
                 ena_5 = 1;
                 enb_5 = 1;
                 wea_5 = valid_cycle_a;
@@ -396,7 +402,7 @@ module Tile_buffer_operator(
                 addrb_5 = addr_cycle_b;
                 dinb_5 = din_cycle_b;
             end
-            4: begin
+            store: begin
                 ena_5 = 0;
                 enb_5 = 1;
                 wea_5 = 0;
@@ -444,9 +450,9 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[4:2])
-            1: begin
+            cal: begin
                 ena_6 = 0;
-                enb_6 = 1;
+                enb_6 = valid_cal;
                 wea_6 = 0;
                 web_6 = 0;
                 addra_6 = 8'd0;
@@ -454,7 +460,7 @@ module Tile_buffer_operator(
                 addrb_6 = addr_cal;
                 dinb_6 = 64'd0;
             end
-            2: begin
+            in: begin
                 ena_6 = 1;
                 enb_6 = 0;
                 wea_6 = valid_in;
@@ -464,7 +470,7 @@ module Tile_buffer_operator(
                 addrb_6 = 8'd0;
                 dinb_6 = 64'd0;
             end
-            3: begin
+            cycle: begin
                 ena_6 = 1;
                 enb_6 = 1;
                 wea_6 = valid_cycle_a;
@@ -474,7 +480,7 @@ module Tile_buffer_operator(
                 addrb_6 = addr_cycle_b;
                 dinb_6 = din_cycle_b;
             end
-            4: begin
+            store: begin
                 ena_6 = 0;
                 enb_6 = 1;
                 wea_6 = 0;
@@ -531,7 +537,7 @@ module Tile_buffer_operator(
             end
             2: begin // out
                 ena_7 = 0;
-                enb_7 = 1;
+                enb_7 = valid_out;
                 wea_7 = 0;
                 addra_7 = 8'd0;
                 dina_7 = 64'd0;
