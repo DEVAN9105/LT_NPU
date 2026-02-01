@@ -44,7 +44,7 @@ module Node_wb_buffer(
     end
     ///////// addr buffer end//////////
 
-    ///////// GLB_in buffer //////////
+    ///////// GLB_wb buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
             glb_wb <= 0;
@@ -63,6 +63,6 @@ module Node_wb_buffer(
             end
         end
     end
-    ///////// GLB_in buffer end//////////
+    ///////// GLB_wb buffer end//////////
 
 endmodule

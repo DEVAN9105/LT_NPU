@@ -150,8 +150,8 @@ module CIU_bridge#(
         .bridge_wb(bridge_wb),
         // addr buffer
         .en_wb(en_wb),
-        .addr_out_in(addr_wb_in),
-        .addr_out(addr_wb)
+        .addr_wb_in(addr_wb_in),
+        .addr_wb(addr_wb)
     );
     ////////// Bridge write back buffer end //////////
 endmodule
