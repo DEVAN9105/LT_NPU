@@ -32,6 +32,8 @@ module CIU_node(
     output [7:0] addr_in,
     output [63:0] din_in,
     ////////// write back //////////
+    input en_a,
+    input en_b,
     input [7:0] addr_out_in,
     output reg [7:0] addr_out,
     input [63:0] node_in_a,
@@ -143,19 +145,20 @@ module CIU_node(
     ////////// Node input buffer end //////////
 
     ////////// Node output buffer //////////
+    wire en_in = write_back_en | en_a | en_b;
     Node_output_buffer node_output_buffer(
-    .CLK(CLK),
-    .rst(rst),
-    .en_in(write_back_en),
-    .node_sel(node_sel),
-    .node_in_a(node_in_a),
-    .node_in_b(node_in_b),
-    .dout_out(dout_out),
-    .GLB_in(glb_in),
-    // addr buffer
-    .en_out(en_out),
-    .addr_out_in(addr_out_in),
-    .addr_out(addr_out)
+        .CLK(CLK),
+        .rst(rst),
+        .en_in(en_in),
+        .node_sel(node_sel),
+        .node_in_a(node_in_a),
+        .node_in_b(node_in_b),
+        .dout_out(dout_out),
+        .GLB_in(glb_in),
+        // addr buffer
+        .en_out(en_out),
+        .addr_out_in(addr_out_in),
+        .addr_out(addr_out)
     );
     ////////// Node output buffer end //////////
 endmodule
