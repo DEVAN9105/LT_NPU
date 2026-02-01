@@ -5,7 +5,7 @@ module Bridge_output_buffer(
     input rst,
     input en_in,
     input [63:0] dout_out,
-    output reg [63:0] GLB_in,
+    output reg [63:0] bridge_out,
     // addr buffer
     output en_out,
     input [7:0] addr_out_in,
@@ -41,20 +41,20 @@ module Bridge_output_buffer(
     end
     ///////// addr buffer end//////////
 
-    ///////// GLB_in buffer //////////
+    ///////// bridge_out buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
-            GLB_in <= 0;
+            bridge_out <= 0;
         end
         else begin
             if (en_SR[2]) begin
-                GLB_in <= dout_out;
+                bridge_out <= dout_out;
             end
             else begin
-                GLB_in <= GLB_in;
+                bridge_out <= bridge_out;
             end
         end
     end
-    ///////// GLB_in buffer end//////////
+    ///////// bridge_out buffer end//////////
 
 endmodule

@@ -134,9 +134,9 @@ module CIU_node#(
     ////////// CI buffer end //////////
 
     ////////// Node input buffer //////////
-    Node_input_buffer node_input_buffer #(
+    Node_input_buffer #(
         .CIU_ID(CIU_ID)
-    )(
+    ) node_input_buffer(
         .CLK(CLK),
         .rst(rst),
         .en(load_en),
