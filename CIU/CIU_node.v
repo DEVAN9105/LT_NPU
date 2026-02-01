@@ -29,18 +29,18 @@ module CIU_node#(
     output reg [63:0] din_cycle_b,
     ////////// load //////////
     input [75:0] glb_load,
-    output [75:0] node_out, // we + destination + addr + data
-    output valid_in,
-    output [7:0] addr_in,
-    output [63:0] din_in,
+    output [75:0] node_load, // we + destination + addr + data
+    output valid_load,
+    output [7:0] addr_load,
+    output [63:0] din_load,
     ////////// write back //////////
     input en_a,
     input en_b,
-    input [7:0] addr_out_in,
-    output reg [7:0] addr_out,
-    input [63:0] node_in_a,
-    input [63:0] node_in_b,
-    input [63:0] dout_out,
+    input [7:0] addr_wb_in,
+    output [7:0] addr_wb,
+    input [63:0] node_wb_a,
+    input [63:0] node_wb_b,
+    input [63:0] dout_wb,
     // GLB write back
     output [63:0] glb_wb,
     output en_wb,
@@ -134,20 +134,20 @@ module CIU_node#(
     );
     ////////// CI buffer end //////////
 
-    ////////// Node input buffer //////////
-    Node_input_buffer #(
+    ////////// Node load buffer //////////
+    Node_load_buffer #(
         .CIU_ID(CIU_ID)
-    ) node_input_buffer(
+    ) node_load_buffer(
         .CLK(CLK),
         .rst(rst),
         .en(load_en),
-        .GLB_out(glb_load),
-        .node_out(node_out),
-        .valid_in(valid_in),
-        .addr_in(addr_in),
-        .din_in(din_in)
+        .glb_load(glb_load),
+        .node_load(node_load),
+        .valid_load(valid_load),
+        .addr_load(addr_load),
+        .din_load(din_load)
     );
-    ////////// Node input buffer end //////////
+    ////////// Node load buffer end //////////
 
     ////////// Node write back buffer //////////
     wire en_wb_in = write_back_en | en_a | en_b;
