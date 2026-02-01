@@ -17,7 +17,7 @@ module Core(
     input [6:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
-    // input tile buffer
+    // cal tile buffer
     output valid_cal,
     output [7:0] addr_cal,
     input [63:0] tile_1,
@@ -40,7 +40,7 @@ module Core(
     input [31:0] bdata_1,
     input [31:0] bdata_2,
     input [31:0] bdata_3,
-    // output tile buffer
+    // store tile buffer
     output valid_store,
     output [7:0] addr_store,
     output [63:0] din_store,
