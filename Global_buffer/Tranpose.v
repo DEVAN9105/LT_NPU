@@ -7,6 +7,7 @@ module Transpose(
     input [63:0] data,
     output reg [63:0] data_transpose
     );
+    
     reg [63:0] buffer_0;
     reg [79:0] buffer_1;
     reg [95:0] buffer_2;

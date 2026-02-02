@@ -8,7 +8,6 @@ module CIU_node#(
     input cycle_en,
     input load_en,
     input write_back_en,
-    input [1:0] node_sel,
     // AGU parameters
     input [7:0] width_out,
     input [7:0] ch_out,
@@ -151,6 +150,21 @@ module CIU_node#(
 
     ////////// Node write back buffer //////////
     wire en_wb_in = write_back_en | en_a | en_b;
+    reg [1:0] node_sel; // 00: none, 01: dout_out, 10: node_wb_a, 11: node_wb_b
+    wire [2:0] wb_en_bus = {write_back_en, en_a, en_b};
+    always@(posedge CLK) begin
+        if(rst) begin
+            node_sel <= 2'b00;
+        end
+        else begin
+            case(wb_en_bus)
+                3'b100: node_sel <= 2'b01;
+                3'b010: node_sel <= 2'b10;
+                3'b001: node_sel <= 2'b11;
+                default: node_sel <= 2'b00;
+            endcase
+        end
+    end
     Node_wb_buffer node_wb_buffer(
         .CLK(CLK),
         .rst(rst),
