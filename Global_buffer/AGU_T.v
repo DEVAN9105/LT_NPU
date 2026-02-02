@@ -202,17 +202,12 @@ module AGU_T(
     ////////// stage 3 end //////////
 
     ////////// done signal //////////
-    always@(posedge CLK) begin
-        if(rst) begin
-            done <= 0;
+    always@(*) begin
+        if(s3_done && s3_en) begin
+            done = 1;
         end
         else begin
-            if(s3_done && s3_en) begin
-                done <= 1;
-            end
-            else begin
-                done <= 0;
-            end
+            done = 0;
         end
     end
     ////////// done signal end //////////
