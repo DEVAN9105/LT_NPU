@@ -13,16 +13,16 @@ module Bridge_wb_buffer(
     );
 
     ////////// valid SR //////////
-    reg [2:0] en_SR;
+    reg [3:0] en_SR;
     always @(posedge CLK) begin
         if (rst) begin
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[1:0], en_wb_in};
+            en_SR <= {en_SR[2:0], en_wb_in};
         end
     end
-    assign en_wb = en_SR[2];
+    assign en_wb = en_SR[3];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////
@@ -47,7 +47,7 @@ module Bridge_wb_buffer(
             bridge_wb <= 0;
         end
         else begin
-            if (en_SR[2]) begin
+            if (en_SR[3]) begin
                 bridge_wb <= dout_wb;
             end
             else begin
