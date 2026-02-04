@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+// delay = 1
+
 module CIU_load_buffer(
     input CLK,
     input rst,
