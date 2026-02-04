@@ -3,14 +3,15 @@
 module CIU_wb_buffer(
     input CLK,
     input rst,
+    // tile buffer
     input en_wb_in,
-    input [63:0] dout_wb,
-    output data_valid,
-    output reg [63:0] CIU_wb,
-    // addr buffer
-    output en_wb,
     input [7:0] addr_wb_in,
-    output reg [7:0] addr_wb
+    output reg [7:0] addr_wb,
+    output en_wb,
+    input [63:0] dout_wb,
+    // output data
+    output data_valid,
+    output reg [63:0] CIU_wb
     );
 
     ////////// valid SR //////////
