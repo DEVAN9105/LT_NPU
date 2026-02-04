@@ -1,14 +1,12 @@
 `timescale 1ns / 1ps
 
-module CIU_bridge#(
-    parameter [2:0] CIU_ID = 3'd1
-)(
+module CIU(
     input CLK,
     input rst,
     input cycle_en,
     input load_en,
     input write_back_en,
-    // AGU parameters
+    ////////// AGU parameters //////////
     input [7:0] width_out,
     input [7:0] ch_out,
     input [7:0] AGU_O_initial, // initial address for AGU_C
@@ -27,7 +25,7 @@ module CIU_bridge#(
     output reg [63:0] din_cycle_b,
     input [63:0] dout_cycle,
     ////////// load //////////
-    input [75:0] bridge_load,
+    input [71:0] CIU_load,
     output valid_load,
     output [7:0] addr_load,
     output [63:0] din_load,
@@ -35,7 +33,7 @@ module CIU_bridge#(
     input [7:0] addr_wb_in,
     output [7:0] addr_wb,
     input [63:0] dout_wb,
-    output [63:0] bridge_wb,
+    output [63:0] CIU_wb,
     output en_wb,
     ////////// done //////////
     output cycle_done
@@ -62,7 +60,6 @@ module CIU_bridge#(
         din_cycle_b = stream_b_out[63:0];
     end
     ////////// signals for tile buffer operator end //////////
-
 
     ////////// AGU //////////
     wire [7:0] caddr;
@@ -127,31 +124,29 @@ module CIU_bridge#(
     );
     ////////// CI buffer end //////////
 
-    ////////// Bridge load buffer //////////
-    Bridge_load_buffer #(
-        .CIU_ID(CIU_ID)
-    ) bridge_load_buffer (
+    ////////// CIU load buffer //////////
+    CIU_load_buffer CIU_load_buffer(
         .CLK(CLK),
         .rst(rst),
         .en(load_en),
-        .bridge_load(bridge_load),
+        .CIU_load(CIU_load),
         .valid_load(valid_load),
         .addr_load(addr_load),
         .din_load(din_load)
     );
-    ////////// Bridge load buffer end //////////
+    ////////// CIU load buffer end //////////
 
-    ////////// Bridge write back buffer //////////
-    Bridge_wb_buffer bridge_wb_buffer(
+    ////////// CIU write back buffer //////////
+    CIU_wb_buffer CIU_wb_buffer(
         .CLK(CLK),
         .rst(rst),
         .en_wb_in(write_back_en),
         .dout_wb(dout_wb),
-        .bridge_wb(bridge_wb),
+        .CIU_wb(CIU_wb),
         // addr buffer
         .en_wb(en_wb),
         .addr_wb_in(addr_wb_in),
         .addr_wb(addr_wb)
     );
-    ////////// Bridge write back buffer end //////////
+    ////////// CIU write back buffer end //////////
 endmodule

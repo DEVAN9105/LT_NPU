@@ -43,7 +43,7 @@ module CIU_wb_buffer(
     end
     ///////// addr buffer end//////////
 
-    ///////// bridge_wb buffer //////////
+    ///////// wb buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
             CIU_wb <= 0;
@@ -57,6 +57,6 @@ module CIU_wb_buffer(
             end
         end
     end
-    ///////// bridge_wb buffer end//////////
+    ///////// wb buffer end//////////
 
 endmodule
