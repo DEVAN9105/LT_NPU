@@ -36,9 +36,6 @@ module GLB_input_controller(
         //avoid latch
         next_state = state;
         done = 0;
-        write_back_en = 0;
-        glb_a_en = 0;
-        glb_a_we = 0;
         en_SR = 0;
         
         case(state)

@@ -47,7 +47,7 @@ module Bridge_wb_buffer(
             bridge_wb <= 0;
         end
         else begin
-            if (en_SR[3]) begin
+            if (en_SR[2]) begin
                 bridge_wb <= dout_wb;
             end
             else begin
