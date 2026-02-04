@@ -1,7 +1,5 @@
 `timescale 1ns / 1ps
 
-// delay = 4 cycle / 2 cycle
-
 module GLB_output_controller(
     input CLK,
     input en,
