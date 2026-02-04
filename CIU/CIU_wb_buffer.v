@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+// delay = 4
+
 module CIU_wb_buffer(
     input CLK,
     input rst,
