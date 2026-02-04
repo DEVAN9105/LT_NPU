@@ -78,25 +78,20 @@ module GLB_input(
     ////////// AGU_T end //////////
 
     ////////// write back enable //////////
-    always@(posedge CLK) begin
-        if(glb_in_rst) begin
-            wb_en <= 7'b0000000;
+    always@(*) begin
+        if(glb_in_mode == 0) begin
+            wb_en = 7'b0000001; // pre_processing tile
         end
         else begin
-            if(glb_in_mode==0) begin
-                wb_en <= 7'b0000001; // pre_processing tile
-            end
-            else begin
-                case(core_pointer)
-                    0: wb_en <= 7'b0000010;
-                    1: wb_en <= 7'b0000100;
-                    2: wb_en <= 7'b0001000;
-                    3: wb_en <= 7'b0010000;
-                    4: wb_en <= 7'b0100000;
-                    5: wb_en <= 7'b1000000;
-                    default: wb_en <= 7'b0000000;
-                endcase
-            end
+            case(core_pointer)
+                0: wb_en = 7'b0000010;
+                1: wb_en = 7'b0000100;
+                2: wb_en = 7'b0001000;
+                3: wb_en = 7'b0010000;
+                4: wb_en = 7'b0100000;
+                5: wb_en = 7'b1000000;
+                default: wb_en = 7'b0000000;
+            endcase
         end
     end
     ////////// write back enable end //////////

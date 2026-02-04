@@ -1,11 +1,12 @@
 `timescale 1ns / 1ps
 
-module Bridge_wb_buffer(
+module CIU_wb_buffer(
     input CLK,
     input rst,
     input en_wb_in,
     input [63:0] dout_wb,
-    output reg [63:0] bridge_wb,
+    output data_valid,
+    output reg [63:0] CIU_wb,
     // addr buffer
     output en_wb,
     input [7:0] addr_wb_in,
@@ -13,16 +14,17 @@ module Bridge_wb_buffer(
     );
 
     ////////// valid SR //////////
-    reg [3:0] en_SR;
+    reg [2:0] en_SR;
     always @(posedge CLK) begin
         if (rst) begin
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[2:0], en_wb_in};
+            en_SR <= {en_SR[1:0], en_wb_in};
         end
     end
-    assign en_wb = en_SR[3];
+    assign en_wb = en_SR[0];
+    assign data_valid = en_SR[2];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////
@@ -44,14 +46,14 @@ module Bridge_wb_buffer(
     ///////// bridge_wb buffer //////////
     always @(posedge CLK) begin
         if (rst) begin
-            bridge_wb <= 0;
+            CIU_wb <= 0;
         end
         else begin
             if (en_SR[2]) begin
-                bridge_wb <= dout_wb;
+                CIU_wb <= dout_wb;
             end
             else begin
-                bridge_wb <= bridge_wb;
+                CIU_wb <= CIU_wb;
             end
         end
     end
