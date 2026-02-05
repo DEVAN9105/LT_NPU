@@ -6,7 +6,8 @@ module GLB_output_controller(
     input rst,
     input AGU_G_done,
     output reg AGU_G_en,
-    output reg [10:0] SR,
+    output reg [5:0] SR_0,
+    output reg [11:0] SR_1,
     output reg done,
     output reg glb_out_rst
     );
@@ -56,7 +57,7 @@ module GLB_output_controller(
                 end
             end
             ending: begin
-                if(SR[10]) begin
+                if(SR_1[11]) begin
                     next_state = ending;
                 end
                 else begin
@@ -83,12 +84,23 @@ module GLB_output_controller(
     ////////// FSM end //////////
 
     ////////// SR //////////
+    // SR_0
     always@(posedge CLK) begin
         if(rst) begin
-            SR <= 0;
+            SR_0 <= 0;
         end
         else begin
-            SR <= {SR[9:0], en_SR};
+            SR_0 <= {SR_0[4:0], en_SR};
+        end
+    end
+
+    // SR_1
+    always@(posedge CLK) begin
+        if(rst) begin
+            SR_1 <= 0;
+        end
+        else begin
+            SR_1 <= {SR_1[10:0], (SR_0[5]&&(state==processing)) };
         end
     end
     ////////// SR end //////////

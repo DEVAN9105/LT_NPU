@@ -29,7 +29,8 @@ module GLB_input(
     );
     
     ////////// GLB control //////////
-    wire [10:0] SR;
+    wire [5:0] SR_0;
+    wire [10:0] SR_1;
     wire glb_out_rst;
     wire AGU_G_en;
     wire AGU_G_done;
@@ -39,15 +40,16 @@ module GLB_input(
         .rst(rst),
         .AGU_G_done(AGU_G_done),
         .AGU_G_en(AGU_G_en),
-        .SR(SR),
+        .SR_0(SR_0),
+        .SR_1(SR_1),
         .done(done),
         .glb_out_rst(glb_out_rst)
     );
     ////////// GLB control end //////////
 
     ////////// signal assign //////////
-    assign glb_b_en = SR[0];
-    assign load_en = SR[7];
+    assign glb_b_en = SR_1[0];
+    assign load_en = SR_1[8];
     ////////// signal assign end //////////
 
     ////////// AGU_G //////////
@@ -70,7 +72,7 @@ module GLB_input(
     wire [2:0] core_pointer;
     AGU_T agu_t(
         .CLK(CLK),
-        .en(SR[3]),
+        .en(SR_1[4]),
         .rst(glb_out_rst),
         .AGU_T_initial_in(AGU_T_initial_in),
         .tile_width_in(tile_width_in),
@@ -85,7 +87,7 @@ module GLB_input(
     Transpose transpose(
         .CLK(CLK),
         .rst(glb_out_rst),
-        .en(SR[3]),
+        .en(SR_1[3]),
         .data(data_buffer_1),
         .data_transpose(din_glb)
     );
