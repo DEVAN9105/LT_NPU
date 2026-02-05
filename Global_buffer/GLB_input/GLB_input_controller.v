@@ -1,20 +1,21 @@
 `timescale 1ns / 1ps
 
-// delay = 4 cycle / 2 cycle
-
 module GLB_input_controller(
     input CLK,
     input en,
     input rst,
     input data_valid,
+    // AGU_T
     input AGU_T_done,
-    output reg [2:0] SR_0,
-    output reg [6:0] SR_1,
+    output reg AGU_T_en,
+    output reg AGU_T_rst,
+    output reg [8:0] SR_1,
     output reg done,
     output reg glb_in_rst
     );
     
     ////////// state define //////////
+    reg [1:0] state, next_state;
     parameter idle = 0, processing = 1, ending = 2,finish = 3;
     ////////// state define end //////////
 
@@ -30,16 +31,16 @@ module GLB_input_controller(
     ////////// reset end //////////
 
     ////////// FSM //////////
-    reg en_SR;
-    reg [1:0] next_state;
     always@(*) begin
         //avoid latch
         next_state = state;
         done = 0;
-        en_SR = 0;
-        
+        AGU_T_en = 0;
+        AGU_T_rst = 0;
+
         case(state)
             idle: begin
+                AGU_T_rst = 1;
                 if(en) begin
                     next_state = processing;
                 end
@@ -48,16 +49,17 @@ module GLB_input_controller(
                 end
             end
             processing: begin
-                en_SR = 1;
+                AGU_T_en = 1;
                 if(AGU_T_done) begin
-                    next_state = finish;
+                    next_state = ending;
                 end
                 else begin
                     next_state = processing;
                 end
             end
             ending: begin
-                if(SR_1[6]) begin
+                AGU_T_rst = 1;
+                if(SR_1 != 0) begin
                     next_state = ending;
                 end
                 else begin
@@ -66,7 +68,12 @@ module GLB_input_controller(
             end
             finish: begin
                 done = 1;
-                next_state = finish;
+                if(en) begin
+                    next_state = finish;
+                end
+                else begin
+                    next_state = idle;
+                end
             end
             default: begin
                 next_state = idle;
@@ -84,33 +91,13 @@ module GLB_input_controller(
     ////////// FSM end //////////
 
     ////////// SR //////////
-    // SR_0
-    always@(posedge CLK) begin
-        if(rst) begin
-            SR_0 <= 0;
-        end
-        else begin
-            if(en_SR) begin
-                SR_0 <= {SR_0[1:0], 1'b1};
-            end
-            else begin
-                SR_0 <= SR_0;
-            end
-        end
-    end
-
     // SR_1
     always@(posedge CLK) begin
         if(rst) begin
             SR_1 <= 0;
         end
         else begin
-            if(en_SR) begin
-                SR_1 <= {SR_1[5:0], data_valid};
-            end
-            else begin
-                SR_1 <= SR_1;
-            end
+            SR_1 <= {SR_1[7:0], data_valid};
         end
     end
     ////////// SR end //////////

@@ -27,7 +27,6 @@ module GLB_input(
     input en_wb_c5,
     input en_wb_pp,
     // glb control
-    output write_back_en,
     output glb_a_en,
     output glb_a_we,
     output [63:0] din_glb,
@@ -36,7 +35,8 @@ module GLB_input(
     );
     
     ////////// GLB control //////////
-    wire [2:0] SR_0;
+    wire AGU_T_en;
+    wire AGU_T_rst;
     wire [8:0] SR_1;
     wire glb_in_rst;
     wire AGU_T_done;
@@ -47,7 +47,8 @@ module GLB_input(
         .rst(rst),
         .data_valid(data_valid),
         .AGU_T_done(AGU_T_done),
-        .SR_0(SR_0),
+        .AGU_T_en(AGU_T_en),
+        .AGU_T_rst(AGU_T_rst),
         .SR_1(SR_1),
         .done(done),
         .glb_in_rst(glb_in_rst)
@@ -55,13 +56,13 @@ module GLB_input(
     ////////// GLB control end //////////
 
     ////////// signal assign //////////
-    assign write_back_en = SR_0[2];
     assign glb_a_en = SR_1[5];
     assign glb_a_we = SR_1[5];
     ////////// signal assign end //////////
 
     ////////// AGU_T //////////
     reg [2:0] core;
+    wire write_back_en;
     always@(posedge CLK) begin
         if(glb_in_mode == 0) begin
             core <= 3'd0; // pre_processing tile
@@ -72,16 +73,17 @@ module GLB_input(
     end
     wire [2:0] core_pointer;
     AGU_T agu_t(
-    .CLK(CLK),
-    .en(SR_0[0]),
-    .rst(glb_in_rst),
-    .AGU_T_initial_in(AGU_T_initial_in),
-    .tile_width_in(tile_width_in),
-    .tile_ch_in(tile_ch_in),
-    .core(core),
-    .core_pointer(core_pointer),
-    .taddr(taddr),
-    .done(AGU_T_done)
+        .CLK(CLK),
+        .en(AGU_T_en),
+        .rst(AGU_T_rst),
+        .AGU_T_initial_in(AGU_T_initial_in),
+        .tile_width_in(tile_width_in),
+        .tile_ch_in(tile_ch_in),
+        .core(core),
+        .core_pointer(core_pointer),
+        .taddr(taddr),
+        .en_next(write_back_en),
+        .done(AGU_T_done)
     );
     ////////// AGU_T end //////////
 
@@ -91,32 +93,37 @@ module GLB_input(
             wb_en = 7'b0000001; // pre_processing tile
         end
         else begin
-            case(core_pointer)
-                0: wb_en = 7'b0000010;
-                1: wb_en = 7'b0000100;
-                2: wb_en = 7'b0001000;
-                3: wb_en = 7'b0010000;
-                4: wb_en = 7'b0100000;
-                5: wb_en = 7'b1000000;
-                default: wb_en = 7'b0000000;
-            endcase
+            if(write_back_en) begin
+                case(core_pointer)
+                    0: wb_en = 7'b0000010;
+                    1: wb_en = 7'b0000100;
+                    2: wb_en = 7'b0001000;
+                    3: wb_en = 7'b0010000;
+                    4: wb_en = 7'b0100000;
+                    5: wb_en = 7'b1000000;
+                    default: wb_en = 7'b0000000;
+                endcase
+            end
+            else begin
+                wb_en = 7'b0000000;
+            end
         end
     end
     ////////// write back enable end //////////
 
     ////////// data buffer //////////
     reg [1:0] glb_in_sel;
-    wire [2:0]input_en_bus = {en_wb_pp, en_wb_c2, en_wb_c5};
-    always@(posedge CLK) begin
+    wire [2:0] input_en_bus = {en_wb_pp, en_wb_c2, en_wb_c5};
+    always@(*) begin
         if(glb_in_rst) begin
-            glb_in_sel <= 2'd0;
+            glb_in_sel = 2'd0;
         end
         else begin
             case(input_en_bus)
-                3'b100: glb_in_sel <= 2'd0; // pre_processing
-                3'b010: glb_in_sel <= 2'd1; // core 2
-                3'b001: glb_in_sel <= 2'd2; // core 5
-                default: glb_in_sel <= glb_in_sel;
+                3'b100: glb_in_sel = 2'd0; // pre_processing
+                3'b010: glb_in_sel = 2'd1; // core 2
+                3'b001: glb_in_sel = 2'd2; // core 5
+                default: glb_in_sel = 2'd0;
             endcase
         end
     end
