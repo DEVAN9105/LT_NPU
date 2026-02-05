@@ -5,11 +5,11 @@
 module CIU_wb_buffer(
     input CLK,
     input rst,
-    // tile buffer
     input en_wb_in,
     input [7:0] addr_wb_in,
-    output reg [7:0] addr_wb,
+    // tile buffer
     output en_wb,
+    output reg [7:0] addr_wb,
     input [63:0] dout_wb,
     // output data
     output data_valid,
@@ -17,17 +17,17 @@ module CIU_wb_buffer(
     );
 
     ////////// valid SR //////////
-    reg [2:0] en_SR;
+    reg [3:0] en_SR;
     always @(posedge CLK) begin
         if (rst) begin
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[1:0], en_wb_in};
+            en_SR <= {en_SR[2:0], en_wb_in};
         end
     end
     assign en_wb = en_SR[0];
-    assign data_valid = en_SR[2];
+    assign data_valid = en_SR[3];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////
