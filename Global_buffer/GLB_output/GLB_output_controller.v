@@ -5,7 +5,6 @@ module GLB_output_controller(
     input en,
     input rst,
     input AGU_G_done,
-    output reg AGU_G_en,
     output reg [5:0] SR_0,
     output reg [11:0] SR_1,
     output reg done,
@@ -13,6 +12,7 @@ module GLB_output_controller(
     );
     
     ////////// state define //////////
+    reg [1:0] state, next_state;
     parameter idle = 0, processing = 1, ending = 2,finish = 3;
     ////////// state define end //////////
 
@@ -29,12 +29,11 @@ module GLB_output_controller(
 
     ////////// FSM //////////
     reg en_SR;
-    reg [1:0] next_state;
+    
     always@(*) begin
         //avoid latch
         next_state = state;
         done = 0;
-        AGU_G_en = 0;
         en_SR = 0;
         
         case(state)
@@ -48,16 +47,15 @@ module GLB_output_controller(
             end
             processing: begin
                 en_SR = 1;
-                AGU_G_en = 1;
                 if(AGU_G_done) begin
-                    next_state = finish;
+                    next_state = ending;
                 end
                 else begin
                     next_state = processing;
                 end
             end
             ending: begin
-                if(SR_1[11]) begin
+                if(SR_1 != 0) begin
                     next_state = ending;
                 end
                 else begin
@@ -66,7 +64,12 @@ module GLB_output_controller(
             end
             finish: begin
                 done = 1;
-                next_state = finish;
+                if(en) begin
+                    next_state = finish;
+                end
+                else begin
+                    next_state = idle;
+                end
             end
             default: begin
                 next_state = idle;
