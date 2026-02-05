@@ -42,6 +42,7 @@ module GLB_output_controller(
         
         case(state)
             idle: begin
+                AGU_G_rst = 1;
                 if(en) begin
                     next_state = processing;
                 end

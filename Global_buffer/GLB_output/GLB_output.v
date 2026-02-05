@@ -30,16 +30,20 @@ module GLB_input(
     );
     
     ////////// GLB control //////////
-    wire [5:0] SR_0;
-    wire [10:0] SR_1;
+    wire [11:0] SR_1;
     wire glb_out_rst;
     wire AGU_G_done;
+    wire AGU_G_en;
+    wire AGU_G_rst;
+    wire AGU_G_en_next;
     GLB_output_controller glb_output_controller(
         .CLK(CLK),
         .en(en),
         .rst(rst),
         .AGU_G_done(AGU_G_done),
-        .SR_0(SR_0),
+        .AGU_G_en(AGU_G_en),
+        .AGU_G_rst(AGU_G_rst),
+        .AGU_G_en_next(AGU_G_en_next),
         .SR_1(SR_1),
         .done(done),
         .glb_out_rst(glb_out_rst)
@@ -53,8 +57,8 @@ module GLB_input(
     ////////// AGU_G //////////
     AGU_G agu_g(
         .CLK(CLK),
-        .en(SR_0[0]),
-        .rst(glb_out_rst),
+        .en(AGU_G_en),
+        .rst(AGU_G_rst),
         .AGU_G_initial_in(AGU_G_initial_in),
         .glb_width_in(glb_width_in),
         .glb_ch_in(glb_ch_in),
@@ -62,6 +66,7 @@ module GLB_input(
         .ch_sum(ch_sum),
         .Y(Y),
         .gaddr(gaddr),
+        .en_next(AGU_G_en_next),
         .done(AGU_G_done)
     );
     ////////// AGU_G end //////////
