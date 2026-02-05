@@ -16,6 +16,7 @@ module AGU_G(
     input [11:0] Y,
     // output
     output reg [11:0] gaddr,
+    output en_next,
     output done
     );
     
@@ -38,14 +39,15 @@ module AGU_G(
     ////////// input buffer end //////////
 
     ////////// en SR //////////
-    reg [4:0] en_SR;
+    reg [5:0] en_SR;
+    assign en_next = en_SR[5];
     assign ch_to_Y_en = en_SR[2];
     always@(posedge CLK) begin
         if(rst) begin
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[3:0], en};
+            en_SR <= {en_SR[4:0], en};
         end
     end
     ////////// en SR end //////////

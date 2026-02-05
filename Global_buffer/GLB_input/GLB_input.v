@@ -37,7 +37,7 @@ module GLB_input(
     
     ////////// GLB control //////////
     wire [2:0] SR_0;
-    wire [6:0] SR_1;
+    wire [8:0] SR_1;
     wire glb_in_rst;
     wire AGU_T_done;
     wire data_valid = (en_wb_c2 | en_wb_c5 | en_wb_pp);
@@ -56,17 +56,25 @@ module GLB_input(
 
     ////////// signal assign //////////
     assign write_back_en = SR_0[2];
-    assign glb_a_en = SR_1[6];
-    assign glb_a_we = SR_1[6];
+    assign glb_a_en = SR_1[5];
+    assign glb_a_we = SR_1[5];
     ////////// signal assign end //////////
 
     ////////// AGU_T //////////
     reg [2:0] core;
+    always@(posedge CLK) begin
+        if(glb_in_mode == 0) begin
+            core <= 3'd0; // pre_processing tile
+        end
+        else begin
+            core <= 3'd5;
+        end
+    end
     wire [2:0] core_pointer;
     AGU_T agu_t(
     .CLK(CLK),
     .en(SR_0[0]),
-    .rst(rst),
+    .rst(glb_in_rst),
     .AGU_T_initial_in(AGU_T_initial_in),
     .tile_width_in(tile_width_in),
     .tile_ch_in(tile_ch_in),
@@ -119,7 +127,7 @@ module GLB_input(
             data_buffer_0 <= 64'd0;
         end
         else begin
-            if(SR_1[0]) begin
+            if(data_valid) begin
                 case(glb_in_sel)
                     2'd0: data_buffer_0 <= PP_wb;
                     2'd1: data_buffer_0 <= CIU_node_wb_2;
@@ -138,7 +146,7 @@ module GLB_input(
             data_buffer_1 <= 64'd0;
         end
         else begin
-            if(SR_1[1]) begin
+            if(SR_1[0]) begin
                 data_buffer_1 <= data_buffer_0;
             end
             else begin
@@ -151,8 +159,8 @@ module GLB_input(
     ////////// AGU_G //////////
     AGU_G agu_g(
         .CLK(CLK),
-        .en(SR_1[0]),
-        .rst(rst),
+        .en(data_valid),
+        .rst(glb_in_rst),
         .AGU_G_initial_in(AGU_G_initial_in),
         .glb_width_in(glb_width_in),
         .glb_ch_in(glb_ch_in),
@@ -166,8 +174,8 @@ module GLB_input(
     ////////// Input Transpose //////////
     Transpose transpose(
         .CLK(CLK),
-        .rst(rst),
-        .en(SR_1[2]),
+        .rst(glb_in_rst),
+        .en(SR_1[1]),
         .data(data_buffer_1),
         .data_transpose(din_glb)
     );

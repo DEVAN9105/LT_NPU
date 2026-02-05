@@ -10,8 +10,10 @@ module AGU_T(
     input [6:0] tile_width_in,
     input [7:0] tile_ch_in,
     input [2:0] core,
+    // output
     output reg [2:0] core_pointer,
     output reg [7:0] taddr,
+    output en_next,
     output reg done
     );
     
@@ -29,13 +31,14 @@ module AGU_T(
     ////////// input buffer end //////////
 
     ////////// en SR //////////
-    reg [1:0] en_sr;
+    reg [2:0] en_sr;
+    assign en_next = en_sr[2];
     always@(posedge CLK) begin
         if(rst) begin
             en_sr <= 0;
         end
         else begin
-            en_sr <= {en_sr[0], en};
+            en_sr <= {en_sr[1:0], en};
         end
     end
     ////////// en SR end //////////
