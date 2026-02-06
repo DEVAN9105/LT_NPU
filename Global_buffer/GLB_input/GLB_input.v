@@ -20,11 +20,11 @@ module GLB_input(
     // input tile
     output reg [6:0] wb_en, // 0: pre_processing tile, 1~6: core
     output [7:0] taddr,
-    input [63:0] CIU_node_wb_2,
-    input [63:0] CIU_node_wb_5,
+    input [63:0] CIU_wb_0,
+    input [63:0] CIU_wb_1,
     input [63:0] PP_wb,
-    input en_wb_c2,
-    input en_wb_c5,
+    input en_wb_0,
+    input en_wb_1,
     input en_wb_pp,
     // glb control
     output glb_a_en,
@@ -40,7 +40,7 @@ module GLB_input(
     wire [8:0] SR_1;
     wire glb_in_rst;
     wire AGU_T_done;
-    wire data_valid = (en_wb_c2 | en_wb_c5 | en_wb_pp);
+    wire data_valid = (en_wb_0 | en_wb_1 | en_wb_pp);
     GLB_input_controller glb_input_control(
         .CLK(CLK),
         .en(en),
@@ -113,7 +113,7 @@ module GLB_input(
 
     ////////// data buffer //////////
     reg [1:0] glb_in_sel;
-    wire [2:0] input_en_bus = {en_wb_pp, en_wb_c2, en_wb_c5};
+    wire [2:0] input_en_bus = {en_wb_pp, en_wb_0, en_wb_1};
     always@(*) begin
         if(glb_in_rst) begin
             glb_in_sel = 2'd0;
@@ -137,8 +137,8 @@ module GLB_input(
             if(data_valid) begin
                 case(glb_in_sel)
                     2'd0: data_buffer_0 <= PP_wb;
-                    2'd1: data_buffer_0 <= CIU_node_wb_2;
-                    2'd2: data_buffer_0 <= CIU_node_wb_5;
+                    2'd1: data_buffer_0 <= CIU_wb_0;
+                    2'd2: data_buffer_0 <= CIU_wb_1;
                     default: data_buffer_0 <= 64'd0;
                 endcase
             end

@@ -6,6 +6,7 @@ module W_storage (
     input wire rst,             // Reset (只重置輸出 Register，不清除內部資料)
     
     // Port A: 寫入端 (給 DMA 用)
+    input wire en_a,            // Write Enable
     input wire we_a,            // Write Enable
     input wire [11:0] addr_a,   // Write Address (Depth 4096 -> 12 bits)
     input wire [63:0] din_a,    // Data Input
@@ -44,7 +45,7 @@ module W_storage (
         .rstb(rst),          // URAM 的 Reset 主要是清空 Output Register
 
         // Port A (Write)
-        .ena(1'b1),          // Port A Enable 恆開，用 wea 控制寫入即可
+        .ena(en_a),          // Port A Enable 恆開，用 wea 控制寫入即可
         .wea(we_a),          // Write Enable
         .addra(addr_a),
         .dina(din_a),
