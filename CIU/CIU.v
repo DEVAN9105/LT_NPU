@@ -25,7 +25,6 @@ module CIU(
     output [63:0] din_cycle_b,
     input [63:0] dout_cycle,
     ////////// load //////////
-    input load_en,
     input [71:0] CIU_load,
     output valid_load,
     output [7:0] addr_load,
