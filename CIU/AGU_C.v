@@ -6,7 +6,7 @@ module AGU_C(
     input CLK,
     input en,
     input rst,
-    input [7:0] AGU_O_initial_in,
+    input [7:0] AGU_C_initial_in,
     input [6:0] width_out_in,
     input [7:0] ch_out_in,
     output reg [7:0] caddr,
@@ -14,12 +14,12 @@ module AGU_C(
     );
     
     ////////// input buffer //////////
-    reg [7:0] AGU_O_initial;
+    reg [7:0] AGU_C_initial;
     reg [6:0] width_out;
     reg [7:0] ch_out;
     reg [7:0] ch_stride;
     always@(posedge CLK) begin
-        AGU_O_initial <= AGU_O_initial_in;
+        AGU_C_initial <= AGU_C_initial_in;
         width_out <= width_out_in;
         ch_out <= ch_out_in;
         ch_stride <= width_out_in + 1;
@@ -83,7 +83,7 @@ module AGU_C(
         end
         else begin
             if(en) begin
-                adder_1 <= AGU_O_initial + width;
+                adder_1 <= AGU_C_initial + width;
             end
             else begin
                 adder_1 <= adder_1;

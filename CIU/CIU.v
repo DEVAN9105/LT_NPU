@@ -9,7 +9,7 @@ module CIU(
     ////////// AGU parameters //////////
     input [7:0] width_out,
     input [7:0] ch_out,
-    input [7:0] AGU_O_initial, // initial address for AGU_C
+    input [7:0] AGU_C_initial, // initial address for AGU_C
     ////////// cycle //////////
     // stream buffer
     input [71:0] stream_a_in,
@@ -60,7 +60,7 @@ module CIU(
         .CLK(CLK),
         .en(cycle_SR[0]),
         .rst(rst),
-        .AGU_O_initial_in(AGU_O_initial),
+        .AGU_C_initial_in(AGU_C_initial),
         .width_out_in(width_out),
         .ch_out_in(ch_out),
         .caddr(caddr),
