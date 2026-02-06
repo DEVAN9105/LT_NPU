@@ -4,10 +4,8 @@ module GLB_operator(
     input CLK,
     input en,
     input rst,
-
     ////////// Ch_to_Y //////////
     input [10:0] ch_to_Y_initial,
-
     ////////// GLB_input //////////
     input glb_in_mode, // 0: pre_processing, 1: core
     // AGU_T
@@ -29,7 +27,6 @@ module GLB_operator(
     input [64:0] CIU_wb_5,
     input [64:0] CIU_wb_6,
     input [64:0] PP_wb,
-
     ////////// GLB_output //////////
     // AGU_T
     input [2:0] output_core,
