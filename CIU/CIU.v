@@ -5,7 +5,7 @@ module CIU(
     input rst,
     input cycle_en,
     input load_en,
-    input write_back_en,
+    input wb_en,
     ////////// AGU parameters //////////
     input [7:0] width_out,
     input [7:0] ch_out,
@@ -19,13 +19,14 @@ module CIU(
     // tile buffer operator
     output valid_cycle_a,
     output valid_cycle_b,
-    output reg [7:0] addr_cycle_a,
-    output reg [7:0] addr_cycle_b,
-    output reg [63:0] din_cycle_a,
-    output reg [63:0] din_cycle_b,
+    output [7:0] addr_cycle_a,
+    output [7:0] addr_cycle_b,
+    output [63:0] din_cycle_a,
+    output [63:0] din_cycle_b,
     input [63:0] dout_cycle,
     ////////// load //////////
-    input [75:0] CIU_load,
+    input load_en,
+    input [71:0] CIU_load,
     output valid_load,
     output [7:0] addr_load,
     output [63:0] din_load,
@@ -33,6 +34,7 @@ module CIU(
     input [7:0] addr_wb_in,
     output [7:0] addr_wb,
     input [63:0] dout_wb,
+    output data_valid,
     output [63:0] CIU_wb,
     output en_wb,
     ////////// done //////////
@@ -46,19 +48,10 @@ module CIU(
     ////////// signals for tile buffer operator //////////
     assign valid_cycle_a = cycle_SR[6] | cycle_SR[7];
     assign valid_cycle_b = cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
-    always@(*) begin
-        addr_cycle_b = stream_b_out[71:64];
-        if(cycle_SR[2]) begin
-            addr_cycle_a = caddr;
-        end
-        else begin
-            addr_cycle_a = stream_a_out[71:64];
-        end
-    end
-    always@(*) begin
-        din_cycle_a = stream_a_out[63:0];
-        din_cycle_b = stream_b_out[63:0];
-    end
+    assign addr_cycle_a = (cycle_SR[2]) ? caddr : stream_a_out[71:64];
+    assign addr_cycle_b = stream_b_out[71:64];
+    assign din_cycle_a = stream_a_out[63:0];
+    assign din_cycle_b = stream_b_out[63:0];
     ////////// signals for tile buffer operator end //////////
 
     ////////// AGU //////////
@@ -130,6 +123,7 @@ module CIU(
         .rst(rst),
         .en(load_en),
         .CIU_load(CIU_load),
+        // tile buffer
         .valid_load(valid_load),
         .addr_load(addr_load),
         .din_load(din_load)
@@ -140,13 +134,15 @@ module CIU(
     CIU_wb_buffer CIU_wb_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en_wb_in(write_back_en),
-        .dout_wb(dout_wb),
-        .CIU_wb(CIU_wb),
-        // addr buffer
-        .en_wb(en_wb),
+        .en_wb_in(wb_en),
         .addr_wb_in(addr_wb_in),
-        .addr_wb(addr_wb)
+        // output data
+        .data_valid(data_valid),
+        .CIU_wb(CIU_wb),
+        // tile buffer
+        .en_wb(en_wb),
+        .addr_wb(addr_wb),
+        .dout_wb(dout_wb)
     );
     ////////// CIU write back buffer end //////////
 endmodule

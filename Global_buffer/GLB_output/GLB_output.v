@@ -1,10 +1,9 @@
 `timescale 1ns / 1ps
 
-module GLB_input(
+module GLB_output(
     input CLK,
     input en,
     input rst,
-    input glb_in_mode, // 0: pre_processing, 1: core
     // AGU_T
     input [2:0] core,
     input [7:0] AGU_T_initial_in,
@@ -20,8 +19,7 @@ module GLB_input(
     output [11:0] gaddr,
     // output tile
     output reg [5:0] load_en,
-    output reg [7:0] taddr,
-    output [63:0] glb_load,
+    output [71:0] CIU_load,
     // glb control
     output glb_b_en,
     input [63:0] dout_glb,
@@ -51,7 +49,10 @@ module GLB_input(
     ////////// GLB control end //////////
 
     ////////// signal assign //////////
+    wire [7:0] taddr;
+    wire [63:0] glb_load;
     assign glb_b_en = SR_1[0];
+    assign CIU_load = {taddr_buffer, glb_load};
     ////////// signal assign end //////////
 
     ////////// AGU_G //////////
@@ -73,7 +74,8 @@ module GLB_input(
 
     ////////// AGU_T //////////
     wire [2:0] core_pointer;
-    wire [7:0] taddr_buffer;
+    reg [7:0] taddr_buffer;
+    wire AGU_T_en_next;
     AGU_T agu_t(
         .CLK(CLK),
         .en(SR_1[3]),
@@ -83,7 +85,8 @@ module GLB_input(
         .tile_ch_in(tile_ch_in),
         .core(core),
         .core_pointer(core_pointer),
-        .taddr(taddr_buffer)
+        .taddr(taddr),
+        .en_next(AGU_T_en_next)
     );
 
     // core decoder
@@ -92,7 +95,7 @@ module GLB_input(
             load_en <= 6'b0;
         end
         else begin
-            if(SR_1[8]) begin
+            if(AGU_T_en_next) begin
                 case(core_pointer)
                     3'b000: load_en <= 6'b000001;
                     3'b001: load_en <= 6'b000010;
@@ -104,7 +107,7 @@ module GLB_input(
                 endcase
             end
             else begin
-                load_en <= load_en;
+                load_en <= 6'b000000;
             end
         end
     end
@@ -112,10 +115,10 @@ module GLB_input(
     // taddr buffer
     always@(posedge CLK) begin
         if (glb_out_rst) begin
-            taddr <= 8'b0;
+            taddr_buffer <= 8'b0;
         end
         else begin
-            taddr <= taddr_buffer;
+            taddr_buffer <= taddr;
         end
     end
     ////////// AGU_T end //////////
