@@ -4,6 +4,7 @@ module VLIW_PC(
     input CLK,
     input rst,
     input en,
+    // VLIW_storage
     input [9:0] PC_initial_in,
     input [9:0] PC_end_in,
     output reg [9:0] PC,
@@ -25,17 +26,12 @@ module VLIW_PC(
         //avoid latch
         next_PC = PC;
         PC_done = 0;
-        if(en) begin
-            if(PC == PC_end) begin
-                next_PC = PC;
-                PC_done = 1;
-            end
-            else begin
-                next_PC = PC + 1;
-            end
+        if(PC == PC_end) begin
+            next_PC = PC;
+            PC_done = 1;
         end
         else begin
-            next_PC = PC;
+            next_PC = PC + 1;
         end
     end
     always@(posedge CLK) begin
