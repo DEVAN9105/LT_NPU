@@ -22,7 +22,7 @@ module GLB_operator(
     output reg [8:0] wb_pp,
     output reg [10:0] wb_0,
     output reg [10:0] wb_1,
-    input [64:0] CIU_wb_1, // en | data
+    input [64:0] CIU_wb_1, // valid | data
     input [64:0] CIU_wb_2,
     input [64:0] CIU_wb_3,
     input [64:0] CIU_wb_4,
