@@ -121,8 +121,14 @@ module Accumulator(
     // adder tree
     reg signed [32:0] add_buffer_10, add_buffer_11;
     always@(posedge CLK) begin
-        add_buffer_10 <= PE_out_0 + PE_out_1;
-        add_buffer_11 <= PE_out_2 + PE_out_3;
+        if(rst) begin
+            add_buffer_10 <= 0;
+            add_buffer_11 <= 0;
+        end
+        else begin
+            add_buffer_10 <= PE_out_0 + PE_out_1;
+            add_buffer_11 <= PE_out_2 + PE_out_3;
+        end
     end
     // compare chain
     wire signed [15:0] PE_out_0_trunc = PE_out_0[23:8];
@@ -167,8 +173,11 @@ module Accumulator(
     ////////// Stage 2 //////////
     // adder tree
     reg signed [33:0] adder_result;
+    wire signed [33:0] add_buffer_10_ext = {add_buffer_10[32], add_buffer_10};
+    wire signed [33:0] add_buffer_11_ext = {add_buffer_11[32], add_buffer_11};
     always@(posedge CLK) begin
-        adder_result <= add_buffer_10 + add_buffer_11;
+        if(rst) adder_result <= 0;
+        else adder_result <= add_buffer_10_ext + add_buffer_11_ext;
     end
     // compare chain
     wire signed [15:0] comp_2_out;
@@ -192,8 +201,6 @@ module Accumulator(
         end
     end
     ////////// Stage 2 end //////////
-    
-    
     
     ////////// bias buffer //////////
     reg signed [31:0] bias_buffer;
