@@ -5,7 +5,7 @@ module GLB_operator(
     input en,
     input rst,
     ////////// Ch_to_Y //////////
-    input [10:0] ch_to_Y_initial,
+    input [10:0] ch_to_Y_initial, // 2048
     ////////// GLB_input //////////
     input glb_in_mode, // 0: pre_processing, 1: core
     // AGU_T
@@ -13,7 +13,7 @@ module GLB_operator(
     input [6:0] input_tile_width,
     input [7:0] input_tile_ch,
     // AGU_G
-    input [11:0] input_AGU_G_initial,
+    input [13:0] input_AGU_G_initial,
     input [6:0] input_glb_width,
     input [7:0] input_glb_ch,
     // input tile
@@ -34,7 +34,7 @@ module GLB_operator(
     input [6:0] output_tile_width,
     input [7:0] output_tile_ch,
     // AGU_G
-    input [11:0] output_AGU_G_initial,
+    input [13:0] output_AGU_G_initial,
     input [6:0] output_glb_width,
     input [7:0] output_glb_ch,
     // output tile
@@ -55,7 +55,7 @@ module GLB_operator(
     wire input_ch_to_Y_en, output_ch_to_Y_en;
     wire [9:0] input_ch_sum, output_ch_sum;
     wire [10:0] input_ch, output_ch;
-    wire [11:0] input_Y, output_Y;
+    wire [9:0] input_Y, output_Y;
 
     assign input_ch = ch_to_Y_initial + input_ch_sum;
     assign output_ch = ch_to_Y_initial + output_ch_sum;

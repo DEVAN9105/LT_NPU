@@ -7,13 +7,13 @@ module AGU_G(
     input en,
     input rst,
     // parameter
-    input [11:0] AGU_G_initial_in,
+    input [13:0] AGU_G_initial_in,
     input [6:0] glb_width_in,
     input [7:0] glb_ch_in,
     // ch_to_Y
     output ch_to_Y_en,
     output reg [9:0] ch_sum,
-    input [11:0] Y,
+    input [9:0] Y,
     // output
     output reg [11:0] gaddr,
     output en_next,
@@ -21,7 +21,7 @@ module AGU_G(
     );
     
     ////////// input buffer //////////
-    reg [11:0] AGU_G_initial;
+    reg [13:0] AGU_G_initial;
     reg [6:0] glb_width;
     reg [7:0] glb_ch;
     always@(posedge CLK) begin
@@ -144,14 +144,14 @@ module AGU_G(
     end
 
     // adder 1
-    reg [11:0] adder_1;
+    reg [13:0] adder_1;
     always@(posedge CLK) begin
         if(rst) begin
             adder_1 <= 0;
         end
         else begin
             if(en_SR[0]) begin
-                adder_1 <= {4'b0000, X} + AGU_G_initial;
+                adder_1 <= {6'b000000, X} + AGU_G_initial;
             end
             else begin
                 adder_1 <= adder_1;
@@ -234,7 +234,7 @@ module AGU_G(
     ////////// stage 3 end //////////
 
     ////////// addr_1 reg //////////
-    reg [11:0] reg_addr_1_0, reg_addr_1_1, reg_addr_1_2;
+    reg [13:0] reg_addr_1_0, reg_addr_1_1, reg_addr_1_2;
 
     always@(posedge CLK) begin
         if(rst) begin
