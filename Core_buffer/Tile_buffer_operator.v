@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-
 module Tile_buffer_operator(
     input clka,
     input clkb,
