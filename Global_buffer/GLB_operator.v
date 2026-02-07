@@ -10,8 +10,6 @@ module GLB_operator(
     input glb_in_mode, // 0: pre_processing, 1: core
     // AGU_T
     input [7:0] input_AGU_T_initial,
-    input [6:0] input_tile_width,
-    input [7:0] input_tile_ch,
     // AGU_G
     input [13:0] input_AGU_G_initial,
     input [6:0] input_glb_width,
@@ -31,25 +29,25 @@ module GLB_operator(
     // AGU_T
     input [2:0] output_core,
     input [7:0] output_AGU_T_initial,
-    input [6:0] output_tile_width,
-    input [7:0] output_tile_ch,
     // AGU_G
     input [13:0] output_AGU_G_initial,
     input [6:0] output_glb_width,
     input [7:0] output_glb_ch,
     // output tile
-    output reg [74:0] load_0,
-    output reg [74:0] load_1,
-    ////////// glb control //////////
-    output glb_a_en,
-    output glb_a_we,
-    output [63:0] din_glb,
-    output glb_b_en,
-    input [63:0] dout_glb,
+    output reg [74:0] load_L,
+    output reg [74:0] load_R,
     // done signal
     output input_done,
     output output_done
     );
+
+    ////////// tile parameter //////////
+    wire [6:0] input_tile_width = ((input_glb_width + 1) << 1) - 1;
+    wire [7:0] input_tile_ch = ((input_glb_ch + 1) >> 1) - 1;
+    wire [6:0] output_tile_width = ((output_glb_width + 1) << 1) - 1;
+    wire [7:0] output_tile_ch = ((output_glb_ch + 1) >> 1) - 1;
+    ////////// tile parameter end //////////
+
 
     ////////// ch_to_Y //////////
     wire input_ch_to_Y_en, output_ch_to_Y_en;
@@ -77,6 +75,7 @@ module GLB_operator(
     ////////// GLB //////////
     wire we_a, en_a, en_b;
     wire [13:0] addr_a, addr_b;
+    wire [63:0] din_a, dout_b;
     GLB glb(
         .clk(CLK),
         .rst(rst),
@@ -110,22 +109,22 @@ module GLB_operator(
     end
 
     // wb data buffer
-    reg [64:0] CIU_wb_0, CIU_wb_1;
+    reg [64:0] CIU_wb_L, CIU_wb_R;
     wire [2:0] mux_sel_0, mux_sel_1;
     assign mux_sel_0 = {CIU_wb_1[64], CIU_wb_2[64], CIU_wb_3[64]};
     assign mux_sel_1 = {CIU_wb_4[64], CIU_wb_5[64], CIU_wb_6[64]};
     always@(posedge CLK) begin
         case(mux_sel_0)
-            3'b100: CIU_wb_0 <= CIU_wb_1;
-            3'b010: CIU_wb_0 <= CIU_wb_2;
-            3'b001: CIU_wb_0 <= CIU_wb_3;
-            default: CIU_wb_0 <= 65'd0;
+            3'b100: CIU_wb_L <= CIU_wb_1;
+            3'b010: CIU_wb_L <= CIU_wb_2;
+            3'b001: CIU_wb_L <= CIU_wb_3;
+            default: CIU_wb_L <= 65'd0;
         endcase
         case(mux_sel_1)
-            3'b100: CIU_wb_1 <= CIU_wb_4;
-            3'b010: CIU_wb_1 <= CIU_wb_5;
-            3'b001: CIU_wb_1 <= CIU_wb_6;
-            default: CIU_wb_1 <= 65'd0;
+            3'b100: CIU_wb_R <= CIU_wb_4;
+            3'b010: CIU_wb_R <= CIU_wb_5;
+            3'b001: CIU_wb_R <= CIU_wb_6;
+            default: CIU_wb_R <= 65'd0;
         endcase
     end
 
@@ -149,16 +148,16 @@ module GLB_operator(
         // input tile
         .wb_en(wb_en), // 0: pre_processing tile, 1~6: core
         .taddr(taddr),
-        .en_wb_0(CIU_wb_0[64]),
-        .en_wb_1(CIU_wb_1[64]),
+        .en_wb_L(CIU_wb_L[64]),
+        .en_wb_R(CIU_wb_R[64]),
         .en_wb_pp(PP_wb[64]),
-        .CIU_wb_0(CIU_wb_0[63:0]),
-        .CIU_wb_1(CIU_wb_1[63:0]),
+        .CIU_wb_L(CIU_wb_L[63:0]),
+        .CIU_wb_R(CIU_wb_R[63:0]),
         .PP_wb(PP_wb[63:0]),
         // glb control
-        .glb_a_en(glb_a_en),
-        .glb_a_we(glb_a_we),
-        .din_glb(din_glb),
+        .glb_a_en(en_a),
+        .glb_a_we(we_a),
+        .din_glb(din_a),
         // done signal
         .done(input_done)
     );
@@ -170,12 +169,12 @@ module GLB_operator(
     wire [71:0] CIU_load;
     always@(posedge CLK) begin
         if(rst) begin
-            load_0 <= 75'd0;
-            load_1 <= 75'd0;
+            load_L <= 75'd0;
+            load_R <= 75'd0;
         end
         else begin
-            load_0 <= {load_en[2:0], CIU_load};
-            load_1 <= {load_en[5:3], CIU_load};
+            load_L <= {load_en[2:0], CIU_load};
+            load_R <= {load_en[5:3], CIU_load};
         end
     end
 
@@ -195,13 +194,13 @@ module GLB_operator(
         .ch_to_Y_en(output_ch_to_Y_en),
         .ch_sum(output_ch_sum),
         .Y(output_Y),
-        .gaddr(output_gaddr),
+        .gaddr(addr_b),
         // output tile
         .load_en(load_en),
         .CIU_load(CIU_load),
         // glb control
         .glb_b_en(en_b),
-        .dout_glb(dout_glb),
+        .dout_glb(dout_b),
         // done signal
         .done(output_done)
     );
