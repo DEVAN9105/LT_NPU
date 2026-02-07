@@ -66,28 +66,28 @@ module Array_buffer(
             conv: begin
                 case(conv_count)
                     0: begin
-                        PE_fin_0 <= fdata_0;
-                        PE_fin_1 <= fdata_0;
-                        PE_fin_2 <= fdata_0;
-                        PE_fin_3 <= fdata_0;
+                        PE_fin_0 <= {4{fdata_0[63:48]}};
+                        PE_fin_1 <= {4{fdata_0[47:32]}};
+                        PE_fin_2 <= {4{fdata_0[31:16]}};
+                        PE_fin_3 <= {4{fdata_0[15:0]}};
                     end
                     1: begin
-                        PE_fin_0 <= fdata_1;
-                        PE_fin_1 <= fdata_1;
-                        PE_fin_2 <= fdata_1;
-                        PE_fin_3 <= fdata_1;
+                        PE_fin_0 <= {4{fdata_1[63:48]}};
+                        PE_fin_1 <= {4{fdata_1[47:32]}};
+                        PE_fin_2 <= {4{fdata_1[31:16]}};
+                        PE_fin_3 <= {4{fdata_1[15:0]}};
                     end
                     2: begin
-                        PE_fin_0 <= fdata_2;
-                        PE_fin_1 <= fdata_2;
-                        PE_fin_2 <= fdata_2;
-                        PE_fin_3 <= fdata_2;
+                        PE_fin_0 <= {4{fdata_2[63:48]}};
+                        PE_fin_1 <= {4{fdata_2[47:32]}};
+                        PE_fin_2 <= {4{fdata_2[31:16]}};
+                        PE_fin_3 <= {4{fdata_2[15:0]}};
                     end
                     default: begin
-                        PE_fin_0 <= fdata_0;
-                        PE_fin_1 <= fdata_0;
-                        PE_fin_2 <= fdata_0;
-                        PE_fin_3 <= fdata_0;
+                        PE_fin_0 <= {4{fdata_0[63:48]}};
+                        PE_fin_1 <= {4{fdata_0[47:32]}};
+                        PE_fin_2 <= {4{fdata_0[31:16]}};
+                        PE_fin_3 <= {4{fdata_0[15:0]}};
                     end
                 endcase
             end
