@@ -17,10 +17,10 @@ module Accumulator(
     input signed [31:0]PE_out_3_in,
     output reg signed [15:0]acc_out,
     output acc_done
-    /*,
+    ,
     output [7:0] acc_count_tb,
     output rst_bias_tb,
-    output [33:0] adder_result_tb*/
+    output [33:0] adder_result_tb
     );
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
@@ -125,8 +125,8 @@ module Accumulator(
         add_buffer_11 <= PE_out_2 + PE_out_3;
     end
     // compare chain
-    wire signed [15:0] PE_out_0_trunc = PE_out_0[15:0];
-    wire signed [15:0] PE_out_1_trunc = PE_out_1[15:0];
+    wire signed [15:0] PE_out_0_trunc = PE_out_0[23:8];
+    wire signed [15:0] PE_out_1_trunc = PE_out_1[23:8];
     reg signed [15:0] PE_out_2_trunc;
     wire signed [15:0] comp_1_out;
     reg signed [15:0] comp_result_1;
@@ -136,7 +136,7 @@ module Accumulator(
         end
         else begin
             if(en) begin
-                PE_out_2_trunc <= PE_out_2[15:0];
+                PE_out_2_trunc <= PE_out_2[23:8];
             end
             else begin
                 PE_out_2_trunc <= PE_out_2_trunc;
@@ -264,17 +264,17 @@ module Accumulator(
     ////////// acc_result Truncate //////////
     reg signed [15:0] acc_out_truncated;
     always@(*) begin
-        if(accumulator_reg[47:32] != {16{accumulator_reg[31]}}) begin
+        if(accumulator_reg[47:23] != {25{accumulator_reg[23]}}) begin
             //overflow
             if(accumulator_reg[47] == 0) begin
-                acc_out_truncated <= 16'h7FFF; //max pos
+                acc_out_truncated = 16'h7FFF; //max pos
             end
             else begin
-                acc_out_truncated <= 16'h8000; //max neg
+                acc_out_truncated = 16'h8000; //max neg
             end
         end
         else begin
-            acc_out_truncated <= accumulator_reg[23:8];
+            acc_out_truncated = accumulator_reg[23:8];
         end
     end
     ////////// acc_result Truncate end //////////
@@ -307,8 +307,8 @@ module Accumulator(
     end
     ////////// Output register end //////////
     
-    /*assign acc_count_tb = acc_count;
+    assign acc_count_tb = acc_count;
     assign rst_bias_tb = rst_bias_sr[1];
-    assign adder_result_tb = adder_result;*/
+    assign adder_result_tb = adder_result;
     
 endmodule
