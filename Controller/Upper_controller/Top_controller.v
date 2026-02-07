@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module IS_Controller(
+module Top_Controller(
     input CLK,
     input rst,
     input PS_en,
@@ -131,7 +131,7 @@ module IS_Controller(
                         end
                         else begin
                             PC_step = 0;
-                            next_state = S_decode;
+                            next_state = S_wait;
                         end
                     end
                     COND_wait_weight: begin
@@ -141,7 +141,7 @@ module IS_Controller(
                         end
                         else begin
                             PC_step = 0;
-                            next_state = S_decode;
+                            next_state = S_wait;
                         end
                     end
                     COND_wait_both: begin
@@ -151,7 +151,7 @@ module IS_Controller(
                         end
                         else begin
                             PC_step = 0;
-                            next_state = S_decode;
+                            next_state = S_wait;
                         end
                     end
                     default: next_state = S_decode;
@@ -201,7 +201,7 @@ module IS_Controller(
                                     GLB_in_combined  <= op_a[15:0];
                                     GLB_out_combined <= op_b[15:0];
                                 end
-                                FUNC_channel_order: begin // Change_channel_order
+                                FUNC_ch_order: begin // Change_channel_order
                                     Ch_to_Y_initial <= op_a[10:0];
                                 end
                                 default: begin
