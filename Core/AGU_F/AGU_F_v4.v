@@ -6,8 +6,8 @@ module AGU_F(
     input CLK,
     input en,
     input rst,
-    input [7:0] width_in_in,    // Map Width (0~127)
-    input [7:0] width_out_in,   // down sampling
+    input [6:0] width_in_in,    // Map Width (0~127)
+    input [6:0] width_out_in,   // down sampling
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,      // channel may vary per layer
     input [2:0] mode_in,
@@ -23,17 +23,22 @@ module AGU_F(
     ////////// input buffer & parameter generate //////////
     reg padding;
     reg [2:0] mode;
-    reg [7:0] width_in;
-    reg [7:0] width_out;
+    reg [6:0] width_in;
+    reg [6:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [1:0] stride_X;
     reg [7:0] stride_Y;
     reg [1:0] AGU_offset_X;
-    // ch_stride define
-    wire [7:0] ch_stride = width_in + 1; //width + 1 (Max 128)
+    reg [7:0] ch_stride;
     always@(posedge CLK) begin
-        case (mode)
+        if(rst) begin
+            padding <= 0;
+            stride_Y <= 0;
+            AGU_offset_X <= 0;
+        end
+        else begin
+        case (mode_in)
             conv: begin
                 padding <= 1;
                 stride_Y <= 0;
@@ -65,14 +70,27 @@ module AGU_F(
                 AGU_offset_X <= 0;
             end
         endcase
+        end
     end
     always@(posedge CLK) begin
-        mode <= mode_in;
-        stride_X <= stride_X_in;
-        width_in <= width_in_in;
-        width_out <= width_out_in;
-        ch_in <= ch_in_in;
-        ch_out <= ch_out_in;
+        if(rst) begin
+            mode <= 0;
+            stride_X <= 0;
+            width_in <= 0;
+            width_out <= 0;
+            ch_in <= 0;
+            ch_out <= 0;
+            ch_stride <= 0;
+        end
+        else begin
+            mode <= mode_in;
+            stride_X <= stride_X_in;
+            width_in <= width_in_in;
+            width_out <= width_out_in;
+            ch_in <= ch_in_in;
+            ch_out <= ch_out_in;
+            ch_stride <= width_in_in + 1;
+        end
     end
     ////////// input buffer & parameter generate end //////////
     
@@ -94,12 +112,15 @@ module AGU_F(
     reg s1_done;
     reg s2_en;
     always@(posedge CLK) begin
-        s2_en <= s1_done & en;
+        if(rst) s2_en <= 0;
+        else s2_en <= s1_done & en;
     end
     // GAP skip
     wire gap_skip = (mode == GAP) ? 1'b1: 1'b0;
     // counter offset_Y
     always@(*) begin
+        s1_done = 0;
+        next_offset_Y = offset_Y;
         if (padding || gap_skip) begin
             next_offset_Y = 0;
             next_ch_count_0 = 0;
@@ -157,10 +178,12 @@ module AGU_F(
     reg s2_done;
     reg s3_en;
     always@(posedge CLK) begin
-        s3_en <= s2_done & s2_en;
+        if(rst) s3_en <= 0;
+        else s3_en <= s2_done & s2_en;
     end
     //counter offset_X
     always@(*) begin
+        s2_done = 0;
         if (offset_X == AGU_offset_X) begin
             next_offset_X = 0;
             s2_done = 1;
@@ -207,7 +230,8 @@ module AGU_F(
     reg s3_done;
     reg s4_en;
     always@(posedge CLK) begin
-        s4_en <= s3_done & s3_en;
+        if(rst) s4_en <= s3_done & s3_en;
+        else s4_en <= 0;
     end
     //counter X & x_count
     always@(*) begin

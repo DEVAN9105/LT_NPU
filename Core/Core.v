@@ -132,12 +132,31 @@ module Core(
     ////////// output signal end //////////
 
     ////////// AGU //////////
+    // conv1 counter
+    reg [1:0] conv_count;
+    always@(posedge CLK) begin
+        if(rst) begin
+            conv_count <= 0;
+        end
+        else begin
+            if( SR_0[0] && mode==0 ) begin
+                if(conv_count == 2) begin
+                    conv_count <= 0;
+                end
+                else begin
+                    conv_count <= conv_count + 1;
+                end
+            end
+            else conv_count <= 0;
+        end
+    end
+    
     // AGU_F
     wire boundary;
     AGU_F agu_f(
         .CLK(CLK),
         .rst(core_rst),
-        .en(SR_0[0]),
+        .en(SR_0[0]/* && (conv_count==0)*/),
         .width_in_in(width_in),
         .width_out_in(width_out),
         .ch_in_in(ch_in),

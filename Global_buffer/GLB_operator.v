@@ -8,8 +8,6 @@ module GLB_operator(
     input [10:0] ch_to_Y_initial, // 2048
     ////////// GLB_input //////////
     input glb_in_mode, // 0: pre_processing, 1: core
-    // AGU_T
-    input [7:0] input_AGU_T_initial,
     // AGU_G
     input [13:0] input_AGU_G_initial,
     input [6:0] input_glb_width,
@@ -28,7 +26,6 @@ module GLB_operator(
     ////////// GLB_output //////////
     // AGU_T
     input [2:0] output_core,
-    input [7:0] output_AGU_T_initial,
     // AGU_G
     input [13:0] output_AGU_G_initial,
     input [6:0] output_glb_width,
@@ -46,6 +43,8 @@ module GLB_operator(
     wire [7:0] input_tile_ch = ((input_glb_ch + 1) >> 1) - 1;
     wire [6:0] output_tile_width = ((output_glb_width + 1) << 1) - 1;
     wire [7:0] output_tile_ch = ((output_glb_ch + 1) >> 1) - 1;
+    wire [7:0] input_AGU_T_initial = 0;
+    wire [7:0] output_AGU_T_initial = 0;
     ////////// tile parameter end //////////
 
 
