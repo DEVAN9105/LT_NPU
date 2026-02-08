@@ -19,6 +19,8 @@ module Top_Controller(
     output reg VLIW_controller_en,
     output reg [9:0] VLIW_initial,
     output reg [9:0] VLIW_end,
+    output reg [7:0] tile_out,
+    output reg [47:0] cycle_initial,
     // Weight Loader control
     output reg weight_loader_en,
     output reg [11:0] weight_amount,
@@ -27,7 +29,6 @@ module Top_Controller(
     output reg [15:0] GLB_in_combined, // {width_in, ch_in}
     output reg [15:0] GLB_out_combined,// {width_out, ch_out}
     output reg [10:0] Ch_to_Y_initial,
-
     ////////// System status //////////
     output reg DPU_done             // entire task done, notify PS
 );
@@ -67,13 +68,29 @@ module Top_Controller(
 
     ////////// Internal Registers and State //////////
     reg [3:0] loop_counter;
-    
     // FSM States
     reg [1:0] state, next_state;
     localparam S_idle    = 2'd0; // Wait for start
     localparam S_decode  = 2'd1; // Decode and trigger Enable
     localparam S_wait    = 2'd2; // Wait for Done signal
     localparam S_finish  = 2'd3; // Finish state
+    ////////// Internal Registers and State end //////////
+
+    ////////// cycle initial //////////
+    always@(posedge CLK) begin
+        if(rst) begin
+            cycle_initial <= 0;
+        end
+        else begin
+            cycle_initial[47:40] <= 0;
+            cycle_initial[39:32] <= tile_out + 1;
+            cycle_initial[31:24] <= (tile_out << 1) + 1;
+            cycle_initial[23:16] <= (tile_out << 1) + tile_out + 1;
+            cycle_initial[15:8]  <= (tile_out << 2) + 1;
+            cycle_initial[7:0]   <= (tile_out << 2) + tile_out + 1;
+        end
+    end
+    ////////// cycle initial end //////////
 
     ////////// Next State Logic and PC_step //////////
     always @(*) begin
@@ -183,6 +200,7 @@ module Top_Controller(
             VLIW_end <= 0;
             weight_amount <= 0;
             bias_amount <= 0;
+            tile_out <= 0;
             // Enables reset
             VLIW_controller_en <= 0;
             weight_loader_en <= 0;
@@ -203,6 +221,7 @@ module Top_Controller(
                                 end
                                 FUNC_ch_order: begin // Change_channel_order
                                     Ch_to_Y_initial <= op_a[10:0];
+                                    tile_out <= op_b[7:0];
                                 end
                                 default: begin
                                     // none
