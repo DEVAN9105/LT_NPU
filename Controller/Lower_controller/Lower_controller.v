@@ -14,7 +14,7 @@ module Lower_controller(
     input PosP_done,
     // output control signal
     output [10:0] en_bus,
-    output [132:0] VLIW_out,
+    output [143:0] VLIW_out,
     output [8:0] tile_sel,
     // VLIW done
     output VLIW_done
@@ -56,7 +56,7 @@ module Lower_controller(
         .CLK(CLK),
         .rst(VLIW_rst),
         .en(VLIW_decoder_en),
-        .VLIW_in(VLIW_in[132:0]),
+        .VLIW_in(VLIW_in[143:0]),
         .VLIW(VLIW_out),
         .tile_sel(tile_sel)
     );
