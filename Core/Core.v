@@ -63,18 +63,48 @@ module Core(
     reg [11:0] AGU_W_initial;
     reg [7:0] AGU_B_initial;
     reg [7:0] AGU_O_initial;
+    
     always@(posedge CLK) begin
-        mode <= mode_in;
-        tile_sel <= tile_sel_in;
-        stride_X <= stride_X_in;
-        ReLU_en <= ReLU_en_in;
-        width_in <= width_in_in;
-        width_out <= width_out_in;
-        ch_in <= ch_in_in;
-        ch_out <= ch_out_in;
-        AGU_W_initial <= AGU_W_initial_in;
-        AGU_B_initial <= AGU_B_initial_in;
-        AGU_O_initial <= AGU_O_initial_in;
+        if(rst) begin
+            mode <= 0;
+            tile_sel <= 0;
+            stride_X <= 0;
+            ReLU_en <= 0;
+            width_in <= 0;
+            width_out <= 0;
+            ch_in <= 0;
+            ch_out <= 0;
+            AGU_W_initial <= 0;
+            AGU_B_initial <= 0;
+            AGU_O_initial <= 0;
+        end
+        else if(en) begin
+            mode <= mode_in;
+            tile_sel <= tile_sel_in;
+            stride_X <= stride_X_in;
+            ReLU_en <= ReLU_en_in;
+            width_in <= width_in_in;
+            width_out <= width_out_in;
+            ch_in <= ch_in_in;
+            ch_out <= ch_out_in;
+            AGU_W_initial <= AGU_W_initial_in;
+            AGU_B_initial <= AGU_B_initial_in;
+            if(mode_in == DW) AGU_O_initial <= AGU_O_initial_in;
+            else AGU_O_initial <= 0;
+        end
+        else begin
+            mode <= mode;
+            tile_sel <= tile_sel;
+            stride_X <= stride_X;
+            ReLU_en <= ReLU_en;
+            width_in <= width_in;
+            width_out <= width_out;
+            ch_in <= ch_in;
+            ch_out <= ch_out;
+            AGU_W_initial <= AGU_W_initial;
+            AGU_B_initial <= AGU_B_initial;
+            AGU_O_initial <= AGU_O_initial;
+        end
     end
     ////////// input buffer end //////////
 

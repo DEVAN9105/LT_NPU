@@ -47,7 +47,7 @@ module Tile_buffer_operator(
     ////////// input buffer end ///////////
 
     ////////// define function //////////
-    parameter none = 3'd0, cal = 3'd1, load = 3'd2, cycle = 3'd3, store = 3'd4;
+    parameter none = 3'd0, cal_0 = 3'd1, cal_1 = 3'd2, cal_2 = 3'd3, load = 3'd4, cycle = 3'd5, store = 3'd6;
     ////////// define function end /////////
 
     ////////// tile 1 //////////
@@ -59,7 +59,7 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[19:17])
-            cal: begin
+            cal_0, cal_1, cal_2: begin
                 ena_1 = 0;
                 enb_1 = valid_cal;
                 wea_1 = 0;
@@ -137,7 +137,7 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[16:14])
-            cal: begin
+            cal_0, cal_1, cal_2: begin
                 ena_2 = 0;
                 enb_2 = valid_cal;
                 wea_2 = 0;
@@ -215,7 +215,7 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[13:11])
-            cal: begin
+            cal_0, cal_1, cal_2: begin
                 ena_3 = 0;
                 enb_3 = valid_cal;
                 wea_3 = 0;
@@ -293,7 +293,7 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[10:8])
-            cal: begin
+            cal_0, cal_1, cal_2: begin
                 ena_4 = 0;
                 enb_4 = valid_cal;
                 wea_4 = 0;
@@ -371,7 +371,7 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[7:5])
-            cal: begin
+            cal_0, cal_1, cal_2: begin
                 ena_5 = 0;
                 enb_5 = valid_cal;
                 wea_5 = 0;
@@ -449,7 +449,7 @@ module Tile_buffer_operator(
     // mux
     always@(*) begin
         case(tile_assign[4:2])
-            cal: begin
+            cal_0, cal_1, cal_2: begin
                 ena_6 = 0;
                 enb_6 = valid_cal;
                 wea_6 = 0;
