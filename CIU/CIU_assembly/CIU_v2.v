@@ -17,8 +17,8 @@ module CIU(
     output [72:0] ciu_to_tbo_cycle_bus_b, // {valid_cycle_b, addr_cycle_b, din_cycle_b}
     input [63:0] tbo_to_ciu_cycle_data,
     ////////// load //////////
-    input [72:0] glb_load_bus, // {valid_load, addr_load, din_load}
-    output [72:0] tbo_load_bus, // {valid_load, addr_load, din_load}
+    input [72:0] glb_to_ciu_load_bus, // {valid_load, addr_load, din_load}
+    output [72:0] ciu_to_tbo_load_bus, // {valid_load, addr_load, din_load}
     ////////// write back //////////
     input [8:0] glb_to_ciu_wb_bus, // {en_wb, addr_wb_in}
     output [8:0] ciu_to_tbo_wb_bus, // {en_wb, addr_wb}
@@ -107,12 +107,12 @@ module CIU(
     CIU_load_buffer CIU_load_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en(glb_load_bus[72]),
-        .CIU_load(glb_load_bus[71:0]),
+        .en(glb_to_ciu_load_bus[72]),
+        .CIU_load(glb_to_ciu_load_bus[71:0]),
         // tile buffer
-        .valid_load(tbo_load_bus[72]),
-        .addr_load(tbo_load_bus[71:64]),
-        .din_load(tbo_load_bus[63:0])
+        .valid_load(ciu_to_tbo_load_bus[72]),
+        .addr_load(ciu_to_tbo_load_bus[71:64]),
+        .din_load(ciu_to_tbo_load_bus[63:0])
     );
     ////////// CIU load buffer end //////////
 
