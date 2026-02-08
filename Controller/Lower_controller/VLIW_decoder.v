@@ -1,13 +1,12 @@
 `timescale 1ns / 1ps
 
-module VLIW_buffer(
+module VLIW_decoder(
     input CLK,
     input rst,
     input en,
-    input [127:0] VLIW_in,
-    output reg [127:0] VLIW,
-    output reg [8:0] tile_sel,
-    output reg PC_done
+    input [132:0] VLIW_in,
+    output reg [132:0] VLIW,
+    output reg [8:0] tile_sel
     );
 
     ////////// input buffer //////////

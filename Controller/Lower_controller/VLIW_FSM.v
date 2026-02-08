@@ -7,8 +7,8 @@ module VLIW_FSM(
     // en
     input [10:0] en_sel,
     output reg [10:0] en_bus,
-    // VLIW buffer
-    output reg VLIW_buffer_en,
+    // VLIW decoder
+    output reg VLIW_decoder_en,
     // done mux
     input complete,
     // PC
@@ -50,7 +50,7 @@ module VLIW_FSM(
         cc_en = 0;
         PC_en = 0;
         en_bus = 0;
-        VLIW_buffer_en = 0;
+        VLIW_decoder_en = 0;
         VLIW_rst = 0;
 
         case(state)
@@ -69,12 +69,12 @@ module VLIW_FSM(
                 if(control_count == 3) begin
                     next_state = run;
                     PC_en = 1;
-                    VLIW_buffer_en = 0;
+                    VLIW_decoder_en = 0;
                 end
                 else begin
                     next_state = set_up;
                     PC_en = 0;
-                    VLIW_buffer_en = 1;
+                    VLIW_decoder_en = 1;
                 end
             end
             run: begin
