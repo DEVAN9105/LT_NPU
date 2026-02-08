@@ -68,12 +68,10 @@ module VLIW_FSM(
                 // next state
                 if(control_count == 3) begin
                     next_state = run;
-                    PC_en = 1;
                     VLIW_decoder_en = 0;
                 end
                 else begin
                     next_state = set_up;
-                    PC_en = 0;
                     VLIW_decoder_en = 1;
                 end
             end
@@ -85,6 +83,7 @@ module VLIW_FSM(
                     end
                     else begin
                         next_state = set_up;
+                        PC_en = 1;
                     end
                 end
                 else begin

@@ -24,7 +24,7 @@ module VLIW_decoder(
     ////////// input buffer end //////////
 
     ////////// decode tile sel //////////
-    wire [19:0] tile_assign;
+    wire [19:0] tile_assign = VLIW_in[68:49];
     reg [5:0] cal_0, cal_1, cal_2;
     reg [8:0] tile_sel;
     always@(posedge CLK) begin
@@ -65,6 +65,9 @@ module VLIW_decoder(
         end
     end
     always@(*) begin
+        cal_0 = 0;
+        cal_1 = 0;
+        cal_2 = 0;
         case(tile_assign[19:17]) // tile 1
             3'd1: begin
                 cal_0[0] = 1;
