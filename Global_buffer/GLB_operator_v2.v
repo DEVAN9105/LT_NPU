@@ -109,18 +109,24 @@ module GLB_operator(
     assign mux_sel_0 = {ciu_to_glb_wb_1[64], ciu_to_glb_wb_2[64], ciu_to_glb_wb_3[64]};
     assign mux_sel_1 = {ciu_to_glb_wb_4[64], ciu_to_glb_wb_5[64], ciu_to_glb_wb_6[64]};
     always@(posedge CLK) begin
-        case(mux_sel_0)
-            3'b100: CIU_wb_L <= ciu_to_glb_wb_1;
-            3'b010: CIU_wb_L <= ciu_to_glb_wb_2;
-            3'b001: CIU_wb_L <= ciu_to_glb_wb_3;
-            default: CIU_wb_L <= 65'd0;
-        endcase
-        case(mux_sel_1)
-            3'b100: CIU_wb_R <= ciu_to_glb_wb_4;
-            3'b010: CIU_wb_R <= ciu_to_glb_wb_5;
-            3'b001: CIU_wb_R <= ciu_to_glb_wb_6;
-            default: CIU_wb_R <= 65'd0;
-        endcase
+        if(rst) begin
+            CIU_wb_L <= 65'd0;
+            CIU_wb_R <= 65'd0;
+        end
+        else begin
+            case(mux_sel_0)
+                3'b100: CIU_wb_L <= ciu_to_glb_wb_1;
+                3'b010: CIU_wb_L <= ciu_to_glb_wb_2;
+                3'b001: CIU_wb_L <= ciu_to_glb_wb_3;
+                default: CIU_wb_L <= 65'd0;
+            endcase
+            case(mux_sel_1)
+                3'b100: CIU_wb_R <= ciu_to_glb_wb_4;
+                3'b010: CIU_wb_R <= ciu_to_glb_wb_5;
+                3'b001: CIU_wb_R <= ciu_to_glb_wb_6;
+                default: CIU_wb_R <= 65'd0;
+            endcase
+        end
     end
 
     GLB_input glb_input(
