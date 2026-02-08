@@ -7,8 +7,7 @@ module CIU(
     input load_en,
     input wb_en,
     ////////// AGU parameters //////////
-    input [7:0] width_out,
-    input [7:0] ch_out,
+    input [7:0] tile_size,
     input [7:0] AGU_C_initial, // initial address for AGU_C
     ////////// cycle //////////
     // stream buffer
@@ -61,8 +60,7 @@ module CIU(
         .en(cycle_SR[0]),
         .rst(rst),
         .AGU_C_initial_in(AGU_C_initial),
-        .width_out_in(width_out),
-        .ch_out_in(ch_out),
+        .tile_size_in(tile_size),
         .caddr(caddr),
         .done(AGU_C_done)
     );
