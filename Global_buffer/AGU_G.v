@@ -6,11 +6,11 @@ module AGU_G(
     input CLK,
     input en,
     input rst,
+    input set,
     // parameter
-    input [11:0] AGU_G_initial_in,
-    input [6:0] glb_width_in,
-    input [7:0] glb_ch_in,
+    input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     // ch_to_Y
+    output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
     output ch_to_Y_en,
     output reg [9:0] ch_sum,
     input [11:0] Y,
@@ -20,14 +20,19 @@ module AGU_G(
     );
     
     ////////// input buffer //////////
-    reg [11:0] AGU_G_initial;
+    reg [13:0] AGU_G_initial;
     reg [6:0] glb_width;
     reg [7:0] glb_ch;
     always@(posedge CLK) begin
         if(rst) begin
-            AGU_G_initial <= AGU_G_initial_in;
-            glb_width <= glb_width_in;
-            glb_ch <= glb_ch_in;
+            AGU_G_initial <= 0;
+            glb_width <= 0;
+            glb_ch <= 0;
+        end
+        else if(set) begin
+            AGU_G_initial <= AGU_G_param[28:15];
+            glb_width <= AGU_G_param[14:8];
+            glb_ch <= AGU_G_param[7:0];
         end
         else begin
             AGU_G_initial <= AGU_G_initial;
@@ -142,14 +147,14 @@ module AGU_G(
     end
 
     // adder 1
-    reg [11:0] adder_1;
+    reg [13:0] adder_1;
     always@(posedge CLK) begin
         if(rst) begin
             adder_1 <= 0;
         end
         else begin
             if(en_SR[0]) begin
-                adder_1 <= {4'b0000, X} + AGU_G_initial;
+                adder_1 <= {6'd0, X} + AGU_G_initial;
             end
             else begin
                 adder_1 <= adder_1;
@@ -165,7 +170,7 @@ module AGU_G(
         end
         else begin
             if(en_SR[0]) begin
-                offset_Y_reg_1 <= {2'b00, offset_Y_reg_0};
+                offset_Y_reg_1 <= {4'd0, offset_Y_reg_0};
             end
             else begin
                 offset_Y_reg_1 <= offset_Y_reg_1;
@@ -232,7 +237,7 @@ module AGU_G(
     ////////// stage 3 end //////////
 
     ////////// addr_1 reg //////////
-    reg [11:0] reg_addr_1_0, reg_addr_1_1, reg_addr_1_2;
+    reg [13:0] reg_addr_1_0, reg_addr_1_1, reg_addr_1_2;
 
     always@(posedge CLK) begin
         if(rst) begin

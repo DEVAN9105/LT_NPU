@@ -6,9 +6,7 @@ module AGU_T(
     input CLK,
     input en,
     input rst,
-    input [7:0] AGU_T_initial_in,
-    input [6:0] tile_width_in,
-    input [7:0] tile_ch_in,
+    input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     input [2:0] core,
     // output
     output reg [2:0] core_pointer,
@@ -23,10 +21,10 @@ module AGU_T(
     reg [7:0] tile_ch;
     reg [7:0] ch_stride;
     always@(posedge CLK) begin
-        AGU_T_initial <= AGU_T_initial_in;
-        tile_width <= tile_width_in;
-        tile_ch <= tile_ch_in;
-        ch_stride <= tile_width_in + 1; //stride = tile_width
+        AGU_T_initial <= AGU_T_param[22:15];
+        tile_width <= AGU_T_param[14:8];
+        tile_ch <= AGU_T_param[7:0];
+        ch_stride <= AGU_T_param[14:8] + 1; //stride = tile_width
     end
     ////////// input buffer end //////////
 
