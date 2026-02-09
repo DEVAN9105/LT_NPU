@@ -66,7 +66,7 @@ module Cycle_controller(
             set_up: begin
                 cc_en = 1;
                 set = 1;
-                if(cc == 3'd2) begin
+                if(cc == 3'd1) begin
                     next_state = processing;
                 end
                 else begin
