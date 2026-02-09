@@ -6,6 +6,7 @@ module GLB_input(
     input rst,
     input glb_in_mode, // 0: pre_processing, 1: core
     // AGU_T
+    input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     input [7:0] AGU_T_initial_in,
     input [6:0] tile_width_in,
     input [7:0] tile_ch_in,
@@ -76,9 +77,9 @@ module GLB_input(
         .CLK(CLK),
         .en(AGU_T_en),
         .rst(AGU_T_rst),
-        .AGU_T_initial_in(AGU_T_initial_in),
-        .tile_width_in(tile_width_in),
-        .tile_ch_in(tile_ch_in),
+        .AGU_T_initial_in(AGU_T_param[22:15]),
+        .tile_width_in(AGU_T_param[14:8]),
+        .tile_ch_in(AGU_T_param[7:0]),
         .core(core),
         .core_pointer(core_pointer),
         .taddr(taddr),
