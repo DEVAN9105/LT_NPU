@@ -7,23 +7,23 @@ module CIU(
     ////////// AGU parameters //////////
     input [15:0] AGU_C_param, // {tile_size, AGU_C_initial} remember to split these two signal to different control parameters
     ////////// cycle //////////
-    // stream buffer
+    // CI buffer
     input [71:0] stream_a_in,
     output [71:0] stream_a_out,
     input [71:0] stream_b_in,
     output [71:0] stream_b_out,
     // tile buffer operator
-    output [72:0] ciu_to_tbo_cycle_bus_a, // {valid_cycle_a, addr_cycle_a, din_cycle_a}
-    output [72:0] ciu_to_tbo_cycle_bus_b, // {valid_cycle_b, addr_cycle_b, din_cycle_b}
-    input [63:0] tbo_to_ciu_cycle_data,
+    output [72:0] ciu_tbo_cycle_bus_a, // {valid_cycle_a, addr_cycle_a, din_cycle_a}
+    output [72:0] ciu_tbo_cycle_bus_b, // {valid_cycle_b, addr_cycle_b, din_cycle_b}
+    input [63:0] tbo_ciu_cycle_data,
     ////////// load //////////
-    input [72:0] glb_to_ciu_load_bus, // {valid_load, addr_load, din_load}
-    output [72:0] ciu_to_tbo_load_bus, // {valid_load, addr_load, din_load}
+    input [72:0] glb_ciu_load_bus, // {valid_load, addr_load, din_load}
+    output [72:0] ciu_tbo_load_bus, // {valid_load, addr_load, din_load}
     ////////// write back //////////
-    input [8:0] glb_to_ciu_wb_bus, // {en_wb, addr_wb_in}
-    output [8:0] ciu_to_tbo_wb_bus, // {en_wb, addr_wb}
-    input [63:0] tbo_to_ciu_wb_data,
-    output [64:0] ciu_to_glb_wb_bus, // {data_valid, CIU_wb}
+    input [8:0] glb_ciu_wb_bus, // {en_wb, addr_wb_in}
+    output [8:0] ciu_tbo_wb_bus, // {en_wb, addr_wb}
+    input [63:0] tbo_ciu_wb_data,
+    output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
     ////////// done //////////
     output cycle_done
     );
@@ -33,12 +33,12 @@ module CIU(
     ////////// SR end //////////
 
     ////////// signals for tile buffer operator //////////
-    assign ciu_to_tbo_cycle_bus_a[72] = cycle_SR[6] | cycle_SR[7];
-    assign ciu_to_tbo_cycle_bus_b[72] = cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
-    assign ciu_to_tbo_cycle_bus_a[71:64] = (cycle_SR[2]) ? caddr : stream_a_out[71:64];
-    assign ciu_to_tbo_cycle_bus_b[71:64] = stream_b_out[71:64];
-    assign ciu_to_tbo_cycle_bus_a[63:0] = stream_a_out[63:0];
-    assign ciu_to_tbo_cycle_bus_b[63:0] = stream_b_out[63:0];
+    assign ciu_tbo_cycle_bus_a[72] = cycle_SR[6] | cycle_SR[7];
+    assign ciu_tbo_cycle_bus_b[72] = cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
+    assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[2]) ? caddr : stream_a_out[71:64];
+    assign ciu_tbo_cycle_bus_b[71:64] = stream_b_out[71:64];
+    assign ciu_tbo_cycle_bus_a[63:0] = stream_a_out[63:0];
+    assign ciu_tbo_cycle_bus_b[63:0] = stream_b_out[63:0];
     ////////// signals for tile buffer operator end //////////
 
     ////////// AGU //////////
@@ -72,8 +72,8 @@ module CIU(
         .CLK(CLK),
         .rst(rst),
         .en(cycle_SR[4]),
-        .addr_cycle(ciu_to_tbo_cycle_bus_a[71:64]),
-        .dout_cycle(tbo_to_ciu_cycle_data),
+        .addr_cycle(ciu_tbo_cycle_bus_a[71:64]),
+        .dout_cycle(tbo_ciu_cycle_data),
         .stream_initial(stream_initial)
     );
     ////////// stream buffer end //////////
@@ -107,12 +107,12 @@ module CIU(
     CIU_load_buffer CIU_load_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en(glb_to_ciu_load_bus[72]),
-        .CIU_load(glb_to_ciu_load_bus[71:0]),
+        .en(glb_ciu_load_bus[72]),
+        .CIU_load(glb_ciu_load_bus[71:0]),
         // tile buffer
-        .valid_load(ciu_to_tbo_load_bus[72]),
-        .addr_load(ciu_to_tbo_load_bus[71:64]),
-        .din_load(ciu_to_tbo_load_bus[63:0])
+        .valid_load(ciu_tbo_load_bus[72]),
+        .addr_load(ciu_tbo_load_bus[71:64]),
+        .din_load(ciu_tbo_load_bus[63:0])
     );
     ////////// CIU load buffer end //////////
 
@@ -120,15 +120,15 @@ module CIU(
     CIU_wb_buffer CIU_wb_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en_wb_in(glb_to_ciu_wb_bus[8]),
-        .addr_wb_in(glb_to_ciu_wb_bus[7:0]),
+        .en_wb_in(glb_ciu_wb_bus[8]),
+        .addr_wb_in(glb_ciu_wb_bus[7:0]),
         // output data
-        .data_valid(ciu_to_glb_wb_bus[64]),
-        .CIU_wb(ciu_to_glb_wb_bus[63:0]),
+        .data_valid(ciu_glb_wb_bus[64]),
+        .CIU_wb(ciu_glb_wb_bus[63:0]),
         // tile buffer
-        .en_wb(ciu_to_tbo_wb_bus[8]),
-        .addr_wb(ciu_to_tbo_wb_bus[7:0]),
-        .dout_wb(tbo_to_ciu_wb_data)
+        .en_wb(ciu_tbo_wb_bus[8]),
+        .addr_wb(ciu_tbo_wb_bus[7:0]),
+        .dout_wb(tbo_ciu_wb_data)
     );
     ////////// CIU write back buffer end //////////
 endmodule
