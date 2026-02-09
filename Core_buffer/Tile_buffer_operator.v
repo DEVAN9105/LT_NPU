@@ -4,45 +4,29 @@ module Tile_buffer_operator(
     input clka,
     input clkb,
     // tile assign
-    input [2:0] tile_sel_cycle_in,
-    input [19:0] tile_assign_in,
+    input [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
     // tile load
-    input valid_load,
-    input [7:0] addr_load,
-    input [63:0] din_load,
+    input [72:0] ciu_tbo_load_bus, // {valid, addr, din}
     // tile cycle
-    input valid_cycle_a,
-    input valid_cycle_b,
-    input [7:0] addr_cycle_a,
-    input [7:0] addr_cycle_b,
-    input [63:0] din_cycle_a,
-    input [63:0] din_cycle_b,
-    output reg [63:0] dout_cycle,
+    input [72:0] ciu_tbo_cycle_bus_a, // {valid, addr, din}
+    input [72:0] ciu_tbo_cycle_bus_b, // {valid, addr, din}
+    output reg [63:0] tbo_ciu_cycle_data,
     // tile wb
-    input en_wb,
-    input [7:0] addr_wb,
-    output [63:0] dout_wb,
+    input [8:0] ciu_tbo_wb_bus, // {en_wb, addr_wb}
+    output [63:0] tbo_ciu_wb_data,
     // tile cal
-    input valid_cal,
-    input [7:0] addr_cal,
-    output [63:0] tile_1,
-    output [63:0] tile_2,
-    output [63:0] tile_3,
-    output [63:0] tile_4,
-    output [63:0] tile_5,
-    output [63:0] tile_6,
+    input [8:0] core_tbo_cal_bus, // {valid_cal, addr_cal}
+    output [383:0] tbo_core_tile_bus, // {tile_1, tile_2, tile_3, tile_4, tile_5, tile_6}
     // tile store
-    input valid_store,
-    input [7:0] addr_store,
-    input [63:0] din_store
+    input [72:0] core_tbo_store_bus, // {valid, addr, din}
     );
 
     ////////// input buffer ///////////
-    reg [19:0] tile_assign;
     reg [2:0] tile_sel_cycle;
+    reg [19:0] tile_assign;
     always@(posedge clka) begin
-        tile_assign <= tile_assign_in;
-        tile_sel_cycle <= tile_sel_cycle_in;
+        tile_sel_cycle <= tbo_param[22:20];
+        tile_assign <= tbo_param[19:0];
     end
     ////////// input buffer end ///////////
 
@@ -61,43 +45,43 @@ module Tile_buffer_operator(
         case(tile_assign[19:17])
             cal_0, cal_1, cal_2: begin
                 ena_1 = 0;
-                enb_1 = valid_cal;
+                enb_1 = core_tbo_cal_bus[8];
                 wea_1 = 0;
                 web_1 = 0;
                 addra_1 = 8'd0;
                 dina_1 = 64'd0;
-                addrb_1 = addr_cal;
+                addrb_1 = core_tbo_cal_bus[7:0];
                 dinb_1 = 64'd0;
             end
             load: begin
                 ena_1 = 1;
                 enb_1 = 0;
-                wea_1 = valid_load;
+                wea_1 = ciu_tbo_load_bus[72];
                 web_1 = 0;
-                addra_1 = addr_load;
-                dina_1 = din_load;
+                addra_1 = ciu_tbo_load_bus[71:64];
+                dina_1 = ciu_tbo_load_bus[63:0];
                 addrb_1 = 8'd0;
                 dinb_1 = 64'd0;
             end
             cycle: begin
                 ena_1 = 1;
                 enb_1 = 1;
-                wea_1 = valid_cycle_a;
-                web_1 = valid_cycle_b;
-                addra_1 = addr_cycle_a;
-                dina_1 = din_cycle_a;
-                addrb_1 = addr_cycle_b;
-                dinb_1 = din_cycle_b;
+                wea_1 = ciu_tbo_cycle_bus_a[72];
+                addra_1 = ciu_tbo_cycle_bus_a[71:64];
+                dina_1 = ciu_tbo_cycle_bus_a[63:0];
+                web_1 = ciu_tbo_cycle_bus_b[72];
+                addrb_1 = ciu_tbo_cycle_bus_b[71:64];
+                dinb_1 = ciu_tbo_cycle_bus_b[63:0];
             end
             store: begin
                 ena_1 = 0;
                 enb_1 = 1;
                 wea_1 = 0;
-                web_1 = valid_store;
+                web_1 = core_tbo_store_bus[72];
                 addra_1 = 8'd0;
                 dina_1 = 64'd0;
-                addrb_1 = addr_store;
-                dinb_1 = din_store;
+                addrb_1 = core_tbo_store_bus[71:64];
+                dinb_1 = core_tbo_store_bus[63:0];
             end
             default: begin
                 ena_1 = 0;
@@ -124,7 +108,7 @@ module Tile_buffer_operator(
         .web( web_1 ),
         .addrb(addrb_1),
         .dinb(dinb_1),
-        .doutb(tile_1)
+        .doutb(tbo_core_tile_bus[383:320])
     );
     ////////// tile 1 end //////////
 
@@ -139,43 +123,43 @@ module Tile_buffer_operator(
         case(tile_assign[16:14])
             cal_0, cal_1, cal_2: begin
                 ena_2 = 0;
-                enb_2 = valid_cal;
+                enb_2 = core_tbo_cal_bus[8];
                 wea_2 = 0;
                 web_2 = 0;
                 addra_2 = 8'd0;
                 dina_2 = 64'd0;
-                addrb_2 = addr_cal;
+                addrb_2 = core_tbo_cal_bus[7:0];
                 dinb_2 = 64'd0;
             end
             load: begin
                 ena_2 = 1;
                 enb_2 = 0;
-                wea_2 = valid_load;
+                wea_2 = ciu_tbo_load_bus[72];
                 web_2 = 0;
-                addra_2 = addr_load;
-                dina_2 = din_load;
+                addra_2 = ciu_tbo_load_bus[71:64];
+                dina_2 = ciu_tbo_load_bus[63:0];
                 addrb_2 = 8'd0;
                 dinb_2 = 64'd0;
             end
             cycle: begin
                 ena_2 = 1;
                 enb_2 = 1;
-                wea_2 = valid_cycle_a;
-                web_2 = valid_cycle_b;
-                addra_2 = addr_cycle_a;
-                dina_2 = din_cycle_a;
-                addrb_2 = addr_cycle_b;
-                dinb_2 = din_cycle_b;
+                wea_2 = ciu_tbo_cycle_bus_a[72];
+                addra_2 = ciu_tbo_cycle_bus_a[71:64];
+                dina_2 = ciu_tbo_cycle_bus_a[63:0];
+                web_2 = ciu_tbo_cycle_bus_b[72];
+                addrb_2 = ciu_tbo_cycle_bus_b[71:64];
+                dinb_2 = ciu_tbo_cycle_bus_b[63:0];
             end
             store: begin
                 ena_2 = 0;
                 enb_2 = 1;
                 wea_2 = 0;
-                web_2 = valid_store;
+                web_2 = core_tbo_store_bus[72];
                 addra_2 = 8'd0;
                 dina_2 = 64'd0;
-                addrb_2 = addr_store;
-                dinb_2 = din_store;
+                addrb_2 = core_tbo_store_bus[71:64];
+                dinb_2 = core_tbo_store_bus[63:0];
             end
             default: begin
                 ena_2 = 0;
@@ -202,7 +186,7 @@ module Tile_buffer_operator(
         .web( web_2 ),
         .addrb(addrb_2),
         .dinb(dinb_2),
-        .doutb(tile_2)
+        .doutb(tbo_core_tile_bus[319:256])
     );
     ////////// tile 2 end //////////
 
@@ -217,43 +201,43 @@ module Tile_buffer_operator(
         case(tile_assign[13:11])
             cal_0, cal_1, cal_2: begin
                 ena_3 = 0;
-                enb_3 = valid_cal;
+                enb_3 = core_tbo_cal_bus[8];
                 wea_3 = 0;
                 web_3 = 0;
                 addra_3 = 8'd0;
                 dina_3 = 64'd0;
-                addrb_3 = addr_cal;
+                addrb_3 = core_tbo_cal_bus[7:0];
                 dinb_3 = 64'd0;
             end
             load: begin
                 ena_3 = 1;
                 enb_3 = 0;
-                wea_3 = valid_load;
+                wea_3 = ciu_tbo_load_bus[72];
                 web_3 = 0;
-                addra_3 = addr_load;
-                dina_3 = din_load;
+                addra_3 = ciu_tbo_load_bus[71:64];
+                dina_3 = ciu_tbo_load_bus[63:0];
                 addrb_3 = 8'd0;
                 dinb_3 = 64'd0;
             end
             cycle: begin
                 ena_3 = 1;
                 enb_3 = 1;
-                wea_3 = valid_cycle_a;
-                web_3 = valid_cycle_b;
-                addra_3 = addr_cycle_a;
-                dina_3 = din_cycle_a;
-                addrb_3 = addr_cycle_b;
-                dinb_3 = din_cycle_b;
+                wea_3 = ciu_tbo_cycle_bus_a[72];
+                addra_3 = ciu_tbo_cycle_bus_a[71:64];
+                dina_3 = ciu_tbo_cycle_bus_a[63:0];
+                web_3 = ciu_tbo_cycle_bus_b[72];
+                addrb_3 = ciu_tbo_cycle_bus_b[71:64];
+                dinb_3 = ciu_tbo_cycle_bus_b[63:0];
             end
             store: begin
                 ena_3 = 0;
                 enb_3 = 1;
                 wea_3 = 0;
-                web_3 = valid_store;
+                web_3 = core_tbo_store_bus[72];
                 addra_3 = 8'd0;
                 dina_3 = 64'd0;
-                addrb_3 = addr_store;
-                dinb_3 = din_store;
+                addrb_3 = core_tbo_store_bus[71:64];
+                dinb_3 = core_tbo_store_bus[63:0];
             end
             default: begin
                 ena_3 = 0;
@@ -280,7 +264,7 @@ module Tile_buffer_operator(
         .web( web_3 ),
         .addrb(addrb_3),
         .dinb(dinb_3),
-        .doutb(tile_3)
+        .doutb(tbo_core_tile_bus[255:192])
     );
     ////////// tile 3 end //////////
 
@@ -295,43 +279,43 @@ module Tile_buffer_operator(
         case(tile_assign[10:8])
             cal_0, cal_1, cal_2: begin
                 ena_4 = 0;
-                enb_4 = valid_cal;
+                enb_4 = core_tbo_cal_bus[8];
                 wea_4 = 0;
                 web_4 = 0;
                 addra_4 = 8'd0;
                 dina_4 = 64'd0;
-                addrb_4 = addr_cal;
+                addrb_4 = core_tbo_cal_bus[7:0];
                 dinb_4 = 64'd0;
             end
             load: begin
                 ena_4 = 1;
                 enb_4 = 0;
-                wea_4 = valid_load;
+                wea_4 = ciu_tbo_load_bus[72];
                 web_4 = 0;
-                addra_4 = addr_load;
-                dina_4 = din_load;
+                addra_4 = ciu_tbo_load_bus[71:64];
+                dina_4 = ciu_tbo_load_bus[63:0];
                 addrb_4 = 8'd0;
                 dinb_4 = 64'd0;
             end
             cycle: begin
                 ena_4 = 1;
                 enb_4 = 1;
-                wea_4 = valid_cycle_a;
-                web_4 = valid_cycle_b;
-                addra_4 = addr_cycle_a;
-                dina_4 = din_cycle_a;
-                addrb_4 = addr_cycle_b;
-                dinb_4 = din_cycle_b;
+                wea_4 = ciu_tbo_cycle_bus_a[72];
+                addra_4 = ciu_tbo_cycle_bus_a[71:64];
+                dina_4 = ciu_tbo_cycle_bus_a[63:0];
+                web_4 = ciu_tbo_cycle_bus_b[72];
+                addrb_4 = ciu_tbo_cycle_bus_b[71:64];
+                dinb_4 = ciu_tbo_cycle_bus_b[63:0];
             end
             store: begin
                 ena_4 = 0;
                 enb_4 = 1;
                 wea_4 = 0;
-                web_4 = valid_store;
+                web_4 = core_tbo_store_bus[72];
                 addra_4 = 8'd0;
                 dina_4 = 64'd0;
-                addrb_4 = addr_store;
-                dinb_4 = din_store;
+                addrb_4 = core_tbo_store_bus[71:64];
+                dinb_4 = core_tbo_store_bus[63:0];
             end
             default: begin
                 ena_4 = 0;
@@ -358,7 +342,7 @@ module Tile_buffer_operator(
         .web( web_4 ),
         .addrb(addrb_4),
         .dinb(dinb_4),
-        .doutb(tile_4)
+        .doutb(tbo_core_tile_bus[191:128])
     );
     ////////// tile 4 end //////////
 
@@ -373,43 +357,43 @@ module Tile_buffer_operator(
         case(tile_assign[7:5])
             cal_0, cal_1, cal_2: begin
                 ena_5 = 0;
-                enb_5 = valid_cal;
+                enb_5 = core_tbo_cal_bus[8];
                 wea_5 = 0;
                 web_5 = 0;
                 addra_5 = 8'd0;
                 dina_5 = 64'd0;
-                addrb_5 = addr_cal;
+                addrb_5 = core_tbo_cal_bus[7:0];
                 dinb_5 = 64'd0;
             end
             load: begin
                 ena_5 = 1;
                 enb_5 = 0;
-                wea_5 = valid_load;
+                wea_5 = ciu_tbo_load_bus[72];
                 web_5 = 0;
-                addra_5 = addr_load;
-                dina_5 = din_load;
+                addra_5 = ciu_tbo_load_bus[71:64];
+                dina_5 = ciu_tbo_load_bus[63:0];
                 addrb_5 = 8'd0;
                 dinb_5 = 64'd0;
             end
             cycle: begin
                 ena_5 = 1;
                 enb_5 = 1;
-                wea_5 = valid_cycle_a;
-                web_5 = valid_cycle_b;
-                addra_5 = addr_cycle_a;
-                dina_5 = din_cycle_a;
-                addrb_5 = addr_cycle_b;
-                dinb_5 = din_cycle_b;
+                wea_5 = ciu_tbo_cycle_bus_a[72];
+                addra_5 = ciu_tbo_cycle_bus_a[71:64];
+                dina_5 = ciu_tbo_cycle_bus_a[63:0];
+                web_5 = ciu_tbo_cycle_bus_b[72];
+                addrb_5 = ciu_tbo_cycle_bus_b[71:64];
+                dinb_5 = ciu_tbo_cycle_bus_b[63:0];
             end
             store: begin
                 ena_5 = 0;
                 enb_5 = 1;
                 wea_5 = 0;
-                web_5 = valid_store;
+                web_5 = core_tbo_store_bus[72];
                 addra_5 = 8'd0;
                 dina_5 = 64'd0;
-                addrb_5 = addr_store;
-                dinb_5 = din_store;
+                addrb_5 = core_tbo_store_bus[71:64];
+                dinb_5 = core_tbo_store_bus[63:0];
             end
             default: begin
                 ena_5 = 0;
@@ -436,7 +420,7 @@ module Tile_buffer_operator(
         .web( web_5 ),
         .addrb(addrb_5),
         .dinb(dinb_5),
-        .doutb(tile_5)
+        .doutb(tbo_core_tile_bus[127:64])
     );
     ////////// tile 5 end //////////
 
@@ -451,43 +435,43 @@ module Tile_buffer_operator(
         case(tile_assign[4:2])
             cal_0, cal_1, cal_2: begin
                 ena_6 = 0;
-                enb_6 = valid_cal;
+                enb_6 = core_tbo_cal_bus[8];
                 wea_6 = 0;
                 web_6 = 0;
                 addra_6 = 8'd0;
                 dina_6 = 64'd0;
-                addrb_6 = addr_cal;
+                addrb_6 = core_tbo_cal_bus[7:0];
                 dinb_6 = 64'd0;
             end
             load: begin
                 ena_6 = 1;
                 enb_6 = 0;
-                wea_6 = valid_load;
+                wea_6 = ciu_tbo_load_bus[72];
                 web_6 = 0;
-                addra_6 = addr_load;
-                dina_6 = din_load;
+                addra_6 = ciu_tbo_load_bus[71:64];
+                dina_6 = ciu_tbo_load_bus[63:0];
                 addrb_6 = 8'd0;
                 dinb_6 = 64'd0;
             end
             cycle: begin
                 ena_6 = 1;
                 enb_6 = 1;
-                wea_6 = valid_cycle_a;
-                web_6 = valid_cycle_b;
-                addra_6 = addr_cycle_a;
-                dina_6 = din_cycle_a;
-                addrb_6 = addr_cycle_b;
-                dinb_6 = din_cycle_b;
+                wea_6 = ciu_tbo_cycle_bus_a[72];
+                addra_6 = ciu_tbo_cycle_bus_a[71:64];
+                dina_6 = ciu_tbo_cycle_bus_a[63:0];
+                web_6 = ciu_tbo_cycle_bus_b[72];
+                addrb_6 = ciu_tbo_cycle_bus_b[71:64];
+                dinb_6 = ciu_tbo_cycle_bus_b[63:0];
             end
             store: begin
                 ena_6 = 0;
                 enb_6 = 1;
                 wea_6 = 0;
-                web_6 = valid_store;
+                web_6 = core_tbo_store_bus[72];
                 addra_6 = 8'd0;
                 dina_6 = 64'd0;
-                addrb_6 = addr_store;
-                dinb_6 = din_store;
+                addrb_6 = core_tbo_store_bus[71:64];
+                dinb_6 = core_tbo_store_bus[63:0];
             end
             default: begin
                 ena_6 = 0;
@@ -514,7 +498,7 @@ module Tile_buffer_operator(
         .web( web_6 ),
         .addrb(addrb_6),
         .dinb(dinb_6),
-        .doutb(tile_6)
+        .doutb(tbo_core_tile_bus[63:0])
     );
     ////////// tile 6 end //////////
 
@@ -529,18 +513,18 @@ module Tile_buffer_operator(
             1: begin // store
                 ena_7 = 1;
                 enb_7 = 0;
-                wea_7 = valid_store;
-                addra_7 = addr_store;
-                dina_7 = din_store;
+                wea_7 = core_tbo_store_bus[72];
+                addra_7 = core_tbo_store_bus[71:64];
+                dina_7 = core_tbo_store_bus[63:0];
                 addrb_7 = 8'd0;
             end
             2: begin // out
                 ena_7 = 0;
-                enb_7 = en_wb;
+                enb_7 = ciu_tbo_wb_bus[8];
                 wea_7 = 0;
                 addra_7 = 8'd0;
                 dina_7 = 64'd0;
-                addrb_7 = addr_wb;
+                addrb_7 = ciu_tbo_wb_bus[7:0];
             end
             default: begin
                 ena_7 = 0;
@@ -562,20 +546,20 @@ module Tile_buffer_operator(
         .clkb(clkb),
         .enb(enb_7),
         .addrb(addrb_7),
-        .doutb(dout_wb)
+        .doutb(tbo_ciu_wb_data)
     );
     ////////// tile 7 end //////////
 
     ////////// cycle out //////////
     always@(*) begin
         case(tile_sel_cycle)
-            1: dout_cycle = douta_1;
-            2: dout_cycle = douta_2;
-            3: dout_cycle = douta_3;
-            4: dout_cycle = douta_4;
-            5: dout_cycle = douta_5;
-            6: dout_cycle = douta_6;
-            default: dout_cycle = 64'd0;
+            1: tbo_ciu_cycle_data = douta_1;
+            2: tbo_ciu_cycle_data = douta_2;
+            3: tbo_ciu_cycle_data = douta_3;
+            4: tbo_ciu_cycle_data = douta_4;
+            5: tbo_ciu_cycle_data = douta_5;
+            6: tbo_ciu_cycle_data = douta_6;
+            default: tbo_ciu_cycle_data = 64'd0;
         endcase
     end
     ////////// cycle out end //////////
