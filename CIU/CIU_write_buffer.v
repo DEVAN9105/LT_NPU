@@ -2,64 +2,65 @@
 
 // delay = 4
 
-module CIU_write_buffer(
+module CIU_wb_buffer(
     input CLK,
     input rst,
-    input en_wb_in,
-    input [7:0] addr_wb_in,
+    input [8:0] glb_ciu_wb_bus, // {en, addr}
     // tile buffer
-    output en_wb,
-    output reg [7:0] addr_wb,
-    input [63:0] dout_wb,
+    output [8:0] ciu_tbo_wb_bus, // {en, addr}
+    input [63:0] tbo_ciu_wb_data,
     // output data
-    output data_valid,
-    output reg [63:0] CIU_wb
+    output [64:0] ciu_glb_wb_bus // {data_valid, data}
     );
 
     ////////// valid SR //////////
-    reg [3:0] en_SR;
+    reg [4:0] en_SR;
     always @(posedge CLK) begin
         if (rst) begin
-            en_SR <= 0;
+            en_SR <= 5'd0;
         end
         else begin
-            en_SR <= {en_SR[2:0], en_wb_in};
+            en_SR <= {en_SR[3:0], glb_ciu_wb_bus[8]};
         end
     end
-    assign en_wb = en_SR[0];
-    assign data_valid = en_SR[3];
+    wire data_valid = en_SR[4];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////
+    reg [7:0] addr_write;
     always @(posedge CLK) begin
         if (rst) begin
-            addr_wb <= 0;
+            addr_write <= 8'd0;
         end
         else begin
-            if (en_wb_in) begin
-                addr_wb <= addr_wb_in;
+            if (glb_ciu_wb_bus[8]) begin
+                addr_write <= glb_ciu_wb_bus[7:0];
             end
             else begin
-                addr_wb <= addr_wb;
+                addr_write <= addr_write;
             end
         end
     end
+    // addr buffer output to tile buffer
+    assign ciu_tbo_wb_bus = {en_SR[0], addr_write};
     ///////// addr buffer end//////////
 
-    ///////// wb buffer //////////
+    ///////// write buffer //////////
+    reg [63:0] write_data;
     always @(posedge CLK) begin
         if (rst) begin
-            CIU_wb <= 0;
+            write_data <= 64'd0;
         end
         else begin
-            if (en_SR[2]) begin
-                CIU_wb <= dout_wb;
+            if (en_SR[3]) begin
+                write_data <= tbo_ciu_wb_data;
             end
             else begin
-                CIU_wb <= CIU_wb;
+                write_data <= write_data;
             end
         end
     end
-    ///////// wb buffer end//////////
+    assign ciu_glb_wb_bus = {data_valid, write_data};
+    ///////// write buffer end//////////
 
 endmodule

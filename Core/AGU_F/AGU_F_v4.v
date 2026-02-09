@@ -230,8 +230,8 @@ module AGU_F(
     reg s3_done;
     reg s4_en;
     always@(posedge CLK) begin
-        if(rst) s4_en <= s3_done & s3_en;
-        else s4_en <= 0;
+        if(rst) s4_en <= 0;
+        else s4_en <= s3_done & s3_en;
     end
     //counter X & x_count
     always@(*) begin

@@ -20,10 +20,10 @@ module CIU(
     input [72:0] glb_ciu_load_bus, // {valid_load, addr_load, din_load}
     output [72:0] ciu_tbo_load_bus, // {valid_load, addr_load, din_load}
     ////////// write back //////////
-    input [8:0] glb_ciu_write_bus, // {en_wb, addr_wb_in}
-    output [8:0] ciu_tbo_write_bus, // {en_wb, addr_wb}
-    input [63:0] tbo_ciu_write_data,
-    output [64:0] ciu_glb_write_bus, // {data_valid, CIU_wb}
+    input [8:0] glb_ciu_wb_bus, // {en_wb, addr_wb_in}
+    output [8:0] ciu_tbo_wb_bus, // {en_wb, addr_wb}
+    input [63:0] tbo_ciu_wb_data,
+    output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
     ////////// done //////////
     output cycle_done
     );
@@ -95,12 +95,12 @@ module CIU(
         .stream_out(stream_a_out)
     );
     // B
-    wire CI_buffer_B_en = cycle_SR[5] | cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
+    wire CI_buffer_B_en = cycle_SR[4] | cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
     CI_buffer CI_buffer_B(
         .CLK(CLK),
         .rst(cycle_rst),
         .en(CI_buffer_B_en),
-        .mux_sel(cycle_SR[5]),
+        .mux_sel(cycle_SR[4]),
         .stream_in(stream_b_in),
         .stream_initial(stream_initial),
         .stream_out(stream_b_out)
@@ -124,15 +124,12 @@ module CIU(
     CIU_write_buffer CIU_write_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en_wb_in(glb_ciu_write_bus[8]),
-        .addr_wb_in(glb_ciu_write_bus[7:0]),
+        .glb_ciu_wb_bus(glb_ciu_wb_bus),
         // output data
-        .data_valid(ciu_glb_write_bus[64]),
-        .CIU_wb(ciu_glb_write_bus[63:0]),
+        .ciu_glb_wb_bus(ciu_glb_wb_bus),
         // tile buffer
-        .en_wb(ciu_tbo_write_bus[8]),
-        .addr_wb(ciu_tbo_write_bus[7:0]),
-        .dout_wb(tbo_ciu_write_data)
+        .dout_wb(tbo_ciu_wb_data),
+        .ciu_tbo_wb_bus(ciu_tbo_wb_bus)
     );
     ////////// CIU write buffer end //////////
 endmodule
