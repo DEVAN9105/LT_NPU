@@ -4,49 +4,42 @@ module GLB_input_controller(
     input CLK,
     input en,
     input rst,
-    input data_valid,
+    input wb_data_valid,
     // AGU_T
     input AGU_T_done,
+    output reg set,
     output reg AGU_T_en,
-    output reg AGU_T_rst,
-    output reg [8:0] SR_1,
+    output reg [5:0] SR,
     output reg done,
     output reg glb_in_rst
     );
     
     ////////// state define //////////
-    reg [1:0] state, next_state;
-    parameter idle = 0, processing = 1, ending = 2,finish = 3;
+    reg [2:0] state, next_state;
+    parameter idle = 0, set_up = 1, processing = 2, ending = 3, finish = 4;
     ////////// state define end //////////
-
-    ////////// reset //////////
-    always@(posedge CLK) begin
-        if(state == idle) begin
-            glb_in_rst <= 1;
-        end
-        else begin
-            glb_in_rst <= 0;
-        end
-    end
-    ////////// reset end //////////
 
     ////////// FSM //////////
     always@(*) begin
         //avoid latch
-        next_state = state;
         done = 0;
         AGU_T_en = 0;
-        AGU_T_rst = 0;
+        glb_in_rst = 0;
+        set = 0;
 
         case(state)
             idle: begin
-                AGU_T_rst = 1;
+                glb_in_rst = 1;
                 if(en) begin
-                    next_state = processing;
+                    next_state = set_up;
                 end
                 else begin
                     next_state = idle;
                 end
+            end
+            set_up : begin
+                set = 1;
+                next_state = processing;
             end
             processing: begin
                 AGU_T_en = 1;
@@ -58,8 +51,7 @@ module GLB_input_controller(
                 end
             end
             ending: begin
-                AGU_T_rst = 1;
-                if(SR_1 != 0) begin
+                if(SR != 0) begin
                     next_state = ending;
                 end
                 else begin
@@ -91,13 +83,18 @@ module GLB_input_controller(
     ////////// FSM end //////////
 
     ////////// SR //////////
-    // SR_1
+    // SR
     always@(posedge CLK) begin
         if(rst) begin
-            SR_1 <= 0;
+            SR <= 0;
         end
         else begin
-            SR_1 <= {SR_1[7:0], data_valid};
+            if(state == processing || state == ending) begin
+                SR <= {SR[4:0], wb_data_valid};
+            end
+            else begin
+                SR <= SR;
+            end
         end
     end
     ////////// SR end //////////

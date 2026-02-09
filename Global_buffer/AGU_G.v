@@ -1,27 +1,26 @@
 `timescale 1ns / 1ps
 
-// delay = 6 cycle
+// delay = 2 cycle
 
 module AGU_G(
     input CLK,
     input en,
     input rst,
     // parameter
-    input [13:0] AGU_G_initial_in,
+    input [11:0] AGU_G_initial_in,
     input [6:0] glb_width_in,
     input [7:0] glb_ch_in,
     // ch_to_Y
     output ch_to_Y_en,
     output reg [9:0] ch_sum,
-    input [9:0] Y,
+    input [11:0] Y,
     // output
     output reg [11:0] gaddr,
-    output en_next,
     output done
     );
     
     ////////// input buffer //////////
-    reg [13:0] AGU_G_initial;
+    reg [11:0] AGU_G_initial;
     reg [6:0] glb_width;
     reg [7:0] glb_ch;
     always@(posedge CLK) begin
@@ -39,15 +38,14 @@ module AGU_G(
     ////////// input buffer end //////////
 
     ////////// en SR //////////
-    reg [5:0] en_SR;
-    assign en_next = en_SR[5];
+    reg [4:0] en_SR;
     assign ch_to_Y_en = en_SR[2];
     always@(posedge CLK) begin
-        if(rst) begin
+        if(rst || done) begin
             en_SR <= 0;
         end
         else begin
-            en_SR <= {en_SR[4:0], en};
+            en_SR <= {en_SR[3:0], en};
         end
     end
     ////////// en SR end //////////
@@ -144,14 +142,14 @@ module AGU_G(
     end
 
     // adder 1
-    reg [13:0] adder_1;
+    reg [11:0] adder_1;
     always@(posedge CLK) begin
         if(rst) begin
             adder_1 <= 0;
         end
         else begin
             if(en_SR[0]) begin
-                adder_1 <= {6'b000000, X} + AGU_G_initial;
+                adder_1 <= {4'b0000, X} + AGU_G_initial;
             end
             else begin
                 adder_1 <= adder_1;
@@ -234,7 +232,7 @@ module AGU_G(
     ////////// stage 3 end //////////
 
     ////////// addr_1 reg //////////
-    reg [13:0] reg_addr_1_0, reg_addr_1_1, reg_addr_1_2;
+    reg [11:0] reg_addr_1_0, reg_addr_1_1, reg_addr_1_2;
 
     always@(posedge CLK) begin
         if(rst) begin
@@ -294,16 +292,16 @@ module AGU_G(
     ////////// gaddr done //////////
 
     ////////// done signal //////////
-    reg [1:0] done_SR;
+    reg [2:0] done_SR;
     always@(posedge CLK) begin
         if(rst) begin
             done_SR <= 0;
         end
         else begin
-            done_SR <= {done_SR[0], done_det};
+            done_SR <= {done_SR[1:0], done_det};
         end
     end
-    assign done = done_SR[1];
+    assign done = done_SR[2];
     ////////// done signal end //////////
 
 endmodule

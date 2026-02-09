@@ -34,7 +34,7 @@ module AGU_T(
     reg [2:0] en_sr;
     assign en_next = en_sr[2];
     always@(posedge CLK) begin
-        if(rst) begin
+        if(rst || done) begin
             en_sr <= 0;
         end
         else begin
