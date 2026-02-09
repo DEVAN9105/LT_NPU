@@ -4,8 +4,8 @@ module Stream_buffer(
     input CLK,
     input rst,
     input en,
-    input [7:0] addr_cycle,
-    input [63:0] dout_cycle,
+    input [7:0] caddr,
+    input [63:0] tbo_ciu_cycle_data,
     output reg [71:0] stream_initial
     );
 
@@ -17,7 +17,7 @@ module Stream_buffer(
             addr_buffer_1 <= 0;
         end
         else begin
-            addr_buffer_0 <= addr_cycle;
+            addr_buffer_0 <= caddr;
             addr_buffer_1 <= addr_buffer_0;
         end
     end
@@ -30,7 +30,7 @@ module Stream_buffer(
         end
         else begin
             if(en) begin
-                stream_initial <= {addr_buffer_1, dout_cycle};
+                stream_initial <= {addr_buffer_1, tbo_ciu_cycle_data};
             end
             else begin
                 stream_initial <= stream_initial;

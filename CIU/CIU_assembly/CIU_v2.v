@@ -76,8 +76,8 @@ module CIU(
         .CLK(CLK),
         .rst(cycle_rst),
         .en(cycle_SR[3]),
-        .addr_cycle(ciu_tbo_cycle_bus_a[71:64]),
-        .dout_cycle(tbo_ciu_cycle_data),
+        .caddr(caddr),
+        .tbo_ciu_cycle_data(tbo_ciu_cycle_data),
         .stream_initial(stream_initial)
     );
     ////////// stream buffer end //////////

@@ -5,34 +5,24 @@
 module CIU_load_buffer(
     input CLK,
     input rst,
-    input en,
-    input [71:0] CIU_load,
-    output valid_load,
-    output [7:0] addr_load,
-    output [63:0] din_load
+    input [72:0] glb_ciu_load_bus, // {valid, addr, data}
+    output [72:0] ciu_tbo_load_bus // {valid, addr, data}
     );
 
     ////////// buffer //////////
-    reg [71:0] load_buffer;
+    reg [72:0] load_buffer;
     always @(posedge CLK) begin
         if (rst) begin
             load_buffer <= 0;
         end
         else begin
-            if(en) begin
-                load_buffer <= CIU_load;
-            end
-            else begin
-                load_buffer <= load_buffer;
-            end
+            load_buffer <= glb_ciu_load_bus;
         end
     end
     ////////// buffer end //////////
 
     ////////// output //////////
-    assign valid_load = en;
-    assign addr_load = load_buffer[71:64];
-    assign din_load = load_buffer[63:0];
+    assign ciu_tbo_load_bus = load_buffer;
     ////////// output end //////////
 
 endmodule

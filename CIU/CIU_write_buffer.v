@@ -14,16 +14,16 @@ module CIU_wb_buffer(
     );
 
     ////////// valid SR //////////
-    reg [4:0] en_SR;
+    reg [3:0] en_SR;
     always @(posedge CLK) begin
         if (rst) begin
-            en_SR <= 5'd0;
+            en_SR <= 4'd0;
         end
         else begin
-            en_SR <= {en_SR[3:0], glb_ciu_wb_bus[8]};
+            en_SR <= {en_SR[2:0], glb_ciu_wb_bus[8]};
         end
     end
-    wire data_valid = en_SR[4];
+    wire data_valid = en_SR[3];
     ////////// valid SR end//////////
 
     ///////// addr buffer //////////
@@ -52,7 +52,7 @@ module CIU_wb_buffer(
             write_data <= 64'd0;
         end
         else begin
-            if (en_SR[3]) begin
+            if (en_SR[2]) begin
                 write_data <= tbo_ciu_wb_data;
             end
             else begin
