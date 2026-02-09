@@ -2,7 +2,7 @@
 
 module CIU(
     input CLK,
-    input rst,
+    input rst, // global reset, will reset whole CIU, including AGU and cycle controller
     input cycle_en,
     ////////// AGU parameters //////////
     input [15:0] AGU_C_param, // {AGU_C_initial, tile_size} remember to split these two signal to different control parameters
@@ -29,13 +29,13 @@ module CIU(
     );
 
     ////////// SR //////////
-    wire [8:0] cycle_SR;
+    wire [7:0] cycle_SR;
     ////////// SR end //////////
 
     ////////// signals for tile buffer operator //////////
     assign ciu_tbo_cycle_bus_a[72] = cycle_SR[6] | cycle_SR[7];
     assign ciu_tbo_cycle_bus_b[72] = cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
-    assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[2]) ? caddr : stream_a_out[71:64];
+    assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[1]) ? caddr : stream_a_out[71:64];
     assign ciu_tbo_cycle_bus_b[71:64] = stream_b_out[71:64];
     assign ciu_tbo_cycle_bus_a[63:0] = stream_a_out[63:0];
     assign ciu_tbo_cycle_bus_b[63:0] = stream_b_out[63:0];
@@ -43,14 +43,16 @@ module CIU(
 
     ////////// AGU //////////
     wire [7:0] caddr;
+    wire set;
     wire AGU_C_done;
+    wire cycle_rst;
     AGU_C agu_c(
         .CLK(CLK),
         .en(cycle_SR[0]),
-        .rst(rst),
-        .AGU_C_initial_in(AGU_C_param[15:8]),
-        .tile_size_in(AGU_C_param[7:0]),
-        .caddr(caddr),
+        .rst(cycle_rst),
+        .set(set),
+        .AGU_C_param(AGU_C_param),
+        .caddr(caddr), // output addr to tile buffer
         .done(AGU_C_done)
     );
     ////////// AGU end //////////
@@ -61,6 +63,8 @@ module CIU(
         .rst(rst),
         .en(cycle_en),
         .AGU_C_done(AGU_C_done),
+        .set(set),
+        .cycle_rst(cycle_rst),
         .cycle_SR(cycle_SR),
         .cycle_done(cycle_done)
     );
@@ -70,8 +74,8 @@ module CIU(
     wire [71:0] stream_initial;
     Stream_buffer stream_buffer(
         .CLK(CLK),
-        .rst(rst),
-        .en(cycle_SR[4]),
+        .rst(cycle_rst),
+        .en(cycle_SR[3]),
         .addr_cycle(ciu_tbo_cycle_bus_a[71:64]),
         .dout_cycle(tbo_ciu_cycle_data),
         .stream_initial(stream_initial)
@@ -80,12 +84,12 @@ module CIU(
 
     ////////// CI buffer //////////
     // A
-    wire CI_buffer_A_en = cycle_SR[5] | cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
+    wire CI_buffer_A_en = cycle_SR[4] | cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
     CI_buffer CI_buffer_A(
         .CLK(CLK),
-        .rst(rst),
+        .rst(cycle_rst),
         .en(CI_buffer_A_en),
-        .mux_sel(cycle_SR[5]),
+        .mux_sel(cycle_SR[4]),
         .stream_in(stream_a_in),
         .stream_initial(stream_initial),
         .stream_out(stream_a_out)
@@ -94,7 +98,7 @@ module CIU(
     wire CI_buffer_B_en = cycle_SR[5] | cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
     CI_buffer CI_buffer_B(
         .CLK(CLK),
-        .rst(rst),
+        .rst(cycle_rst),
         .en(CI_buffer_B_en),
         .mux_sel(cycle_SR[5]),
         .stream_in(stream_b_in),

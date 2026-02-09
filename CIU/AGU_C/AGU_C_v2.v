@@ -6,6 +6,7 @@ module AGU_C(
     input CLK,
     input en,
     input rst,
+    input set,
     input [15:0] AGU_C_param,
     output reg [7:0] caddr,
     output reg done
@@ -16,6 +17,10 @@ module AGU_C(
     reg [7:0] tile_size;
     always@(posedge CLK) begin
         if(rst) begin
+            AGU_C_initial <= 0;
+            tile_size <= 0;
+        end
+        else if(set) begin
             AGU_C_initial <= AGU_C_param[15:8];
             tile_size <= AGU_C_param[7:0];
         end

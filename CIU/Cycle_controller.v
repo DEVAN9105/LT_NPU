@@ -5,7 +5,9 @@ module Cycle_controller(
     input rst,
     input en,
     input AGU_C_done,
-    output reg [8:0] cycle_SR,
+    output reg set,
+    output cycle_rst,
+    output reg [7:0] cycle_SR,
     output reg cycle_done
     );
     
@@ -48,10 +50,12 @@ module Cycle_controller(
         cycle_done = 0;
         cc_en = 0;
         cc_end = 0;
-
+        set = 0;
+        cycle_rst = 0;
         //FSM logic
         case(state)
             idle: begin
+                set = 1;
                 if(en) begin
                     next_state = processing;
                 end
@@ -72,7 +76,7 @@ module Cycle_controller(
                 end
             end
             ending: begin
-                if(cycle_SR == 9'b000000000) begin
+                if(cycle_SR == 8'b00000000) begin
                     next_state = finish;
                 end
                 else begin
@@ -82,6 +86,7 @@ module Cycle_controller(
             finish: begin
                 next_state = finish;
                 cycle_done = 1;
+                cycle_rst = 1;
             end
             default: begin
                 next_state = idle;
@@ -107,7 +112,7 @@ module Cycle_controller(
             cycle_SR <= 0;
         end
         else begin
-            cycle_SR <= {cycle_SR[7:0], SR_en};
+            cycle_SR <= {cycle_SR[6:0], SR_en};
         end
     end
     ////////// cycle_SR end //////////
