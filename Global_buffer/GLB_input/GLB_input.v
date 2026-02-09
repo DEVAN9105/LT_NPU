@@ -35,7 +35,7 @@ module GLB_input(
     output done
     );
     
-    ////////// GLB control //////////
+    ////////// GLB input control //////////
     wire AGU_T_en;
     wire AGU_T_rst;
     wire [8:0] SR_1;
@@ -54,7 +54,7 @@ module GLB_input(
         .done(done),
         .glb_in_rst(glb_in_rst)
     );
-    ////////// GLB control end //////////
+    ////////// GLB input control end //////////
 
     ////////// signal assign //////////
     assign glb_a_en = SR_1[5];
