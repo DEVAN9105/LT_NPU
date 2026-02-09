@@ -2,7 +2,7 @@
 
 // delay = 3
 
-module Core_en_counter(
+module Core_counter(
     input CLK,
     input en_in,
     input rst,
@@ -10,7 +10,7 @@ module Core_en_counter(
     input [5:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
-    output reg SR_0_en
+    output reg core_counter_done
     /*output [7:0] offset_out,
     output [5:0] w_count_out,
     output [7:0] ch_count_out*/
@@ -164,19 +164,19 @@ module Core_en_counter(
     //done logic
     always@(posedge CLK) begin
         if(rst) begin
-            SR_0_en <= 0;
+            core_counter_done <= 0;
         end
         else begin
             if(en_in) begin
                 if( s3_done && s3_en) begin
-                    SR_0_en <= 0;
+                    core_counter_done <= 1;
                 end
                 else begin
-                    SR_0_en <= 1;
+                    core_counter_done <= 0;
                 end
             end
             else begin
-                SR_0_en <= SR_0_en;
+                core_counter_done <= core_counter_done;
             end
         end
     end
