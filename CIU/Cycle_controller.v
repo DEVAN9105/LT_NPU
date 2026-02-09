@@ -6,19 +6,19 @@ module Cycle_controller(
     input en,
     input AGU_C_done,
     output reg set,
-    output cycle_rst,
+    output reg cycle_rst,
     output reg [7:0] cycle_SR,
-    output reg cycle_done
+    output reg cycle_done,
+    output [2:0] cc_debug
     );
     
     ////////// control counter //////////
     reg cc_en;
     reg [2:0] cc_end;
     reg [2:0] cc, next_cc;
+    assign cc_debug = cc;
     always@(*) begin
         //avoid latch
-        next_cc = cc;
-        
         if(cc == cc_end) begin
             next_cc = 0;
         end
@@ -49,9 +49,9 @@ module Cycle_controller(
         next_state = state;
         cycle_done = 0;
         cc_en = 0;
-        cc_end = 0;
         set = 0;
         cycle_rst = 0;
+        cc_end = 0;
         //FSM logic
         case(state)
             idle: begin
@@ -65,6 +65,7 @@ module Cycle_controller(
             end
             set_up: begin
                 cc_en = 1;
+                cc_end = 1;
                 set = 1;
                 if(cc == 3'd1) begin
                     next_state = processing;
@@ -74,7 +75,9 @@ module Cycle_controller(
                 end
             end
             processing: begin
-                //state transition
+                cc_en = 1;
+                cc_end = 2;
+                
                 if(AGU_C_done) begin
                     next_state = ending;
                 end

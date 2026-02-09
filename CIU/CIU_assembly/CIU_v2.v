@@ -26,6 +26,11 @@ module CIU(
     output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
     ////////// done //////////
     output cycle_done
+    
+    // debug
+    ,
+    output [7:0] caddr_debug,
+    output [2:0] cc_debug
     );
 
     ////////// SR //////////
@@ -33,16 +38,18 @@ module CIU(
     ////////// SR end //////////
 
     ////////// signals for tile buffer operator //////////
-    assign ciu_tbo_cycle_bus_a[72] = cycle_SR[6] | cycle_SR[7];
-    assign ciu_tbo_cycle_bus_b[72] = cycle_SR[6] | cycle_SR[7] | cycle_SR[8];
+    wire [7:0] caddr;
+    assign ciu_tbo_cycle_bus_a[72] = cycle_SR[5] | cycle_SR[6];
+    assign ciu_tbo_cycle_bus_b[72] = cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
     assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[1]) ? caddr : stream_a_out[71:64];
     assign ciu_tbo_cycle_bus_b[71:64] = stream_b_out[71:64];
     assign ciu_tbo_cycle_bus_a[63:0] = stream_a_out[63:0];
     assign ciu_tbo_cycle_bus_b[63:0] = stream_b_out[63:0];
     ////////// signals for tile buffer operator end //////////
+    
+    assign caddr_debug = caddr;
 
     ////////// AGU //////////
-    wire [7:0] caddr;
     wire set;
     wire AGU_C_done;
     wire cycle_rst;
@@ -66,7 +73,8 @@ module CIU(
         .set(set),
         .cycle_rst(cycle_rst),
         .cycle_SR(cycle_SR),
-        .cycle_done(cycle_done)
+        .cycle_done(cycle_done),
+        .cc_debug(cc_debug)
     );
     ////////// cycle controller end //////////
 
@@ -111,24 +119,20 @@ module CIU(
     CIU_load_buffer CIU_load_buffer(
         .CLK(CLK),
         .rst(rst),
-        .en(glb_ciu_load_bus[72]),
-        .CIU_load(glb_ciu_load_bus[71:0]),
-        // tile buffer
-        .valid_load(ciu_tbo_load_bus[72]),
-        .addr_load(ciu_tbo_load_bus[71:64]),
-        .din_load(ciu_tbo_load_bus[63:0])
+        .glb_ciu_load_bus(glb_ciu_load_bus),
+        .ciu_tbo_load_bus(ciu_tbo_load_bus)
     );
     ////////// CIU load buffer end //////////
 
     ////////// CIU write buffer //////////
-    CIU_write_buffer CIU_write_buffer(
+    CIU_wb_buffer CIU_wb_buffer(
         .CLK(CLK),
         .rst(rst),
         .glb_ciu_wb_bus(glb_ciu_wb_bus),
         // output data
         .ciu_glb_wb_bus(ciu_glb_wb_bus),
         // tile buffer
-        .dout_wb(tbo_ciu_wb_data),
+        .tbo_ciu_wb_data(tbo_ciu_wb_data),
         .ciu_tbo_wb_bus(ciu_tbo_wb_bus)
     );
     ////////// CIU write buffer end //////////
