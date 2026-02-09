@@ -2,7 +2,7 @@
 
 // delay = 4
 
-module CIU_wb_buffer(
+module CIU_write_buffer(
     input CLK,
     input rst,
     input en_wb_in,
