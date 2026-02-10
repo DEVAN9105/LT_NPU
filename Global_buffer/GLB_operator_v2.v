@@ -7,9 +7,7 @@ module GLB_operator(
     ////////// Ch_to_Y //////////
     input [10:0] ch_to_Y_initial, // 0~2047
     ////////// GLB_input //////////
-    input glb_in_mode, // 0: pre_processing, 1: core
-    // AGU_G
-    input [28:0] input_AGU_param, // {AGU_G_initial, tile_width, tile_ch}
+    input [30:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[6:0]}
     // input tile
     output reg [8:0] glb_to_prep_bus,
     output reg [10:0] glb_to_ciu_input_L_bus,
@@ -22,10 +20,10 @@ module GLB_operator(
     input [64:0] ciu_to_glb_wb_6,
     input [64:0] prep_to_glb_wb,
     ////////// GLB_output //////////
+    input [30:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[6:0]}
+    input [1:0] glb_out_mode,
     // AGU_T
     input [2:0] output_core,
-    // AGU_G
-    input [28:0] output_AGU_param, // {AGU_G_initial, tile_width, tile_ch}
     // output tile
     output reg [74:0] glb_to_ciu_output_L_bus,
     output reg [74:0] glb_to_ciu_output_R_bus,
@@ -43,8 +41,8 @@ module GLB_operator(
             output_AGU_param_buffer <= 0;
         end
         else begin
-            input_AGU_param_buffer <= input_AGU_param;
-            output_AGU_param_buffer <= output_AGU_param;
+            input_AGU_param_buffer <= glb_input_param[28:0];
+            output_AGU_param_buffer <= glb_output_param[28:0];
         end
     end
     ////////// input buffer end //////////
@@ -152,7 +150,8 @@ module GLB_operator(
         .CLK(CLK),
         .en(en),
         .rst(rst),
-        .glb_in_mode(glb_in_mode),
+        .glb_in_mode(glb_input_param[30:29]),
+         // AGU_T
         // AGU_T
         .AGU_T_initial_in(input_AGU_T_initial),
         .tile_width_in(input_tile_width),
