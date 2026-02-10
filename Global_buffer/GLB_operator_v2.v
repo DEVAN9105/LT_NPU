@@ -9,7 +9,7 @@ module GLB_operator(
     ////////// GLB_input //////////
     input glb_in_mode, // 0: pre_processing, 1: core
     // AGU_G
-    input [28:0] input_AGU_G_param, // {AGU_G_initial, glb_width, glb_ch}
+    input [28:0] input_AGU_param, // {AGU_G_initial, tile_width, tile_ch}
     // input tile
     output reg [8:0] glb_to_prep_bus,
     output reg [10:0] glb_to_ciu_input_L_bus,
@@ -25,7 +25,7 @@ module GLB_operator(
     // AGU_T
     input [2:0] output_core,
     // AGU_G
-    input [28:0] output_AGU_G_param, // {AGU_G_initial, glb_width, glb_ch}
+    input [28:0] output_AGU_param, // {AGU_G_initial, tile_width, tile_ch}
     // output tile
     output reg [74:0] glb_to_ciu_output_L_bus,
     output reg [74:0] glb_to_ciu_output_R_bus,
@@ -34,15 +34,34 @@ module GLB_operator(
     output output_done
     );
 
+    ////////// input buffer //////////
+    reg [28:0] input_AGU_param_buffer;
+    reg [28:0] output_AGU_param_buffer;
+    always@(posedge CLK) begin
+        if(rst) begin
+            input_AGU_param_buffer <= 0;
+            output_AGU_param_buffer <= 0;
+        end
+        else begin
+            input_AGU_param_buffer <= input_AGU_param;
+            output_AGU_param_buffer <= output_AGU_param;
+        end
+    end
+    ////////// input buffer end //////////
+
     ////////// tile parameter //////////
-    wire [6:0] input_tile_width = ((input_AGU_G_param[14:8] + 1) << 1) - 1;
-    wire [7:0] input_tile_ch = ((input_AGU_G_param[7:0] + 1) >> 1) - 1;
-    wire [6:0] output_tile_width = ((output_AGU_G_param[14:8] + 1) << 1) - 1;
-    wire [7:0] output_tile_ch = ((output_AGU_G_param[7:0] + 1) >> 1) - 1;
+    wire [6:0] glb_width_in = ((input_AGU_param_buffer[14:8] + 1) >> 2) - 1; // glb_width = tile_width/4
+    wire [7:0] glb_ch_in = (((input_AGU_param_buffer[7:0] + 1)<<2 + (input_AGU_param_buffer[7:0] + 1)<<1) << 2) - 1; // glb_ch = (tile_ch*6)*4
+    wire [6:0] glb_width_out = ((output_AGU_param_buffer[14:8] + 1) >> 2) - 1; // glb_width = tile_width/4
+    wire [7:0] glb_ch_out = (((output_AGU_param_buffer[7:0] + 1)<<2 + (output_AGU_param_buffer[7:0] + 1)<<1) << 2) - 1; // glb_ch = (tile_ch*6)*4
     wire [7:0] input_AGU_T_initial = 0;
     wire [7:0] output_AGU_T_initial = 0;
-    ////////// tile parameter end //////////
-
+    // GLB input
+    wire [22:0] input_AGU_T_param = {input_AGU_T_initial, input_AGU_param_buffer[14:0]};
+    wire [28:0] input_AGU_G_param = {input_AGU_param_buffer[28:15], glb_width_in, glb_ch_in};
+    wire [22:0] output_AGU_T_param = {output_AGU_T_initial, output_AGU_param_buffer[14:0]};
+    wire [28:0] output_AGU_G_param = {output_AGU_param_buffer[28:15], glb_width_out, glb_ch_out};
+    ////////// tile parameter end /////////
 
     ////////// ch_to_Y //////////
     wire input_ch_to_Y_en, output_ch_to_Y_en;

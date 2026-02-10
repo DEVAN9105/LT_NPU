@@ -6,30 +6,19 @@ module GLB_output_controller(
     input rst,
     // AGU_G
     output reg AGU_G_en,
-    output reg AGU_G_rst,
     input AGU_G_done,
     input AGU_G_en_next,
     // output
-    output reg [11:0] SR_1,
+    output reg set,
+    output reg [9:0] SR,
     output reg done,
     output reg glb_out_rst
     );
     
     ////////// state define //////////
-    reg [1:0] state, next_state;
-    parameter idle = 0, processing = 1, ending = 2,finish = 3;
+    reg [2:0] state, next_state;
+    parameter idle = 0, set_up = 1, processing = 2, ending = 3, finish = 4;
     ////////// state define end //////////
-
-    ////////// reset //////////
-    always@(posedge CLK) begin
-        if(state == idle) begin
-            glb_out_rst <= 1;
-        end
-        else begin
-            glb_out_rst <= 0;
-        end
-    end
-    ////////// reset end //////////
 
     ////////// FSM //////////
     
@@ -38,17 +27,22 @@ module GLB_output_controller(
         next_state = state;
         done = 0;
         AGU_G_en = 0;
-        AGU_G_rst = 0;
+        set = 0;
+        glb_out_rst = 0;
         
         case(state)
             idle: begin
-                AGU_G_rst = 1;
+                glb_out_rst = 1;
                 if(en) begin
-                    next_state = processing;
+                    next_state = set_up;
                 end
                 else begin
                     next_state = idle;
                 end
+            end
+            set_up: begin
+                set = 1;
+                next_state = processing;
             end
             processing: begin
                 AGU_G_en = 1;
@@ -60,8 +54,7 @@ module GLB_output_controller(
                 end
             end
             ending: begin
-                AGU_G_rst = 1;
-                if(SR_1 != 0) begin
+                if(SR != 0) begin
                     next_state = ending;
                 end
                 else begin
@@ -96,10 +89,10 @@ module GLB_output_controller(
     // SR_1
     always@(posedge CLK) begin
         if(rst) begin
-            SR_1 <= 0;
+            SR <= 0;
         end
         else begin
-            SR_1 <= {SR_1[10:0], AGU_G_en_next };
+            SR <= {SR[8:0], AGU_G_en_next};
         end
     end
     ////////// SR end //////////

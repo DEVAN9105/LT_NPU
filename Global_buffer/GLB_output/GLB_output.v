@@ -4,32 +4,25 @@ module GLB_output(
     input CLK,
     input en,
     input rst,
-    // AGU_T
     input [1:0] glb_out_mode, // 0: multi_cast, 1: uni_cast, 2: post_processing
-    input [2:0] core,
-    input [7:0] AGU_T_initial_in,
-    input [6:0] tile_width_in,
-    input [7:0] tile_ch_in,
+    // AGU_T
+    input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // AGU_G
-    input [11:0] AGU_G_initial_in,
-    input [6:0] glb_width_in,
-    input [7:0] glb_ch_in,
-    output ch_to_Y_en,
-    output [9:0] ch_sum,
-    input [11:0] Y,
-    output [11:0] gaddr,
-    // output tile
-    output reg [5:0] load_en,
-    output [71:0] CIU_load,
+    input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
+    output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
+    input [11:0] ch_to_Y_Y, // addr offset for AGU_G
     // glb control
-    output glb_b_en,
-    input [63:0] dout_glb,
+    output [14:0] glb_output_bus, // {enb, gaddr[13:0]}
+    input [63:0] glb_doutb,
+    // output tile
+    output [78:0] glb_load_bus, // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
     // done signal
     output done
     );
     
     ////////// GLB control //////////
-    wire [11:0] SR_1;
+    wire [9:0] SR;
+    wire set;
     wire glb_out_rst;
     wire AGU_G_done;
     wire AGU_G_en;
@@ -39,34 +32,35 @@ module GLB_output(
         .CLK(CLK),
         .en(en),
         .rst(rst),
+        .set(set),
         .AGU_G_done(AGU_G_done),
         .AGU_G_en(AGU_G_en),
-        .AGU_G_rst(AGU_G_rst),
         .AGU_G_en_next(AGU_G_en_next),
-        .SR_1(SR_1),
+        .SR(SR),
         .done(done),
         .glb_out_rst(glb_out_rst)
     );
     ////////// GLB control end //////////
 
     ////////// signal assign //////////
+    reg [6:0] load_sel; // 1~6: core 1~6, 0: Post_processing
     wire [7:0] taddr;
-    wire [63:0] glb_load;
-    assign glb_b_en = SR_1[0];
-    assign CIU_load = {taddr_buffer, glb_load};
+    wire [13:0] gaddr;
+    wire [63:0] glb_doutb_transposed;
+    assign glb_output_bus = {AGU_G_en_next, gaddr[13:0]};
+    assign glb_load_bus = {load_sel, taddr_buffer, glb_doutb_transposed};
     ////////// signal assign end //////////
 
     ////////// AGU_G //////////
     AGU_G agu_g(
         .CLK(CLK),
         .en(AGU_G_en),
-        .rst(AGU_G_rst),
-        .AGU_G_initial_in(AGU_G_initial_in),
-        .glb_width_in(glb_width_in),
-        .glb_ch_in(glb_ch_in),
-        .ch_to_Y_en(ch_to_Y_en),
-        .ch_sum(ch_sum),
-        .Y(Y),
+        .rst(glb_out_rst),
+        .set(set),
+        .AGU_G_param(AGU_G_param),
+        .ch_to_Y_en(ch_to_Y_bus[10]),
+        .ch_sum(ch_to_Y_bus[9:0]),
+        .Y(ch_to_Y_Y),
         .gaddr(gaddr),
         .en_next(AGU_G_en_next),
         .done(AGU_G_done)
@@ -74,41 +68,61 @@ module GLB_output(
     ////////// AGU_G end //////////
 
     ////////// AGU_T //////////
+    reg [2:0] core;
     wire [2:0] core_pointer;
     reg [7:0] taddr_buffer;
     wire AGU_T_en_next;
+    reg [22:0] AGU_T_param_decoded;
+    // channel max: 39
+    wire [7:0] tile_ch_decoded = ((AGU_T_param[7:0] + 1) << 2) + ((AGU_T_param[7:0] + 1) << 1) - 1; // tile_ch * 6
+    // core & channel decode
+    always@(*) begin
+        if(glb_out_mode == 2'd0 || glb_out_mode == 2'd2) begin
+            core = 3'd0; // pre_processing tile
+            AGU_T_param_decoded = {AGU_T_param[22:8], tile_ch_decoded}; // for pre_processing, tile_ch is always 1
+        end
+        else begin
+            core = 3'd5; // multi_cast tile
+            AGU_T_param_decoded = AGU_T_param;
+        end
+    end
+
     AGU_T agu_t(
         .CLK(CLK),
-        .en(SR_1[3]),
+        .en(SR[2]),
         .rst(glb_out_rst),
-        .AGU_T_initial_in(AGU_T_initial_in),
-        .tile_width_in(tile_width_in),
-        .tile_ch_in(tile_ch_in),
+        .set(set),
+        .AGU_T_param(AGU_T_param_decoded),
         .core(core),
         .core_pointer(core_pointer),
         .taddr(taddr),
         .en_next(AGU_T_en_next)
     );
 
-    // core decoder
+    // load_sel decoder
     always@(posedge CLK) begin
         if (glb_out_rst) begin
-            load_en <= 6'b0;
+            load_sel <= 7'd0;
         end
         else begin
             if(AGU_T_en_next) begin
-                case(core_pointer)
-                    3'b000: load_en <= 6'b000001;
-                    3'b001: load_en <= 6'b000010;
-                    3'b010: load_en <= 6'b000100;
-                    3'b011: load_en <= 6'b001000;
-                    3'b100: load_en <= 6'b010000;
-                    3'b101: load_en <= 6'b100000;
-                    default: load_en <= 6'b000000;
-                endcase
+                if(glb_out_mode == 2'd2) begin
+                    load_sel <= 7'b0000001; // pre_processing tile only write to core 1
+                end
+                else begin
+                    case(core_pointer)
+                        3'b000: load_sel <= 7'b0000001;
+                        3'b001: load_sel <= 7'b0000010;
+                        3'b010: load_sel <= 7'b0000100;
+                        3'b011: load_sel <= 7'b0001000;
+                        3'b100: load_sel <= 7'b0010000;
+                        3'b101: load_sel <= 7'b0100000;
+                        default: load_sel <= 7'b0000000;
+                    endcase
+                end
             end
             else begin
-                load_en <= 6'b000000;
+                load_sel <= 7'b0000000;
             end
         end
     end
@@ -128,9 +142,9 @@ module GLB_output(
     Transpose transpose(
         .CLK(CLK),
         .rst(glb_out_rst),
-        .en(SR_1[3]),
-        .data(dout_glb),
-        .data_transpose(glb_load)
+        .en(SR[2]),
+        .data(glb_doutb),
+        .data_transpose(glb_doutb_transposed)
     );
     ////////// Output Transpose end //////////
 

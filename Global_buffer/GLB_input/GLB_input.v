@@ -4,7 +4,7 @@ module GLB_input(
     input CLK,
     input en,
     input rst,
-    input [1:0] glb_in_mode, // 0: pre_processing, 1: core
+    input [1:0] glb_in_mode, // 0: uni_write, 1: multi_write
     // AGU_T
     input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // AGU_G
@@ -44,18 +44,23 @@ module GLB_input(
     ////////// GLB input control end //////////
 
     ////////// signal assign //////////
-    assign glb_input_bus[78] = SR[5];
+    assign glb_input_bus = {SR[5], gaddr, data_transposed};
     ////////// signal assign end //////////
 
     ////////// AGU_T //////////
     reg [2:0] core;
     wire write_back_en;
-    always@(posedge CLK) begin
+    reg [22:0] AGU_T_param_decoded;
+    wire [7:0] tile_ch_decoded = ((AGU_T_param[7:0] + 1) << 2) + ((AGU_T_param[7:0] + 1) << 1) - 1; // tile_ch * 6
+    // core & channel decode
+    always@(*) begin
         if(glb_in_mode == 2'd0) begin
-            core <= 3'd0; // pre_processing tile
+            core = 3'd0; // uni_write tile
+            AGU_T_param_decoded = {AGU_T_param[22:8], tile_ch_decoded};
         end
         else begin
-            core <= 3'd5;
+            core = 3'd5; // multi_write tile
+            AGU_T_param_decoded = AGU_T_param;
         end
     end
     wire [2:0] core_pointer;
@@ -65,7 +70,7 @@ module GLB_input(
         .en(AGU_T_en),
         .rst(glb_in_rst),
         .set(set),
-        .AGU_T_param(AGU_T_param),
+        .AGU_T_param(AGU_T_param_decoded),
         .core(core),
         .core_pointer(core_pointer),
         .taddr(taddr),
@@ -78,7 +83,7 @@ module GLB_input(
     reg [6:0] wb_sel;
     always@(*) begin
         if(glb_in_mode == 2'b00) begin
-            wb_sel = 7'b0000001; // pre_processing tile
+            wb_sel = 7'b0000001;
         end
         else begin
             if(write_back_en) begin
@@ -101,7 +106,7 @@ module GLB_input(
     ////////// write back enable end //////////
 
     ////////// data buffer //////////
-    wire [2:0] wb_sel = {prep_glb_wb_bus[64], ciu_glb_wb_bus_123[64], ciu_glb_wb_bus_456[64]};
+    wire [2:0] wb_mux = {prep_glb_wb_bus[64], ciu_glb_wb_bus_123[64], ciu_glb_wb_bus_456[64]};
     reg [63:0] data_buffer_0, data_buffer_1;
     // data buffer 0
     always@(posedge CLK) begin
@@ -110,7 +115,7 @@ module GLB_input(
         end
         else begin
             if(wb_data_valid) begin
-                case(wb_sel)
+                case(wb_mux)
                     3'b100: data_buffer_0 <= prep_glb_wb_bus[63:0];
                     3'b010: data_buffer_0 <= ciu_glb_wb_bus_123[63:0];
                     3'b001: data_buffer_0 <= ciu_glb_wb_bus_456[63:0];
@@ -139,6 +144,7 @@ module GLB_input(
     ////////// data buffer end //////////
 
     ////////// AGU_G //////////
+    wire [13:0] gaddr;
     AGU_G agu_g(
         .CLK(CLK),
         .en(wb_data_valid),
@@ -147,17 +153,18 @@ module GLB_input(
         .AGU_G_param(AGU_G_param),
         .ch_to_Y_bus(ch_to_Y_bus),
         .Y(ch_to_Y_Y),
-        .gaddr(glb_input_bus[77:64])
+        .gaddr(gaddr)
     );
     ////////// AGU_G end //////////
 
     ////////// Input Transpose //////////
+    wire [63:0] data_transposed;
     Transpose transpose(
         .CLK(CLK),
         .rst(glb_in_rst),
         .en(SR[1]),
         .data(data_buffer_1),
-        .data_transpose(glb_input_bus[63:0])
+        .data_transpose(data_transposed)
     );
     ////////// Input Transpose end //////////
 
