@@ -10,7 +10,7 @@ module GLB_input(
     // AGU_G
     input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
-    input [11:0] ch_to_Y_Y,
+    input [11:0] ch_to_Y_Y, // addr offset for AGU_G
     // input tile
     output [14:0] wb_tile_addr_bus, // {wb_sel[6:0], taddr[7:0]}
     input [64:0] ciu_glb_wb_bus_123, // {wb_en_123, wb_data_123[63:0]}
