@@ -8,7 +8,7 @@ module GLB_output(
     // AGU_G
     input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
-    input [11:0] ch_to_Y_Y, // addr offset for AGU_G
+    input [13:0] ch_to_Y_Y, // addr offset for AGU_G
     // glb
     output [14:0] glb_output_bus, // {enb, gaddr[13:0]}
     input [63:0] glb_doutb,
@@ -57,8 +57,7 @@ module GLB_output(
         .rst(glb_out_rst),
         .set(set),
         .AGU_G_param(AGU_G_param),
-        .ch_to_Y_en(ch_to_Y_bus[10]),
-        .ch_sum(ch_to_Y_bus[9:0]),
+        .ch_to_Y_bus(ch_to_Y_bus),
         .Y(ch_to_Y_Y),
         .gaddr(gaddr),
         .en_next(AGU_G_en_next),
@@ -106,16 +105,16 @@ module GLB_output(
         else begin
             if(AGU_T_en_next) begin
                 if(glb_out_mode == 2'd2) begin
-                    load_sel <= 7'b0000001; // pre_processing tile only write to core 1
+                    load_sel <= 7'b0000001; // post_processing tile only write to core 1
                 end
                 else begin
                     case(core_pointer)
-                        3'b000: load_sel <= 7'b1000000;
-                        3'b001: load_sel <= 7'b0100000;
-                        3'b010: load_sel <= 7'b0010000;
-                        3'b011: load_sel <= 7'b0001000;
-                        3'b100: load_sel <= 7'b0000100;
-                        3'b101: load_sel <= 7'b0000010;
+                        3'd0: load_sel <= 7'b1000000;
+                        3'd1: load_sel <= 7'b0100000;
+                        3'd2: load_sel <= 7'b0010000;
+                        3'd3: load_sel <= 7'b0001000;
+                        3'd4: load_sel <= 7'b0000100;
+                        3'd5: load_sel <= 7'b0000010;
                         default: load_sel <= 7'b0000000;
                     endcase
                 end

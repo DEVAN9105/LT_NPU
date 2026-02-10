@@ -9,13 +9,13 @@ module GLB_operator(
     ////////// GLB_input //////////
     input [30:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[6:0]}
     // input tile
-    output reg [8:0] glb_prep_wb_bus,// {en, addr[7:0]}
-    output reg [8:0] glb_ciu_wb_bus_1, // {en, addr[7:0]}
-    output reg [8:0] glb_ciu_wb_bus_2, // {en, addr[7:0]}
-    output reg [8:0] glb_ciu_wb_bus_3, // {en, addr[7:0]}
-    output reg [8:0] glb_ciu_wb_bus_4, // {en, addr[7:0]}
-    output reg [8:0] glb_ciu_wb_bus_5, // {en, addr[7:0]}
-    output reg [8:0] glb_ciu_wb_bus_6, // {en, addr[7:0]}
+    output [8:0] glb_prep_wb_bus,// {en, addr[7:0]}
+    output [8:0] glb_ciu_wb_bus_1, // {en, addr[7:0]}
+    output [8:0] glb_ciu_wb_bus_2, // {en, addr[7:0]}
+    output [8:0] glb_ciu_wb_bus_3, // {en, addr[7:0]}
+    output [8:0] glb_ciu_wb_bus_4, // {en, addr[7:0]}
+    output [8:0] glb_ciu_wb_bus_5, // {en, addr[7:0]}
+    output [8:0] glb_ciu_wb_bus_6, // {en, addr[7:0]}
     input [64:0] prep_glb_wb_bus, // {valid, data[63:0]}
     input [64:0] ciu_glb_wb_bus_1, // {valid, data[63:0]}
     input [64:0] ciu_glb_wb_bus_2, // {valid, data[63:0]}
@@ -26,9 +26,13 @@ module GLB_operator(
     ////////// GLB_output //////////
     input [30:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[28:0]}
     // output tile
-    output reg [75:0] glb_ciu_load_bus_123, // {en[2:0], addr[7:0], data[63:0]}
-    output reg [75:0] glb_ciu_load_bus_456, // {en[2:0], addr[7:0], data[63:0]}
-    output reg [72:0] glb_prep_load_bus, // {en, addr[7:0], data[63:0]}
+    output [72:0] glb_ciu_load_bus_1, // {en, addr[7:0], data[63:0]}
+    output [72:0] glb_ciu_load_bus_2, // {en, addr[7:0], data[63:0]}
+    output [72:0] glb_ciu_load_bus_3, // {en, addr[7:0], data[63:0]}
+    output [72:0] glb_ciu_load_bus_4, // {en, addr[7:0], data[63:0]}
+    output [72:0] glb_ciu_load_bus_5, // {en, addr[7:0], data[63:0]}
+    output [72:0] glb_ciu_load_bus_6, // {en, addr[7:0], data[63:0]}
+    output reg [72:0] glb_posp_load_bus, // {en, addr[7:0], data[63:0]}
     // done signal
     output input_done,
     output output_done
@@ -51,9 +55,9 @@ module GLB_operator(
 
     ////////// tile parameter //////////
     wire [6:0] glb_width_in = ((input_AGU_param_buffer[14:8] + 1) >> 2) - 1; // glb_width = tile_width/4
-    wire [7:0] glb_ch_in = (((input_AGU_param_buffer[7:0] + 1)<<2 + (input_AGU_param_buffer[7:0] + 1)<<1) << 2) - 1; // glb_ch = (tile_ch*6)*4
+    wire [7:0] glb_ch_in = ((((input_AGU_param_buffer[7:0] + 1)<<2) + ((input_AGU_param_buffer[7:0] + 1)<<1)) << 2) - 1; // glb_ch = (tile_ch*6)*4
     wire [6:0] glb_width_out = ((output_AGU_param_buffer[14:8] + 1) >> 2) - 1; // glb_width = tile_width/4
-    wire [7:0] glb_ch_out = (((output_AGU_param_buffer[7:0] + 1)<<2 + (output_AGU_param_buffer[7:0] + 1)<<1) << 2) - 1; // glb_ch = (tile_ch*6)*4
+    wire [7:0] glb_ch_out = ((((output_AGU_param_buffer[7:0] + 1)<<2) + ((output_AGU_param_buffer[7:0] + 1)<<1)) << 2) - 1; // glb_ch = (tile_ch*6)*4
     wire [7:0] input_AGU_T_initial = 0;
     wire [7:0] output_AGU_T_initial = 0;
     // GLB input
@@ -149,7 +153,7 @@ module GLB_operator(
         .AGU_T_param(input_AGU_T_param),
         // AGU_G
         .AGU_G_param(input_AGU_G_param),
-        .ch_to_Y_bus(ch_to_Y_bus),
+        .ch_to_Y_bus(input_ch_to_Y_bus),
         .ch_to_Y_Y(input_Y),
         // input tile
         .glb_prep_wb_bus(glb_prep_wb_bus),
@@ -166,30 +170,49 @@ module GLB_operator(
     ////////// GLB_input end //////////
 
     ////////// GLB_output //////////
-    // load bus split
+    // glb to ciu/PosP load bus buffer
+    reg [74:0] glb_ciu_load_bus_123; // {en[2:0], addr[7:0], data[63:0]}
+    reg [74:0] glb_ciu_load_bus_456; // {en[2:0], addr[7:0], data[63:0]}
     wire [78:0] glb_load_bus;
-    assign glb_ciu_load_bus_123 = {glb_load_bus[78:76], glb_load_bus[71:0]};
-    assign glb_ciu_load_bus_456 = {glb_load_bus[75:73], glb_load_bus[71:0]};
-    assign glb_prep_load_bus = {glb_load_bus[72], glb_load_bus[71:0]};
+    always@(posedge CLK) begin
+        if(rst) begin
+            glb_ciu_load_bus_123 <= 75'd0;
+            glb_ciu_load_bus_456 <= 75'd0;
+            glb_posp_load_bus <= 73'd0;
+        end
+        else begin
+            glb_ciu_load_bus_123 <= {glb_load_bus[78:76], glb_load_bus[71:0]};
+            glb_ciu_load_bus_456 <= {glb_load_bus[75:73], glb_load_bus[71:0]};
+            glb_posp_load_bus <= {glb_load_bus[72], glb_load_bus[71:0]};
+        end
+    end
+    // glb to ciu/PosP load bus split
+    assign glb_ciu_load_bus_1 = {glb_ciu_load_bus_123[74], glb_ciu_load_bus_123[71:64], glb_ciu_load_bus_123[63:0]};
+    assign glb_ciu_load_bus_2 = {glb_ciu_load_bus_123[73], glb_ciu_load_bus_123[71:64], glb_ciu_load_bus_123[63:0]};
+    assign glb_ciu_load_bus_3 = {glb_ciu_load_bus_123[72], glb_ciu_load_bus_123[71:64], glb_ciu_load_bus_123[63:0]};
+    assign glb_ciu_load_bus_4 = {glb_ciu_load_bus_456[74], glb_ciu_load_bus_456[71:64], glb_ciu_load_bus_456[63:0]};
+    assign glb_ciu_load_bus_5 = {glb_ciu_load_bus_456[73], glb_ciu_load_bus_456[71:64], glb_ciu_load_bus_456[63:0]};
+    assign glb_ciu_load_bus_6 = {glb_ciu_load_bus_456[72], glb_ciu_load_bus_456[71:64], glb_ciu_load_bus_456[63:0]};
+    
     // GLB_output instance
     GLB_output glb_output(
-    .CLK(CLK),
-    .en(en),
-    .rst(rst),
-    .glb_out_mode(glb_output_param[30:29]),
-    // AGU_G
-    .AGU_G_param(output_AGU_G_param), // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
-    .ch_to_Y_bus(ch_to_Y_bus), // {ch_to_Y_en, ch_sum[9:0]}
-    .ch_to_Y_Y(output_Y), // addr offset for AGU_G
-    // glb
-    .glb_output_bus(glb_output_bus), // {enb, gaddr[13:0]}
-    .glb_doutb(glb_doutb),
-    // AGU_T
-    .AGU_T_param(output_AGU_T_param), // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
-    // output tile
-    .glb_load_bus(glb_load_bus), // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
-    // done signal
-    .done(output_done)
+        .CLK(CLK),
+        .en(en),
+        .rst(rst),
+        .glb_out_mode(glb_output_param[30:29]),
+        // AGU_G
+        .AGU_G_param(output_AGU_G_param), // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
+        .ch_to_Y_bus(output_ch_to_Y_bus), // {ch_to_Y_en, ch_sum[9:0]}
+        .ch_to_Y_Y(output_Y), // addr offset for AGU_G
+        // glb
+        .glb_output_bus(glb_output_bus), // {enb, gaddr[13:0]}
+        .glb_doutb(glb_doutb),
+        // AGU_T
+        .AGU_T_param(output_AGU_T_param), // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
+        // output tile
+        .glb_load_bus(glb_load_bus), // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
+        // done signal
+        .done(output_done)
     );
     ////////// GLB_output end //////////
     

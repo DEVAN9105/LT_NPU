@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// delay = 2 cycle
+// delay = 6 cycle
 
 module AGU_G(
     input CLK,
@@ -11,11 +11,10 @@ module AGU_G(
     input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     // ch_to_Y
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
-    output ch_to_Y_en,
-    output reg [9:0] ch_sum,
     input [13:0] Y,
     // output
     output reg [13:0] gaddr,
+    output en_next,
     output done
     );
     
@@ -53,6 +52,7 @@ module AGU_G(
             en_SR <= {en_SR[3:0], en};
         end
     end
+    assign en_next = en_SR[4];
     ////////// en SR end //////////
 
     ////////// stage 1 //////////
@@ -170,7 +170,7 @@ module AGU_G(
         end
         else begin
             if(en_SR[0]) begin
-                offset_Y_reg_1 <= {4'd0, offset_Y_reg_0};
+                offset_Y_reg_1 <= {2'd0, offset_Y_reg_0};
             end
             else begin
                 offset_Y_reg_1 <= offset_Y_reg_1;
@@ -180,7 +180,7 @@ module AGU_G(
     ////////// stage 2 end //////////
     
     ////////// stage 3 //////////
-    reg [9:0] ch, next_ch;
+    reg [9:0] ch, next_ch; // 1024
     reg [7:0] ch_count, next_ch_count;
     reg s3_done;
     reg done_det;
@@ -221,6 +221,7 @@ module AGU_G(
     end
 
     // adder
+    reg [9:0] ch_sum;
     always@(posedge CLK) begin
         if(rst) begin
             ch_sum <= 0;
@@ -234,6 +235,7 @@ module AGU_G(
             end
         end
     end
+    assign ch_to_Y_bus[9:0] = ch_sum;
     ////////// stage 3 end //////////
 
     ////////// addr_1 reg //////////

@@ -10,7 +10,7 @@ module GLB_input(
     // AGU_G
     input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
-    input [11:0] ch_to_Y_Y, // addr offset for AGU_G
+    input [13:0] ch_to_Y_Y, // addr offset for AGU_G
     // input tile
     output [8:0] glb_prep_wb_bus, // {wb_sel[0], taddr[7:0]}
     output [10:0] glb_ciu_wb_bus_123, // {wb_sel[3:1], taddr[7:0]}
@@ -105,8 +105,8 @@ module GLB_input(
         end
     end
     assign glb_prep_wb_bus = {wb_sel[0], taddr};
-    assign glb_ciu_wb_bus_123 = {wb_sel[3:1], taddr};
-    assign glb_ciu_wb_bus_456 = {wb_sel[6:4], taddr};
+    assign glb_ciu_wb_bus_123 = {wb_sel[6:4], taddr};
+    assign glb_ciu_wb_bus_456 = {wb_sel[3:1], taddr};
     ////////// write back enable end //////////
 
     ////////// data buffer //////////
