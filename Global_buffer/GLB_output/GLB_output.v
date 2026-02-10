@@ -5,6 +5,7 @@ module GLB_output(
     input en,
     input rst,
     // AGU_T
+    input [1:0] glb_out_mode, // 0: multi_cast, 1: uni_cast, 2: post_processing
     input [2:0] core,
     input [7:0] AGU_T_initial_in,
     input [6:0] tile_width_in,

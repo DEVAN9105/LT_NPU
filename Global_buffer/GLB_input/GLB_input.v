@@ -4,7 +4,7 @@ module GLB_input(
     input CLK,
     input en,
     input rst,
-    input glb_in_mode, // 0: pre_processing, 1: core
+    input [1:0] glb_in_mode, // 0: pre_processing, 1: core
     // AGU_T
     input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // AGU_G
@@ -25,6 +25,7 @@ module GLB_input(
     ////////// GLB input control //////////
     wire AGU_T_en;
     wire [5:0] SR;
+    wire set;
     wire glb_in_rst;
     wire AGU_T_done;
     wire wb_data_valid = (ciu_glb_wb_bus_123[64] | ciu_glb_wb_bus_456[64] | prep_glb_wb_bus[64]);
@@ -32,6 +33,7 @@ module GLB_input(
         .CLK(CLK),
         .en(en),
         .rst(rst),
+        .set(set),
         .wb_data_valid(wb_data_valid),
         .AGU_T_done(AGU_T_done),
         .AGU_T_en(AGU_T_en),
@@ -49,7 +51,7 @@ module GLB_input(
     reg [2:0] core;
     wire write_back_en;
     always@(posedge CLK) begin
-        if(glb_in_mode == 0) begin
+        if(glb_in_mode == 2'd0) begin
             core <= 3'd0; // pre_processing tile
         end
         else begin
@@ -62,6 +64,7 @@ module GLB_input(
         .CLK(CLK),
         .en(AGU_T_en),
         .rst(glb_in_rst),
+        .set(set),
         .AGU_T_param(AGU_T_param),
         .core(core),
         .core_pointer(core_pointer),
@@ -74,7 +77,7 @@ module GLB_input(
     ////////// write back enable //////////
     reg [6:0] wb_sel;
     always@(*) begin
-        if(glb_in_mode == 0) begin
+        if(glb_in_mode == 2'b00) begin
             wb_sel = 7'b0000001; // pre_processing tile
         end
         else begin
@@ -140,6 +143,7 @@ module GLB_input(
         .CLK(CLK),
         .en(wb_data_valid),
         .rst(glb_in_rst),
+        .set(set),
         .AGU_G_param(AGU_G_param),
         .ch_to_Y_bus(ch_to_Y_bus),
         .Y(ch_to_Y_Y),
