@@ -5,15 +5,15 @@ module GLB_output(
     input en,
     input rst,
     input [1:0] glb_out_mode, // 0: multi_cast, 1: uni_cast, 2: post_processing
-    // AGU_T
-    input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // AGU_G
     input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
     input [11:0] ch_to_Y_Y, // addr offset for AGU_G
-    // glb control
+    // glb
     output [14:0] glb_output_bus, // {enb, gaddr[13:0]}
     input [63:0] glb_doutb,
+    // AGU_T
+    input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // output tile
     output [78:0] glb_load_bus, // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
     // done signal
@@ -26,7 +26,6 @@ module GLB_output(
     wire glb_out_rst;
     wire AGU_G_done;
     wire AGU_G_en;
-    wire AGU_G_rst;
     wire AGU_G_en_next;
     GLB_output_controller glb_output_controller(
         .CLK(CLK),
@@ -43,7 +42,7 @@ module GLB_output(
     ////////// GLB control end //////////
 
     ////////// signal assign //////////
-    reg [6:0] load_sel; // 1~6: core 1~6, 0: Post_processing
+    reg [6:0] load_sel; // {core 1~6, Post_processing}
     wire [7:0] taddr;
     wire [13:0] gaddr;
     wire [63:0] glb_doutb_transposed;
@@ -111,12 +110,12 @@ module GLB_output(
                 end
                 else begin
                     case(core_pointer)
-                        3'b000: load_sel <= 7'b0000001;
-                        3'b001: load_sel <= 7'b0000010;
-                        3'b010: load_sel <= 7'b0000100;
+                        3'b000: load_sel <= 7'b1000000;
+                        3'b001: load_sel <= 7'b0100000;
+                        3'b010: load_sel <= 7'b0010000;
                         3'b011: load_sel <= 7'b0001000;
-                        3'b100: load_sel <= 7'b0010000;
-                        3'b101: load_sel <= 7'b0100000;
+                        3'b100: load_sel <= 7'b0000100;
+                        3'b101: load_sel <= 7'b0000010;
                         default: load_sel <= 7'b0000000;
                     endcase
                 end

@@ -41,10 +41,10 @@ module CIU(
     wire [7:0] caddr;
     assign ciu_tbo_cycle_bus_a[72] = cycle_SR[5] | cycle_SR[6];
     assign ciu_tbo_cycle_bus_b[72] = cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
-    assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[1]) ? caddr : stream_a_out[71:64];
-    assign ciu_tbo_cycle_bus_b[71:64] = stream_b_out[71:64];
-    assign ciu_tbo_cycle_bus_a[63:0] = stream_a_out[63:0];
-    assign ciu_tbo_cycle_bus_b[63:0] = stream_b_out[63:0];
+    assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[1]) ? caddr : stream_a_in[71:64];
+    assign ciu_tbo_cycle_bus_b[71:64] = stream_b_in[71:64];
+    assign ciu_tbo_cycle_bus_a[63:0] = stream_a_in[63:0];
+    assign ciu_tbo_cycle_bus_b[63:0] = stream_b_in[63:0];
     ////////// signals for tile buffer operator end //////////
     
     assign caddr_debug = caddr;
@@ -93,22 +93,24 @@ module CIU(
     ////////// CI buffer //////////
     // A
     wire CI_buffer_A_en = cycle_SR[4] | cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
+    wire mux_sel_a = cycle_SR[4];
     CI_buffer CI_buffer_A(
         .CLK(CLK),
         .rst(cycle_rst),
         .en(CI_buffer_A_en),
-        .mux_sel(cycle_SR[4]),
+        .mux_sel(mux_sel_a),
         .stream_in(stream_a_in),
         .stream_initial(stream_initial),
         .stream_out(stream_a_out)
     );
     // B
     wire CI_buffer_B_en = cycle_SR[4] | cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
+    wire mux_sel_b = cycle_SR[4];
     CI_buffer CI_buffer_B(
         .CLK(CLK),
         .rst(cycle_rst),
         .en(CI_buffer_B_en),
-        .mux_sel(cycle_SR[4]),
+        .mux_sel(mux_sel_b),
         .stream_in(stream_b_in),
         .stream_initial(stream_initial),
         .stream_out(stream_b_out)

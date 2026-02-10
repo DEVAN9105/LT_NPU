@@ -13,9 +13,9 @@ module AGU_G(
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
     output ch_to_Y_en,
     output reg [9:0] ch_sum,
-    input [11:0] Y,
+    input [13:0] Y,
     // output
-    output reg [11:0] gaddr,
+    output reg [13:0] gaddr,
     output done
     );
     
@@ -44,7 +44,7 @@ module AGU_G(
 
     ////////// en SR //////////
     reg [4:0] en_SR;
-    assign ch_to_Y_en = en_SR[2];
+    assign ch_to_Y_bus[10] = en_SR[2];
     always@(posedge CLK) begin
         if(rst || done) begin
             en_SR <= 0;
