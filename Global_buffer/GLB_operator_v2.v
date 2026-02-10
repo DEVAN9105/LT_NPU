@@ -7,7 +7,7 @@ module GLB_operator(
     ////////// Ch_to_Y //////////
     input [10:0] ch_to_Y_initial, // 0~2047
     ////////// GLB_input //////////
-    input [30:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[6:0]}
+    input [30:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[28:0]}
     // input tile
     output [8:0] glb_prep_wb_bus,// {en, addr[7:0]}
     output [8:0] glb_ciu_wb_bus_1, // {en, addr[7:0]}
