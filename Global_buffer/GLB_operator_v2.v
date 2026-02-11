@@ -71,7 +71,7 @@ module GLB_operator(
 
     ////////// ch_to_Y //////////
     wire [10:0] input_ch_to_Y_bus, output_ch_to_Y_bus;
-    wire [13:0] input_Y, output_Y;
+    wire [13:0] input_Y, output_Y; // real addr
     // ch_to_Y addr calculation
     wire [10:0] input_ch, output_ch;
     assign input_ch = ch_to_Y_initial + input_ch_to_Y_bus[9:0];
