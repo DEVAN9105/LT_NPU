@@ -38,7 +38,10 @@ module Core(
     output [47:0] acc_result_0,
     output [47:0] acc_result_1,
     output [47:0] acc_result_2,
-    output [47:0] acc_result_3
+    output [47:0] acc_result_3,
+    output [2:0] state_debug,
+    output [12:0] SR_0_debug,
+    output [5:0] SR_1_debug
     );
     
     ////////// mode define //////////
@@ -64,12 +67,13 @@ module Core(
     wire Core_en_counter_en;
     wire AGU_O_done;
     wire acc_done;
-    wire [1:0] state;
     wire set;
     wire core_rst; // to reset FSM and other modules when core is done
     wire [12:0] SR_0;
     wire [5:0] SR_1;
-
+    assign SR_0_debug = SR_0;
+    assign SR_1_debug = SR_1;
+    
     // Core controller instance
     Core_controller core_controller(
         .CLK(CLK),
@@ -89,7 +93,8 @@ module Core(
         .SR_0(SR_0),
         .SR_1(SR_1),
         .core_done(core_done),
-        .core_rst(core_rst)
+        .core_rst(core_rst),
+        .state_debug(state_debug)
     );
     ////////// Controller end //////////
 
@@ -159,7 +164,7 @@ module Core(
     // AGU_B
     AGU_B agu_b(
         .CLK(CLK),
-        .en_in(SR_0[6]),
+        .en(SR_0[6]),
         .rst(core_rst),
         .set(set),
         .mode_in(mode),
@@ -259,7 +264,7 @@ module Core(
     ////////// Bus end //////////
 
     ////////// PE Array //////////
-    wire [63:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
+    wire [127:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
     // PE array instance
     PE_array pe_array(
     .CLK(CLK),
@@ -294,10 +299,10 @@ module Core(
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
         .bias(bias_0),
-        .PE_out_0_in(PE_out_0[63:48]),
-        .PE_out_1_in(PE_out_1[63:48]),
-        .PE_out_2_in(PE_out_2[63:48]),
-        .PE_out_3_in(PE_out_3[63:48]),
+        .PE_out_0_in(PE_out_0[127:96]),
+        .PE_out_1_in(PE_out_1[127:96]),
+        .PE_out_2_in(PE_out_2[127:96]),
+        .PE_out_3_in(PE_out_3[127:96]),
         .acc_out(acc_out_0),
         .acc_done(acc_done)
         ,
@@ -313,10 +318,10 @@ module Core(
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
         .bias(bias_1),
-        .PE_out_0_in(PE_out_0[47:32]),
-        .PE_out_1_in(PE_out_1[47:32]),
-        .PE_out_2_in(PE_out_2[47:32]),
-        .PE_out_3_in(PE_out_3[47:32]),
+        .PE_out_0_in(PE_out_0[95:64]),
+        .PE_out_1_in(PE_out_1[95:64]),
+        .PE_out_2_in(PE_out_2[95:64]),
+        .PE_out_3_in(PE_out_3[95:64]),
         .acc_out(acc_out_1)
         ,
         .acc_result(acc_result_1)
@@ -331,10 +336,10 @@ module Core(
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
         .bias(bias_2),
-        .PE_out_0_in(PE_out_0[31:16]),
-        .PE_out_1_in(PE_out_1[31:16]),
-        .PE_out_2_in(PE_out_2[31:16]),
-        .PE_out_3_in(PE_out_3[31:16]),
+        .PE_out_0_in(PE_out_0[63:32]),
+        .PE_out_1_in(PE_out_1[63:32]),
+        .PE_out_2_in(PE_out_2[63:32]),
+        .PE_out_3_in(PE_out_3[63:32]),
         .acc_out(acc_out_2)
         ,
         .acc_result(acc_result_2)
@@ -349,10 +354,10 @@ module Core(
         .ReLU_en(ReLU_en),
         .ch_in(ch_in),
         .bias(bias_3),
-        .PE_out_0_in(PE_out_0[15:0]),
-        .PE_out_1_in(PE_out_1[15:0]),
-        .PE_out_2_in(PE_out_2[15:0]),
-        .PE_out_3_in(PE_out_3[15:0]),
+        .PE_out_0_in(PE_out_0[31:0]),
+        .PE_out_1_in(PE_out_1[31:0]),
+        .PE_out_2_in(PE_out_2[31:0]),
+        .PE_out_3_in(PE_out_3[31:0]),
         .acc_out(acc_out_3)
         ,
         .acc_result(acc_result_3)

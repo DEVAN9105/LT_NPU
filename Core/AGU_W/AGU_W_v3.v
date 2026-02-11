@@ -9,7 +9,7 @@ module AGU_W(
     input set,
     input [2:0] mode_in,
     input [11:0] AGU_W_initial_in,
-    input [5:0] width_out_in, //64(0~63) => conv 1
+    input [6:0] width_out_in, //64(0~63) => conv 1
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,    //channel may vary per layer
     output reg [11:0] Waddr,
@@ -21,7 +21,7 @@ module AGU_W(
 
     ////////// input buffer ////////// (2 cycle)
     reg [11:0] AGU_W_initial;
-    reg [5:0] width_out;
+    reg [6:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [7:0] kernel_L;
@@ -130,7 +130,7 @@ module AGU_W(
 
     ////////// Stage 2 //////////
     //counter w_count
-    reg [5:0] w_count,next_w_count;
+    reg [6:0] w_count,next_w_count;
     reg s2_done;
     reg s3_en;
     always@(posedge CLK) begin
