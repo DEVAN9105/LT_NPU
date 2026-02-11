@@ -150,7 +150,7 @@ module GLB_operator(
         .CLK(CLK),
         .en(glb_input_en),
         .rst(rst),
-        .glb_in_mode(glb_input_param[30:29]),
+        .glb_in_mode(glb_input_param[45:44]),
         // AGU_T
         .AGU_T_param(input_AGU_T_param),
         // AGU_G
@@ -201,7 +201,7 @@ module GLB_operator(
         .CLK(CLK),
         .en(glb_output_en),
         .rst(rst),
-        .glb_out_mode(glb_output_param[30:29]),
+        .glb_out_mode(glb_output_param[45:44]),
         // AGU_G
         .AGU_G_param(output_AGU_G_param), // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
         .ch_to_Y_bus(output_ch_to_Y_bus), // {ch_to_Y_en, ch_sum[9:0]}
