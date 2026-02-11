@@ -233,33 +233,33 @@ module Core(
     // W_buffer
     wire [63:0] PE_win_0, PE_win_1, PE_win_2, PE_win_3;
     W_buffer w_buffer(
-    .CLK(CLK),
-    .rst(core_rst),
-    .en(SR_0[7]),
-    .wdata_0(wdata_0),
-    .wdata_1(wdata_1),
-    .wdata_2(wdata_2),
-    .wdata_3(wdata_3),
-    .PE_win_0(PE_win_0),
-    .PE_win_1(PE_win_1),
-    .PE_win_2(PE_win_2),
-    .PE_win_3(PE_win_3)
+        .CLK(CLK),
+        .rst(core_rst),
+        .en(SR_0[7]),
+        .wdata_0(wdata_0),
+        .wdata_1(wdata_1),
+        .wdata_2(wdata_2),
+        .wdata_3(wdata_3),
+        .PE_win_0(PE_win_0),
+        .PE_win_1(PE_win_1),
+        .PE_win_2(PE_win_2),
+        .PE_win_3(PE_win_3)
     );
 
     // B_buffer
     wire [31:0] bias_0, bias_1, bias_2, bias_3;
     B_buffer b_buffer(
-    .CLK(CLK),
-    .rst(core_rst),
-    .en(SR_0[11]),
-    .bdata_0(bdata_0),
-    .bdata_1(bdata_1),
-    .bdata_2(bdata_2),
-    .bdata_3(bdata_3),
-    .bias_0(bias_0),
-    .bias_1(bias_1),
-    .bias_2(bias_2),
-    .bias_3(bias_3)
+        .CLK(CLK),
+        .rst(core_rst),
+        .en(SR_0[11]),
+        .bdata_0(bdata_0),
+        .bdata_1(bdata_1),
+        .bdata_2(bdata_2),
+        .bdata_3(bdata_3),
+        .bias_0(bias_0),
+        .bias_1(bias_1),
+        .bias_2(bias_2),
+        .bias_3(bias_3)
     );
     ////////// Bus end //////////
 
@@ -267,23 +267,23 @@ module Core(
     wire [127:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
     // PE array instance
     PE_array pe_array(
-    .CLK(CLK),
-    .en(SR_0[8]),
-    .rst(rst),
-    .set(set),
-    .mode_in(mode),
-    .PE_fin_0(PE_fin_0),
-    .PE_fin_1(PE_fin_1),
-    .PE_fin_2(PE_fin_2),
-    .PE_fin_3(PE_fin_3),
-    .PE_win_0(PE_win_0),
-    .PE_win_1(PE_win_1),
-    .PE_win_2(PE_win_2),
-    .PE_win_3(PE_win_3),
-    .PE_out_0(PE_out_0),
-    .PE_out_1(PE_out_1),
-    .PE_out_2(PE_out_2),
-    .PE_out_3(PE_out_3)
+        .CLK(CLK),
+        .en(SR_0[8]),
+        .rst(rst),
+        .set(set),
+        .mode_in(mode),
+        .PE_fin_0(PE_fin_0),
+        .PE_fin_1(PE_fin_1),
+        .PE_fin_2(PE_fin_2),
+        .PE_fin_3(PE_fin_3),
+        .PE_win_0(PE_win_0),
+        .PE_win_1(PE_win_1),
+        .PE_win_2(PE_win_2),
+        .PE_win_3(PE_win_3),
+        .PE_out_0(PE_out_0),
+        .PE_out_1(PE_out_1),
+        .PE_out_2(PE_out_2),
+        .PE_out_3(PE_out_3)
     );
     ////////// PE Array //////////
 

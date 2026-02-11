@@ -11,11 +11,11 @@ module Core_en_counter(
     input [6:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
-    output reg SR_0_en,
-    output reg done
-    /*output [7:0] offset_out,
-    output [5:0] w_count_out,
-    output [7:0] ch_count_out*/
+    output SR_0_en,
+    output reg done,
+    output [7:0] offset_out,
+    output [6:0] w_count_out,
+    output [7:0] ch_count_out
     );
     
     // mode define
@@ -44,43 +44,40 @@ module Core_en_counter(
         end
     end
     // kernel_L define
-    always@(posedge CLK) begin
-        if(rst) begin
-            kernel_L <= 0;
-        end
-        else if(set) begin
-            case (mode)
-                conv: kernel_L <= 8;
-                maxpooling: kernel_L <= 2;
-                DW: kernel_L <= 2;
-                PW: kernel_L <= ch_in;
-                GAP: kernel_L <= 3;
-                default: kernel_L <= 0;
-            endcase
-        end
-        else begin
-            kernel_L <= kernel_L;
-        end
+    always@(*) begin
+        case (mode)
+            conv: kernel_L = 8;
+            maxpooling: kernel_L = 2;
+            DW: kernel_L = 2;
+            PW: kernel_L = ch_in;
+            GAP: kernel_L = 3;
+            default: kernel_L = 0;
+        endcase
     end
     ////////// input buffer end //////////
 
     ////////// en SR //////////
-    reg [1:0] adder_en;
+    reg [1:0] en_SR;
     always@(posedge CLK) begin
         if(rst || done) begin
-            adder_en <= 0;
+            en_SR <= 0;
         end
         else begin
-            adder_en <= {adder_en[0], en};
+            en_SR <= {en_SR[1:0], en};
         end
     end
+    assign SR_0_en = en_SR[1];
     ////////// en SR end //////////
     
     ////////// Stage 1 //////////
     reg [7:0] offset,next_offset;
     reg s1_done;
-    wire s2_en;
-    assign s2_en = s1_done & en;
+    reg s2_en;
+    //assign s2_en = s1_done & en;
+    always@(posedge CLK) begin
+        if(rst) s2_en <= 0;
+        else s2_en <= s1_done & en;
+    end
     //counter
     always@(*) begin
         //avoid latch
@@ -115,8 +112,12 @@ module Core_en_counter(
     //counter w_count
     reg [6:0] w_count,next_w_count;
     reg s2_done;
-    wire s3_en;
-    assign s3_en = s2_done & s2_en;
+    reg s3_en;
+    //assign s3_en = s2_done & s2_en;
+    always@(posedge CLK) begin
+        if(rst) s3_en <= 0;
+        else s3_en <= s2_done & s2_en;
+    end
     always@(*) begin
         next_w_count = w_count;
         s2_done = 0;
@@ -145,7 +146,7 @@ module Core_en_counter(
     ////////// Stage 2 end //////////
 
     ////////// Stage 3 //////////
-    reg [8:0] ch_count,next_ch_count;
+    reg [7:0] ch_count,next_ch_count;
     reg s3_done;
     //counter ch_count & L
     always@(*) begin
@@ -180,27 +181,23 @@ module Core_en_counter(
 
     //done logic
     always@(*) begin
-        SR_0_en = 0;
         done = 0;
         if(en) begin
-            if( s3_done && s3_en) begin
+            if(s3_done && s3_en) begin
                 done = 1;
-                SR_0_en = 1;
             end
             else begin
                 done = 0;
-                SR_0_en = 1;
             end
         end
         else begin
             done = 0;
-            SR_0_en = 0;
         end
     end
     
     // debug
-    /*assign offset_out = offset;
+    assign offset_out = offset;
     assign w_count_out = w_count;
-    assign ch_count_out = ch_count;*/
+    assign ch_count_out = ch_count;
     
 endmodule
