@@ -8,9 +8,10 @@ module Core_en_counter(
     input rst,
     input set,
     input [2:0] mode,
-    input [5:0] width_out_in,
+    input [6:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
+    output reg SR_0_en,
     output reg done
     /*output [7:0] offset_out,
     output [5:0] w_count_out,
@@ -21,7 +22,7 @@ module Core_en_counter(
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
     ////////// input buffer //////////
-    reg [5:0] width_out;
+    reg [6:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [7:0] kernel_L;
@@ -44,16 +45,23 @@ module Core_en_counter(
     end
     // kernel_L define
     always@(posedge CLK) begin
-        case (mode)
-            conv: kernel_L <= 8;
-            maxpooling: kernel_L <= 2;
-            DW: kernel_L <= 2;
-            PW: kernel_L <= ch_in;
-            GAP: kernel_L <= 3;
-            default: kernel_L <= 0;
-        endcase
+        if(rst) begin
+            kernel_L <= 0;
+        end
+        else if(set) begin
+            case (mode)
+                conv: kernel_L <= 8;
+                maxpooling: kernel_L <= 2;
+                DW: kernel_L <= 2;
+                PW: kernel_L <= ch_in;
+                GAP: kernel_L <= 3;
+                default: kernel_L <= 0;
+            endcase
+        end
+        else begin
+            kernel_L <= kernel_L;
+        end
     end
-    wire [11:0] k_stride = kernel_L + 1;
     ////////// input buffer end //////////
 
     ////////// en SR //////////
@@ -172,11 +180,21 @@ module Core_en_counter(
 
     //done logic
     always@(*) begin
-        if( s3_done && s3_en) begin
-            done = 1;
+        SR_0_en = 0;
+        done = 0;
+        if(en) begin
+            if( s3_done && s3_en) begin
+                done = 1;
+                SR_0_en = 1;
+            end
+            else begin
+                done = 0;
+                SR_0_en = 1;
+            end
         end
         else begin
             done = 0;
+            SR_0_en = 0;
         end
     end
     

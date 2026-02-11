@@ -6,6 +6,7 @@ module Array_buffer(
     input CLK,
     input rst,
     input en,
+    input set,
     input [63:0]fdata_0,
     input [63:0]fdata_1,
     input [63:0]fdata_2,
@@ -23,7 +24,15 @@ module Array_buffer(
     ////////// input buffer //////////
     reg [2:0] mode;
     always@(posedge CLK) begin
-        mode <= mode_in;
+        if(rst) begin
+            mode <= 0;
+        end
+        else if(set) begin
+            mode <= mode_in;
+        end
+        else begin
+            mode <= mode;
+        end
     end
     ////////// input buffer end //////////
 

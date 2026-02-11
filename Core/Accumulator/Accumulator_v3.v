@@ -6,6 +6,7 @@ module Accumulator(
     input CLK,
     input rst,
     input en,
+    input set,
     input [2:0]mode_in,
     input load_bias,
     input ReLU_en,
@@ -20,7 +21,8 @@ module Accumulator(
     ,
     output [7:0] acc_count_tb,
     output rst_bias_tb,
-    output [33:0] adder_result_tb
+    output [33:0] adder_result_tb,
+    output [47:0] acc_result
     );
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
@@ -29,16 +31,24 @@ module Accumulator(
     reg [7:0] kernel_L;
     reg [2:0] mode;
     always@(posedge CLK) begin
-        mode <= mode_in;
+        if(rst) begin
+            mode <= 0;
+        end
+        else if(set) begin
+            mode <= mode_in;
+        end
+        else begin
+            mode <= mode;
+        end
     end
-    always@(posedge CLK) begin
+    always@(*) begin
         case(mode)
-            conv: kernel_L <= 8;
-            maxpooling: kernel_L <= 2;
-            DW: kernel_L <= 2;
-            PW: kernel_L <= ch_in;
-            GAP: kernel_L <= 3;
-            default: kernel_L <= 0;
+            conv: kernel_L = 8;
+            maxpooling: kernel_L = 2;
+            DW: kernel_L = 2;
+            PW: kernel_L = ch_in;
+            GAP: kernel_L = 3;
+            default: kernel_L = 0;
         endcase
     end
     reg signed [32:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
@@ -95,7 +105,6 @@ module Accumulator(
     end
     //////////// Stage 1 counter end //////////
 
-
     ////////// SR //////////
     reg [1:0] rst_bias_sr;
     reg [1:0] en_sr;
@@ -114,8 +123,6 @@ module Accumulator(
     end
     assign acc_done = done_sr[1];
     ////////// SR end //////////
-    
-    
     
     ////////// Stage 1 ////////// 
     // adder tree
@@ -298,11 +305,11 @@ module Accumulator(
             end
             default: begin
                 if(ReLU_en == 1) begin
-                    if(acc_out_truncated > 0) begin
+                    if(acc_out_truncated[15] == 0) begin
                         acc_out <= acc_out_truncated;
                     end
                     else begin
-                        acc_out <= 0;
+                        acc_out <= 16'd0;
                     end
                 end
                 else begin
@@ -317,5 +324,6 @@ module Accumulator(
     assign acc_count_tb = acc_count;
     assign rst_bias_tb = rst_bias_sr[1];
     assign adder_result_tb = adder_result;
+    assign acc_result = accumulator_reg;
     
 endmodule

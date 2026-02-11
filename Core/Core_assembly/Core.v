@@ -4,6 +4,7 @@ module Core(
     // basic
     input CLK, input rst, input en,
     // control signal
+    input [14:0] core_control, //{mode_in[14:12], tile_sel_in[11:3], stride_X_in[2:1], ReLU_en_in[0]}
     input [2:0] mode_in,
     input [8:0] tile_sel_in,
     input [1:0] stride_X_in,
@@ -45,7 +46,11 @@ module Core(
     output [7:0] addr_store,
     output [63:0] din_store,
     // core done
-    output core_done
+    output core_done,
+    output [47:0] acc_result_0,
+    output [47:0] acc_result_1,
+    output [47:0] acc_result_2,
+    output [47:0] acc_result_3
     );
     
     // mode define
@@ -398,6 +403,8 @@ module Core(
         .PE_out_3_in(PE_out_30),
         .acc_out(acc_out_0),
         .acc_done(acc_done)
+        ,
+        .acc_result(acc_result_0)
     );
     Accumulator acc_1(
         .CLK(CLK),
@@ -413,6 +420,8 @@ module Core(
         .PE_out_2_in(PE_out_21),
         .PE_out_3_in(PE_out_31),
         .acc_out(acc_out_1)
+        ,
+        .acc_result(acc_result_1)
     );
     Accumulator acc_2(
         .CLK(CLK),
@@ -428,6 +437,8 @@ module Core(
         .PE_out_2_in(PE_out_22),
         .PE_out_3_in(PE_out_32),
         .acc_out(acc_out_2)
+        ,
+        .acc_result(acc_result_2)
     );
     Accumulator acc_3(
         .CLK(CLK),
@@ -443,6 +454,8 @@ module Core(
         .PE_out_2_in(PE_out_23),
         .PE_out_3_in(PE_out_33),
         .acc_out(acc_out_3)
+        ,
+        .acc_result(acc_result_3)
     );
     ////////// Accumulator end //////////
 

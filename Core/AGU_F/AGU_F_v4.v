@@ -6,6 +6,7 @@ module AGU_F(
     input CLK,
     input en,
     input rst,
+    input set,
     input [6:0] width_in_in,    // Map Width (0~127)
     input [6:0] width_out_in,   // down sampling
     input [7:0] ch_in_in,
@@ -37,39 +38,39 @@ module AGU_F(
             stride_Y <= 0;
             AGU_offset_X <= 0;
         end
-        else begin
-        case (mode_in)
-            conv: begin
-                padding <= 1;
-                stride_Y <= 0;
-                AGU_offset_X <= 2;
-            end
-            maxpooling: begin
-                padding <= 1;
-                stride_Y <= ch_stride;
-                AGU_offset_X <= 2;
-            end
-            DW: begin
-                padding <= 1;
-                stride_Y <= ch_stride;
-                AGU_offset_X <= 2;
-            end
-            PW: begin
-                padding <= 0;
-                stride_Y <= 0;
-                AGU_offset_X <= 0;
-            end
-            GAP: begin
-                padding <= 0;
-                stride_Y <= ch_stride;
-                AGU_offset_X <= 3;
-            end
-            default: begin
-                padding <= 0;
-                stride_Y <= ch_stride;
-                AGU_offset_X <= 0;
-            end
-        endcase
+        else if(set) begin
+            case (mode_in)
+                conv: begin
+                    padding <= 1;
+                    stride_Y <= 0;
+                    AGU_offset_X <= 2;
+                end
+                maxpooling: begin
+                    padding <= 1;
+                    stride_Y <= width_in_in + 1;
+                    AGU_offset_X <= 2;
+                end
+                DW: begin
+                    padding <= 1;
+                    stride_Y <= width_in_in + 1;
+                    AGU_offset_X <= 2;
+                end
+                PW: begin
+                    padding <= 0;
+                    stride_Y <= 0;
+                    AGU_offset_X <= 0;
+                end
+                GAP: begin
+                    padding <= 0;
+                    stride_Y <= width_in_in + 1;
+                    AGU_offset_X <= 3;
+                end
+                default: begin
+                    padding <= 0;
+                    stride_Y <= width_in_in + 1;
+                    AGU_offset_X <= 0;
+                end
+            endcase
         end
     end
     always@(posedge CLK) begin
@@ -82,7 +83,7 @@ module AGU_F(
             ch_out <= 0;
             ch_stride <= 0;
         end
-        else begin
+        else if(set) begin
             mode <= mode_in;
             stride_X <= stride_X_in;
             width_in <= width_in_in;

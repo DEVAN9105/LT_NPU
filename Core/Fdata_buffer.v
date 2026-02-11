@@ -2,11 +2,11 @@
 
 // delay = 1 cycle
 
-(* keep_hierarchy = "yes" *)
 module Fdata_buffer(
     input CLK,
     input rst,
     input en,
+    input set,
     input [8:0]tile_sel, //3*tile
     input [2:0]mode_in, //function
     input boundary,
@@ -28,7 +28,15 @@ module Fdata_buffer(
     ////////// input buffer //////////
     reg [2:0] mode;
     always@(posedge CLK) begin
-        mode <= mode_in;
+        if(rst) begin
+            mode <= 0;
+        end
+        else if(set) begin
+            mode <= mode_in;
+        end
+        else begin
+            mode <= mode;
+        end
     end
      ////////// input buffer end //////////
     

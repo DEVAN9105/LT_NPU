@@ -1,7 +1,5 @@
 `timescale 1ns / 1ps
 
-// delay = 4 cycle / 2 cycle
-
 module Core_controller(
     input CLK,
     input en,
@@ -10,7 +8,7 @@ module Core_controller(
     input [2:0] mode_in,
     input acc_done,
     // Core en counter control
-    input [5:0] width_out_in,
+    input [6:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
     // FSM control
@@ -19,7 +17,6 @@ module Core_controller(
     output reg set,
     output reg [12:0] SR_0,
     output reg [5:0] SR_1,
-    output reg Core_counter_en,
     output reg core_done,
     output reg core_rst
     );
@@ -27,6 +24,11 @@ module Core_controller(
     ////////// state define //////////
     parameter idle = 0, set_up = 1, processing = 2, ending = 3, finish = 4;
     ////////// state define end //////////
+
+    ////////// parameter define //////////
+    // mode define
+    parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
+    ////////// parameter define end //////////
 
     ////////// input buffer //////////
     reg [2:0] mode;
@@ -44,16 +46,19 @@ module Core_controller(
     ////////// input buffer end //////////
 
     ////////// Core en counter //////////
+    wire core_en_counter_en;
     wire core_en_counter_done;
+    wire SR_0_en;
     Core_en_counter core_en_counter(
         .CLK(CLK),
-        .en(Core_counter_en),
+        .en(core_en_counter_en),
         .rst(rst),
         .set(set),
-        .mode(mode),
+        .mode(mode_in),
         .width_out_in(width_out_in),
         .ch_in_in(ch_in_in),
         .ch_out_in(ch_out_in),
+        .SR_0_en(SR_0_en),
         .done(core_en_counter_done)
     );
     ////////// Core en counter end //////////
@@ -64,7 +69,7 @@ module Core_controller(
         //avoid latch
         next_state = state;
         core_done = 0;
-        Core_counter_en = 0;
+        core_en_counter_en = 0;
         core_rst = 0;
         set = 0;
         
@@ -83,7 +88,7 @@ module Core_controller(
                 set = 1;
             end
             processing: begin
-                Core_counter_en = 1;
+                core_en_counter_en = 1;
                 if(core_en_counter_done) begin
                     next_state = ending;
                 end
@@ -102,10 +107,10 @@ module Core_controller(
             finish: begin
                 core_done = 1;
                 if(en) begin
-                    next_state = idle;
+                    next_state = finish;
                 end
                 else begin
-                    next_state = finish;
+                    next_state = idle;
                 end
             end
             default: begin
@@ -128,19 +133,19 @@ module Core_controller(
         if (rst) begin
             SR_0 <= 13'b0;
         end
-        else if (en) begin
+        else begin
             case(mode)
                 maxpooling, GAP: begin
-                    if(state == 2) begin 
-                        SR_0 <= {SR_0[11], SR_0[8], 2'b0, SR_0[7:0], en};
+                    if(state == processing) begin 
+                        SR_0 <= {SR_0[11], SR_0[8], 2'b0, SR_0[7:0], SR_0_en};
                     end
                     else begin
                         SR_0 <= SR_0;
                     end
                 end
                 default: begin
-                    if(state == 2) begin 
-                        SR_0 <= {SR_0[11:0], en};
+                    if(state == processing) begin 
+                        SR_0 <= {SR_0[11:0], SR_0_en};
                     end
                     else begin
                         SR_0 <= SR_0;
@@ -157,7 +162,7 @@ module Core_controller(
             SR_1 <= 6'b0;
         end
         else begin
-            if(state == 2) begin
+            if(state == processing) begin
                 SR_1 <= {SR_1[4:0], acc_done};
             end
             else begin

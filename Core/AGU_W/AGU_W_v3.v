@@ -6,6 +6,7 @@ module AGU_W(
     input CLK,
     input en,
     input rst,
+    input set,
     input [2:0] mode_in,
     input [11:0] AGU_W_initial_in,
     input [5:0] width_out_in, //64(0~63) => conv 1
@@ -26,11 +27,27 @@ module AGU_W(
     reg [7:0] kernel_L;
     reg [2:0] mode;
     always@(posedge CLK) begin
-        mode <= mode_in;
-        AGU_W_initial <= AGU_W_initial_in;
-        width_out <= width_out_in;
-        ch_in <= ch_in_in;
-        ch_out <= ch_out_in;
+        if(rst) begin
+            mode <= 0;
+            AGU_W_initial <= 0;
+            width_out <= 0;
+            ch_in <= 0;
+            ch_out <= 0;
+        end
+        else if(set) begin
+            mode <= mode_in;
+            AGU_W_initial <= AGU_W_initial_in;
+            width_out <= width_out_in;
+            ch_in <= ch_in_in;
+            ch_out <= ch_out_in;
+        end
+        else begin
+            mode <= mode;
+            AGU_W_initial <= AGU_W_initial;
+            width_out <= width_out;
+            ch_in <= ch_in;
+            ch_out <= ch_out;
+        end
     end
     // kernel_L define
     always@(posedge CLK) begin

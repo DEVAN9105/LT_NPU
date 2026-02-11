@@ -6,6 +6,7 @@ module AGU_O(
     input CLK,
     input en,
     input rst,
+    input set,
     input [7:0] AGU_O_initial_in,
     input [6:0] width_out_in,
     input [7:0] ch_out_in,
@@ -19,10 +20,24 @@ module AGU_O(
     reg [7:0] ch_out;
     reg [7:0] ch_stride;
     always@(posedge CLK) begin
-        AGU_O_initial <= AGU_O_initial_in;
-        width_out <= width_out_in;
-        ch_out <= ch_out_in;
-        ch_stride <= width_out_in + 1; //stride = width_out
+        if(rst) begin
+            AGU_O_initial <= 0;
+            width_out <= 0;
+            ch_out <= 0;
+            ch_stride <= 0;
+        end
+        else if(set) begin
+            AGU_O_initial <= AGU_O_initial_in;
+            width_out <= width_out_in;
+            ch_out <= ch_out_in;
+            ch_stride <= width_out_in + 1; //stride = width_out
+        end
+        else begin
+            AGU_O_initial <= AGU_O_initial;
+            width_out <= width_out;
+            ch_out <= ch_out;
+            ch_stride <= ch_stride;
+        end
     end
     ////////// input buffer end //////////
 

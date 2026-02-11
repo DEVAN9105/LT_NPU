@@ -4,8 +4,9 @@
 
 module AGU_B(
     input CLK,
-    input en_in,
+    input en,
     input rst,
+    input set,
     input [2:0] mode_in,
     input [7:0] AGU_B_initial_in,
     input [6:0] width_out_in,
@@ -18,39 +19,60 @@ module AGU_B(
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
     ////////// input buffer //////////
-    reg en;
     reg [2:0] mode;
     reg [7:0] AGU_B_initial;
     reg [6:0] width_out;
-    reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [7:0] kernel_L;
     always@(posedge CLK) begin
-        en <= en_in;
-        mode <= mode_in;
-        AGU_B_initial <= AGU_B_initial_in;
-        width_out <= width_out_in;
-        ch_in <= ch_in_in;
-        ch_out <= ch_out_in;
+        if(rst) begin
+            mode <= 0;
+            AGU_B_initial <= 0;
+            width_out <= 0;
+            ch_out <= 0;
+        end
+        else if(set) begin
+            mode <= mode_in;
+            AGU_B_initial <= AGU_B_initial_in;
+            width_out <= width_out_in;
+            ch_out <= ch_out_in;
+        end
+        else begin
+            mode <= mode;
+            AGU_B_initial <= AGU_B_initial;
+            width_out <= width_out;
+            ch_out <= ch_out;
+        end
     end
-    always@(posedge CLK) begin
+    always@(*) begin
         case(mode)
-            conv: kernel_L <= 8;
-            maxpooling: kernel_L <= 0;
-            DW: kernel_L <= 2;
-            PW: kernel_L <= ch_in;
-            GAP: kernel_L <= 0;
-            default: kernel_L <= 0;
+            conv: kernel_L = 8;
+            maxpooling: kernel_L = 2;
+            DW: kernel_L = 2;
+            PW: kernel_L = ch_in_in;
+            GAP: kernel_L = 0;
+            default: kernel_L = 0;
         endcase
     end
     ////////// input buffer end //////////
+    
+    ////////// en SR //////////
+    reg [1:0] en_SR;
+    always@(posedge CLK) begin
+        if(rst) begin
+            en_SR <= 0;
+        end
+        else begin
+            en_SR <= {en_SR[0], en};
+        end
+    end
 
     ////////// Stage 1 //////////
     reg [7:0] k_count,next_k_count;
     reg s1_done;
     reg s2_en;
-    always@(*) begin
-        s2_en = s1_done & en;
+    always@(posedge CLK) begin
+        s2_en <= s1_done & en;
     end
     //counter
     always@(*) begin
@@ -87,8 +109,8 @@ module AGU_B(
     reg [7:0] w_count, next_w_count;
     reg s2_done;
     reg s3_en;
-    always@(*) begin
-        s3_en = s2_done & s2_en;
+    always@(posedge CLK) begin
+        s3_en <= s2_done & s2_en;
     end
     always@(*) begin
         next_w_count = w_count;
@@ -120,33 +142,41 @@ module AGU_B(
     ////////// Stage 3 //////////
     reg s3_done;
     reg [7:0] ch_count, next_ch_count;
-    reg [7:0] next_baddr;
     always@(*) begin
         s3_done = 0;
-        next_baddr = baddr;
         if(ch_count == ch_out) begin
             next_ch_count = 0;
-            next_baddr = 0;
             s3_done = 1;
         end
         else begin
             next_ch_count = ch_count + 1;
-            next_baddr = baddr + 1;
             s3_done = 0;
         end
     end
     always@(posedge CLK) begin
         if(rst) begin
             ch_count <= 0;
-            baddr <= AGU_B_initial;
         end
         else begin
             if(s3_en) begin
                 ch_count <= next_ch_count;
-                baddr <= next_baddr;
             end
             else begin
                 ch_count <= ch_count;
+            end
+        end
+    end
+    
+    // adder
+    always@(posedge CLK) begin
+        if(rst) begin
+            baddr <= 0;
+        end
+        else begin
+            if(en_SR[1]) begin
+                baddr <= AGU_B_initial + ch_count;
+            end
+            else begin
                 baddr <= baddr;
             end
         end
@@ -154,12 +184,12 @@ module AGU_B(
     ////////// Stage 3 end //////////
 
     ////////// done signal //////////
-    always@(*) begin
+    always@(posedge CLK) begin
         if(s3_done && s3_en) begin
-            done = 1;
+            done <= 1;
         end
         else begin
-            done = 0;
+            done <= 0;
         end
     end
     ////////// done signal end //////////
