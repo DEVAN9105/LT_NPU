@@ -70,27 +70,13 @@ module GLB_output(
     wire [2:0] core_pointer;
     reg [7:0] taddr_buffer;
     wire AGU_T_en_next;
-    reg [22:0] AGU_T_param_decoded;
-    // channel max: 39
-    wire [7:0] tile_ch_decoded = ((AGU_T_param[7:0] + 1) << 2) + ((AGU_T_param[7:0] + 1) << 1) - 1; // tile_ch * 6
-    // core & channel decode
-    always@(*) begin
-        if(glb_out_mode == 2'd0 || glb_out_mode == 2'd2) begin
-            core = 3'd0; // pre_processing tile
-            AGU_T_param_decoded = {AGU_T_param[22:8], tile_ch_decoded}; // for pre_processing, tile_ch is always 1
-        end
-        else begin
-            core = 3'd5; // multi_cast tile
-            AGU_T_param_decoded = AGU_T_param;
-        end
-    end
 
     AGU_T agu_t(
         .CLK(CLK),
         .en(SR[2]),
         .rst(glb_out_rst),
         .set(set),
-        .AGU_T_param(AGU_T_param_decoded),
+        .AGU_T_param(AGU_T_param),
         .core(core),
         .core_pointer(core_pointer),
         .taddr(taddr),

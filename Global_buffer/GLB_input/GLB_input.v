@@ -52,27 +52,15 @@ module GLB_input(
     ////////// AGU_T //////////
     reg [2:0] core;
     wire write_back_en;
-    reg [22:0] AGU_T_param_decoded;
-    wire [7:0] tile_ch_decoded = ((AGU_T_param[7:0] + 1) << 2) + ((AGU_T_param[7:0] + 1) << 1) - 1; // tile_ch * 6
-    // core & channel decode
-    always@(*) begin
-        if(glb_in_mode == 2'd0) begin
-            core = 3'd0; // uni_write tile
-            AGU_T_param_decoded = {AGU_T_param[22:8], tile_ch_decoded};
-        end
-        else begin
-            core = 3'd5; // multi_write tile
-            AGU_T_param_decoded = AGU_T_param;
-        end
-    end
     wire [2:0] core_pointer;
     wire [7:0] taddr;
+    // AGU_T instance
     AGU_T agu_t(
         .CLK(CLK),
         .en(AGU_T_en),
         .rst(glb_in_rst),
         .set(set),
-        .AGU_T_param(AGU_T_param_decoded),
+        .AGU_T_param(AGU_T_param),
         .core(core),
         .core_pointer(core_pointer),
         .taddr(taddr),

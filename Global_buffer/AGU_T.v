@@ -7,7 +7,7 @@ module AGU_T(
     input en,
     input rst,
     input set,
-    input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
+    input [22:0] AGU_T_param, // {AGU_T_initial[7:0], tile_width[6:0], tile_ch[7:0]}
     input [2:0] core,
     // output
     output reg [2:0] core_pointer,
