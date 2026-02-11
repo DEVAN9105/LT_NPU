@@ -2,15 +2,16 @@
 
 // delay = 3
 
-module Core_counter(
+module Core_en_counter(
     input CLK,
-    input en_in,
+    input en,
     input rst,
-    input [2:0] mode_in,
+    input set,
+    input [2:0] mode,
     input [5:0] width_out_in,
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,
-    output reg core_counter_done
+    output reg done
     /*output [7:0] offset_out,
     output [5:0] w_count_out,
     output [7:0] ch_count_out*/
@@ -19,19 +20,27 @@ module Core_counter(
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
-    ////////// input buffer ////////// (2 cycle)
-    reg en;
-    reg [2:0] mode;
+    ////////// input buffer //////////
     reg [5:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [7:0] kernel_L;
     always@(posedge CLK) begin
-        mode <= mode_in;
-        en <= en_in;
-        width_out <= width_out_in;
-        ch_in <= ch_in_in;
-        ch_out <= ch_out_in;
+        if(rst) begin
+            width_out <= 0;
+            ch_in <= 0;
+            ch_out <= 0;
+        end
+        else if(set) begin
+            width_out <= width_out_in;
+            ch_in <= ch_in_in;
+            ch_out <= ch_out_in;
+        end
+        else begin
+            width_out <= width_out;
+            ch_in <= ch_in;
+            ch_out <= ch_out;
+        end
     end
     // kernel_L define
     always@(posedge CLK) begin
@@ -50,7 +59,7 @@ module Core_counter(
     ////////// en SR //////////
     reg [1:0] adder_en;
     always@(posedge CLK) begin
-        if(rst) begin
+        if(rst || done) begin
             adder_en <= 0;
         end
         else begin
@@ -162,22 +171,12 @@ module Core_counter(
     ////////// Stage 3 end //////////
 
     //done logic
-    always@(posedge CLK) begin
-        if(rst) begin
-            core_counter_done <= 0;
+    always@(*) begin
+        if( s3_done && s3_en) begin
+            done = 1;
         end
         else begin
-            if(en_in) begin
-                if( s3_done && s3_en) begin
-                    core_counter_done <= 1;
-                end
-                else begin
-                    core_counter_done <= 0;
-                end
-            end
-            else begin
-                core_counter_done <= core_counter_done;
-            end
+            done = 0;
         end
     end
     

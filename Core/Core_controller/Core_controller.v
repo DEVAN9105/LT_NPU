@@ -9,8 +9,11 @@ module Core_controller(
     // SR control
     input [2:0] mode_in,
     input acc_done,
+    // Core en counter control
+    input [5:0] width_out_in,
+    input [7:0] ch_in_in,
+    input [7:0] ch_out_in,
     // FSM control
-    input core_counter_done,
     input AGU_O_done,
     // output
     output reg set,
@@ -39,6 +42,21 @@ module Core_controller(
         end
     end
     ////////// input buffer end //////////
+
+    ////////// Core en counter //////////
+    wire core_en_counter_done;
+    Core_en_counter core_en_counter(
+        .CLK(CLK),
+        .en(Core_counter_en),
+        .rst(rst),
+        .set(set),
+        .mode(mode),
+        .width_out_in(width_out_in),
+        .ch_in_in(ch_in_in),
+        .ch_out_in(ch_out_in),
+        .done(core_en_counter_done)
+    );
+    ////////// Core en counter end //////////
     
     ////////// FSM //////////
     reg [2:0] state, next_state;
@@ -66,7 +84,7 @@ module Core_controller(
             end
             processing: begin
                 Core_counter_en = 1;
-                if(core_counter_done) begin
+                if(core_en_counter_done) begin
                     next_state = ending;
                 end
                 else begin
