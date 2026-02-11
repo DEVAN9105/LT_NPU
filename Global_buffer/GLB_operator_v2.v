@@ -2,7 +2,8 @@
 
 module GLB_operator(
     input CLK,
-    input en,
+    input glb_input_en,
+    input glb_output_en,
     input rst,
     ////////// Control param //////////
     input [10:0] ch_to_Y_initial, // 0~2047
@@ -147,7 +148,7 @@ module GLB_operator(
     // GLB_input instance
     GLB_input glb_input(
         .CLK(CLK),
-        .en(en),
+        .en(glb_input_en),
         .rst(rst),
         .glb_in_mode(glb_input_param[30:29]),
         // AGU_T
@@ -198,7 +199,7 @@ module GLB_operator(
     // GLB_output instance
     GLB_output glb_output(
         .CLK(CLK),
-        .en(en),
+        .en(glb_output_en),
         .rst(rst),
         .glb_out_mode(glb_output_param[30:29]),
         // AGU_G
