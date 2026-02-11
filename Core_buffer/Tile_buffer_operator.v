@@ -3,8 +3,9 @@
 module Tile_buffer_operator(
     input clka,
     input clkb,
-    // tile assign
+    ////////// Control param //////////
     input [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
+    ////////// address & data bus //////////
     // tile load
     input [72:0] ciu_tbo_load_bus, // {valid, addr, din}
     // tile cycle
@@ -16,7 +17,12 @@ module Tile_buffer_operator(
     output [63:0] tbo_ciu_wb_data,
     // tile cal
     input [8:0] core_tbo_cal_bus, // {valid_cal, addr_cal}
-    output [383:0] tbo_core_tile_bus, // {tile_1, tile_2, tile_3, tile_4, tile_5, tile_6}
+    output [63:0] tbo_core_cal_data_1,
+    output [63:0] tbo_core_cal_data_2,
+    output [63:0] tbo_core_cal_data_3,
+    output [63:0] tbo_core_cal_data_4,
+    output [63:0] tbo_core_cal_data_5,
+    output [63:0] tbo_core_cal_data_6,
     // tile store
     input [72:0] core_tbo_store_bus, // {valid, addr, din}
     );
@@ -108,7 +114,7 @@ module Tile_buffer_operator(
         .web( web_1 ),
         .addrb(addrb_1),
         .dinb(dinb_1),
-        .doutb(tbo_core_tile_bus[383:320])
+        .doutb(tbo_core_cal_data_1)
     );
     ////////// tile 1 end //////////
 
@@ -186,7 +192,7 @@ module Tile_buffer_operator(
         .web( web_2 ),
         .addrb(addrb_2),
         .dinb(dinb_2),
-        .doutb(tbo_core_tile_bus[319:256])
+        .doutb(tbo_core_cal_data_2)
     );
     ////////// tile 2 end //////////
 
@@ -264,7 +270,7 @@ module Tile_buffer_operator(
         .web( web_3 ),
         .addrb(addrb_3),
         .dinb(dinb_3),
-        .doutb(tbo_core_tile_bus[255:192])
+        .doutb(tbo_core_cal_data_3)
     );
     ////////// tile 3 end //////////
 
@@ -342,7 +348,7 @@ module Tile_buffer_operator(
         .web( web_4 ),
         .addrb(addrb_4),
         .dinb(dinb_4),
-        .doutb(tbo_core_tile_bus[191:128])
+        .doutb(tbo_core_cal_data_4)
     );
     ////////// tile 4 end //////////
 
@@ -420,7 +426,7 @@ module Tile_buffer_operator(
         .web( web_5 ),
         .addrb(addrb_5),
         .dinb(dinb_5),
-        .doutb(tbo_core_tile_bus[127:64])
+        .doutb(tbo_core_cal_data_5)
     );
     ////////// tile 5 end //////////
 
@@ -498,7 +504,7 @@ module Tile_buffer_operator(
         .web( web_6 ),
         .addrb(addrb_6),
         .dinb(dinb_6),
-        .doutb(tbo_core_tile_bus[63:0])
+        .doutb(tbo_core_cal_data_6)
     );
     ////////// tile 6 end //////////
 

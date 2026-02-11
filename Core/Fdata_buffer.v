@@ -78,13 +78,13 @@ module Fdata_buffer(
         else if(en) begin
             if (mode == GAP) begin
                 //Pass-through
-                fdata_0 <= tile_1;
-                fdata_1 <= tile_2;
-                fdata_2 <= tile_3;
-                fdata_3 <= tile_4;
+                fdata_0 <= tile_3;
+                fdata_1 <= tile_4;
+                fdata_2 <= tile_5;
+                fdata_3 <= tile_6;
             end
             else begin
-                // (Conv/Pool/DW) + Padding & PW
+                // (Conv/Pool/DW) + Padding
                 fdata_0 <= (boundary) ? 64'd0 : mux_out_0;
                 fdata_1 <= (boundary) ? 64'd0 : mux_out_1;
                 fdata_2 <= (boundary) ? 64'd0 : mux_out_2;

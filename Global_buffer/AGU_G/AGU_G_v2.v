@@ -315,7 +315,7 @@ module AGU_G(
             done_SR <= {done_SR[1:0], done_det};
         end
     end
-    assign done = done_SR[2];
+    assign done = done_SR[1];
     ////////// done signal end //////////
 
 endmodule
