@@ -106,7 +106,7 @@ module Core(
     wire [11:0] Waddr;
     wire [7:0] baddr;
     assign core_tbo_cal_bus = {SR_0[4], addr_cal};
-    assign core_w_storage_bus = {SR_0[4], Waddr};
+    assign core_w_storage_bus = {SR_0[5], Waddr};
     assign core_b_storage_bus = {SR_0[9], baddr};
     assign core_tbo_store_bus = {SR_1[2], addr_store, din_store};
     ////////// output signal end //////////
@@ -152,7 +152,7 @@ module Core(
     // AGU_W
     AGU_W agu_w(
         .CLK(CLK),
-        .en(SR_0[1]),
+        .en(SR_0[2]),
         .rst(core_rst),
         .set(set),
         .mode_in(mode),
@@ -237,7 +237,7 @@ module Core(
     W_buffer w_buffer(
         .CLK(CLK),
         .rst(core_rst),
-        //.en(SR_0[7]),
+        .en(SR_0[7]),
         .wdata_0(wdata_0),
         .wdata_1(wdata_1),
         .wdata_2(wdata_2),
