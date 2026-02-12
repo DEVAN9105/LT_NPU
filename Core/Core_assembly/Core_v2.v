@@ -4,7 +4,7 @@ module Core(
     // basic
     input CLK, input rst, input en,
     ////////// control signal //////////
-    input [14:0] core_control, //{mode_in[14:12], tile_sel_in[11:3], stride_X_in[2:1], ReLU_en_in[0]}
+    input [15:0] core_control, //{mode_in[15:13], tile_sel_in[12:4], stride_X_in[3:2], ReLU_en_in[1], padding}
     ////////// AGU initial //////////
     input [27:0] core_AGU_initial, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     ////////// tile size //////////
@@ -49,10 +49,11 @@ module Core(
     ////////// mode define end //////////
 
     ////////// input buffer ////////// 
-    wire [2:0] mode = core_control[14:12];
-    wire [8:0] tile_sel = core_control[11:3];
-    wire [1:0] stride_X = core_control[2:1];
-    wire ReLU_en = core_control[0];
+    wire [2:0] mode = core_control[15:13];
+    wire [8:0] tile_sel = core_control[12:4];
+    wire [1:0] stride_X = core_control[3:2];
+    wire ReLU_en = core_control[1];
+    wire padding = core_control[0];
     wire [6:0] width_in = core_tile_param[29:23];
     wire [7:0] ch_in = core_tile_param[22:15];
     wire [6:0] width_out = core_tile_param[14:8];
@@ -137,6 +138,7 @@ module Core(
         .rst(core_rst),
         .en(SR_0[0] && (conv_count==0)),
         .set(set),
+        .padding_in(padding),
         .width_in_in(width_in),
         .width_out_in(width_out),
         .ch_in_in(ch_in),
@@ -366,11 +368,11 @@ module Core(
 
     ////////// Output buffer //////////
     Output_buffer output_buffer(
-    .CLK(CLK),
-    .rst(core_rst),
-    .en(SR_1[0]),
-    .acc_out({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
-    .core_out(din_store)
+        .CLK(CLK),
+        .rst(core_rst),
+        .en(SR_1[0]),
+        .acc_out({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
+        .core_out(din_store)
     );
     ////////// Output buffer end //////////
     
