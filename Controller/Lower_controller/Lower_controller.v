@@ -27,6 +27,7 @@ module Lower_controller(
         .CLK(CLK),
         .ena(en),
         .addra(PC),
+        .reacea(1'b1),
         .douta(VLIW_in)
     );
     ////////// VLIW storage end //////////
