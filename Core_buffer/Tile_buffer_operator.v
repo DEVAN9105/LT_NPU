@@ -3,6 +3,7 @@
 module Tile_buffer_operator(
     input clka,
     input clkb,
+    input rst,
     ////////// Control param //////////
     input [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
     ////////// address & data bus //////////
@@ -24,15 +25,21 @@ module Tile_buffer_operator(
     output [63:0] tbo_core_cal_data_5,
     output [63:0] tbo_core_cal_data_6,
     // tile store
-    input [72:0] core_tbo_store_bus, // {valid, addr, din}
+    input [72:0] core_tbo_store_bus // {valid, addr, din}
     );
 
     ////////// input buffer ///////////
     reg [2:0] tile_sel_cycle;
     reg [19:0] tile_assign;
     always@(posedge clka) begin
-        tile_sel_cycle <= tbo_param[22:20];
-        tile_assign <= tbo_param[19:0];
+        if(rst) begin
+            tile_sel_cycle <= 3'd0;
+            tile_assign <= 20'd0;
+        end
+        else begin
+            tile_sel_cycle <= tbo_param[22:20];
+            tile_assign <= tbo_param[19:0];
+        end
     end
     ////////// input buffer end ///////////
 

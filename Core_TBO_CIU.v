@@ -25,6 +25,7 @@ module Core_TBO_CIU(
     ////////// Tile Buffer Operator //////////
     // control param
     input [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
+
     ////////// Core //////////
     input core_en,
     // control signal
@@ -99,6 +100,7 @@ module Core_TBO_CIU(
     Tile_buffer_operator tbo(
         .clka(CLK),
         .clkb(CLK),
+        .rst(rst),
         // Control param
         .tbo_param(tbo_param), // {tile_sel_cycle, tile_assign}
         // load
@@ -119,7 +121,7 @@ module Core_TBO_CIU(
         .tbo_core_cal_data_5(tbo_core_cal_data_5),
         .tbo_core_cal_data_6(tbo_core_cal_data_6),
         // store
-        .core_tbo_store_bus(core_tbo_store_bus), // {valid, addr, din}
+        .core_tbo_store_bus(core_tbo_store_bus) // {valid, addr, din}
     );
     ////////// Tile Buffer Operator end //////////
 
