@@ -36,16 +36,10 @@ module Core_TBO_CIU(
     input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     // W_storage
     output [12:0] core_w_storage_bus, // {W_storage_en, Waddr[11:0]}
-    input [63:0] w_storage_core_data_0,
-    input [63:0] w_storage_core_data_1,
-    input [63:0] w_storage_core_data_2,
-    input [63:0] w_storage_core_data_3,
+    input [255:0] w_storage_core_data, // {data_0, data_1, data_2, data_3}
     // B_storage
     output [8:0] core_b_storage_bus, // {B_storage_en, baddr[7:0]}
-    input [31:0] b_storage_core_data_0,
-    input [31:0] b_storage_core_data_1,
-    input [31:0] b_storage_core_data_2,
-    input [31:0] b_storage_core_data_3,
+    input [127:0] b_storage_core_data, // {data_0, data_1, data_2, data_3}
     // core done
     output core_done
     );
@@ -144,16 +138,16 @@ module Core_TBO_CIU(
         .tbo_core_cal_data_6(tbo_core_cal_data_6),
         // W_storage
         .core_w_storage_bus(core_w_storage_bus), // {W_storage_en, Waddr[11:0]}
-        .w_storage_core_data_0(w_storage_core_data_0),
-        .w_storage_core_data_1(w_storage_core_data_1),
-        .w_storage_core_data_2(w_storage_core_data_2),
-        .w_storage_core_data_3(w_storage_core_data_3),
+        .w_storage_core_data_0(w_storage_core_data[255:192]),
+        .w_storage_core_data_1(w_storage_core_data[191:128]),
+        .w_storage_core_data_2(w_storage_core_data[127:64]),
+        .w_storage_core_data_3(w_storage_core_data[63:0]),
         // B_storage
         .core_b_storage_bus(core_b_storage_bus), // {B_storage_en, baddr[7:0]}
-        .b_storage_core_data_0(b_storage_core_data_0),
-        .b_storage_core_data_1(b_storage_core_data_1),
-        .b_storage_core_data_2(b_storage_core_data_2),
-        .b_storage_core_data_3(b_storage_core_data_3),
+        .b_storage_core_data_0(b_storage_core_data[127:96]),
+        .b_storage_core_data_1(b_storage_core_data[95:64]),
+        .b_storage_core_data_2(b_storage_core_data[63:32]),
+        .b_storage_core_data_3(b_storage_core_data[31:0]),
         // store tile buffer
         .core_tbo_store_bus(core_tbo_store_bus), // {valid, addr, din}
         // core done
