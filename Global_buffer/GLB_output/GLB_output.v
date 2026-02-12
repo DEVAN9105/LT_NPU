@@ -43,7 +43,7 @@ module GLB_output(
 
     ////////// signal assign //////////
     reg [6:0] load_sel; // {core 1~6, Post_processing}
-    wire [7:0] taddr;
+    reg [7:0] taddr_buffer;
     wire [13:0] gaddr;
     wire [63:0] glb_doutb_transposed;
     assign glb_output_bus = {AGU_G_en_next, gaddr[13:0]};
@@ -67,13 +67,13 @@ module GLB_output(
 
     ////////// AGU_T //////////
     reg [2:0] core;
+    wire [7:0] taddr;
     wire [2:0] core_pointer;
-    reg [7:0] taddr_buffer;
     wire AGU_T_en_next;
 
     AGU_T agu_t(
         .CLK(CLK),
-        .en(SR[2]),
+        .en(SR[3]),
         .rst(glb_out_rst),
         .set(set),
         .AGU_T_param(AGU_T_param),
@@ -90,20 +90,28 @@ module GLB_output(
         end
         else begin
             if(AGU_T_en_next) begin
-                if(glb_out_mode == 2'd2) begin
-                    load_sel <= 7'b0000001; // post_processing tile only write to core 1
-                end
-                else begin
-                    case(core_pointer)
-                        3'd0: load_sel <= 7'b1000000;
-                        3'd1: load_sel <= 7'b0100000;
-                        3'd2: load_sel <= 7'b0010000;
-                        3'd3: load_sel <= 7'b0001000;
-                        3'd4: load_sel <= 7'b0000100;
-                        3'd5: load_sel <= 7'b0000010;
-                        default: load_sel <= 7'b0000000;
-                    endcase
-                end
+                case(glb_out_mode)
+                    2'd0: begin // multi cast
+                        load_sel <= 7'b1111110;
+                    end
+                    2'd1: begin // uni cast
+                        case(core_pointer)
+                            3'd0: load_sel <= 7'b1000000;
+                            3'd1: load_sel <= 7'b0100000;
+                            3'd2: load_sel <= 7'b0010000;
+                            3'd3: load_sel <= 7'b0001000;
+                            3'd4: load_sel <= 7'b0000100;
+                            3'd5: load_sel <= 7'b0000010;
+                            default: load_sel <= 7'b0000000;
+                        endcase
+                    end
+                    2'd2: begin // posp
+                        load_sel <= 7'b0000001; // post_processing tile only write to core 1
+                    end
+                    default: begin
+                        load_sel <= 7'b0000000;
+                    end
+                endcase
             end
             else begin
                 load_sel <= 7'b0000000;
@@ -126,7 +134,7 @@ module GLB_output(
     Transpose transpose(
         .CLK(CLK),
         .rst(glb_out_rst),
-        .en(SR[2]),
+        .en(SR[2] | SR[3] | SR[4] | SR[5] | SR[6]),
         .data(glb_doutb),
         .data_transpose(glb_doutb_transposed)
     );

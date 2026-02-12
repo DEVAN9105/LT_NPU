@@ -95,8 +95,14 @@ module GLB_operator(
 
     ////////// GLB //////////
     wire [63:0] glb_doutb;
+    reg [63:0] glb_doutb_buffer;
     wire [78:0] glb_input_bus;
     wire [14:0] glb_output_bus;
+    always@(posedge CLK) begin
+        if(rst) glb_doutb_buffer <= 0;
+        else glb_doutb_buffer <= glb_doutb;
+    end
+    // glb instance
     GLB glb(
         .clka(CLK),
         .clkb(CLK),
@@ -107,6 +113,7 @@ module GLB_operator(
         .dina(glb_input_bus[63:0]),
         // port b
         .enb(glb_output_bus[14]),
+        .regceb(1'b1),
         .addrb(glb_output_bus[13:0]),
         .doutb(glb_doutb)
     );
@@ -210,7 +217,7 @@ module GLB_operator(
         .ch_to_Y_Y(output_Y), // addr offset for AGU_G
         // glb
         .glb_output_bus(glb_output_bus), // {enb, gaddr[13:0]}
-        .glb_doutb(glb_doutb),
+        .glb_doutb(glb_doutb_buffer),
         // AGU_T
         .AGU_T_param(output_AGU_T_param), // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
         // output tile

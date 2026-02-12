@@ -42,17 +42,20 @@ module AGU_G(
     ////////// input buffer end //////////
 
     ////////// en SR //////////
-    reg [4:0] en_SR;
+    reg [5:0] en_SR;
     assign ch_to_Y_bus[10] = en_SR[2];
     always@(posedge CLK) begin
-        if(rst || done) begin
+        if(rst) begin
             en_SR <= 0;
         end
+        else if(done) begin
+            en_SR <= 6'b100000;
+        end
         else begin
-            en_SR <= {en_SR[3:0], en};
+            en_SR <= {en_SR[4:0], en};
         end
     end
-    assign en_next = en_SR[4];
+    assign en_next = en_SR[5];
     ////////// en SR end //////////
 
     ////////// stage 1 //////////
