@@ -227,14 +227,14 @@ module AGU_G(
         end
     end
 
-    // adder
+    // adder_2
     reg [9:0] ch_sum;
     always@(posedge CLK) begin
         if(rst) begin
             ch_sum <= 0;
         end
         else begin
-            if(en_SR[1]) begin
+            if(en_SR[2]) begin
                 ch_sum <= offset_Y_reg_1 + ch;
             end
             else begin

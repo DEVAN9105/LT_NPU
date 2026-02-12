@@ -51,11 +51,11 @@ module GLB_input_controller(
                 end
             end
             ending: begin
-                if(SR != 0) begin
-                    next_state = ending;
+                if(SR == 6'd0) begin
+                    next_state = finish;
                 end
                 else begin
-                    next_state = finish;
+                    next_state = ending;
                 end
             end
             finish: begin
@@ -98,5 +98,5 @@ module GLB_input_controller(
         end
     end
     ////////// SR end //////////
-
+    
 endmodule

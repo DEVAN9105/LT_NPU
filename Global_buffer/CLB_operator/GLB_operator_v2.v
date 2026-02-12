@@ -7,8 +7,8 @@ module GLB_operator(
     input rst,
     ////////// Control param //////////
     input [10:0] ch_to_Y_initial, // 0~2047
-    input [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[51:0]}
-    input [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[51:0]}
+    input [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[43:0]}
+    input [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[43:0]}
     ////////// GLB_input //////////
     // input tile
     output [8:0] glb_prep_wb_bus,// {en, addr[7:0]}
@@ -61,14 +61,12 @@ module GLB_operator(
     wire [7:0] glb_ch_out = output_AGU_param_buffer[22:15]; // glb_ch = tile_ch*6
     wire [7:0] input_AGU_T_initial = input_AGU_param_buffer[51:44];
     wire [7:0] output_AGU_T_initial = output_AGU_param_buffer[51:44];
-    wire [13:0] input_AGU_G_initial = input_AGU_param_buffer[43:30];
-    wire [13:0] output_AGU_G_initial = output_AGU_param_buffer[43:30];
     // GLB input
     wire [22:0] input_AGU_T_param = {input_AGU_T_initial, input_AGU_param_buffer[14:0]};
-    wire [28:0] input_AGU_G_param = {input_AGU_G_initial, glb_width_in, glb_ch_in};
+    wire [28:0] input_AGU_G_param = {input_AGU_param_buffer[43:30], glb_width_in, glb_ch_in};
     // GLB output
     wire [22:0] output_AGU_T_param = {output_AGU_T_initial, output_AGU_param_buffer[14:0]};
-    wire [28:0] output_AGU_G_param = {output_AGU_G_initial, glb_width_out, glb_ch_out};
+    wire [28:0] output_AGU_G_param = {output_AGU_param_buffer[43:30], glb_width_out, glb_ch_out};
     ////////// tile parameter end /////////
 
     ////////// ch_to_Y //////////
@@ -79,15 +77,17 @@ module GLB_operator(
     assign input_ch = ch_to_Y_initial + input_ch_to_Y_bus[9:0];
     assign output_ch = ch_to_Y_initial + output_ch_to_Y_bus[9:0];
     // Ch_to_Y instance
-    Ch_to_Y ch_to_Y(
+    ch_to_Y ch_to_Y(
         // port a
         .clka(CLK),
         .ena(input_ch_to_Y_bus[10]),
+        .regcea(1'b1),
         .addra(input_ch),
         .douta(input_Y),
         // port b
         .clkb(CLK),
         .enb(output_ch_to_Y_bus[10]),
+        .regceb(1'b1),
         .addrb(output_ch),
         .doutb(output_Y)
     );
@@ -98,17 +98,17 @@ module GLB_operator(
     wire [78:0] glb_input_bus;
     wire [14:0] glb_output_bus;
     GLB glb(
-        .clk(CLK),
-        .rst(rst),
+        .clka(CLK),
+        .clkb(CLK),
         // port a
-        .en_a(glb_input_bus[78]),
-        .we_a(glb_input_bus[78]),
-        .addr_a(glb_input_bus[77:64]),
-        .din_a(glb_input_bus[63:0]),
+        .ena(glb_input_bus[78]),
+        .wea(glb_input_bus[78]),
+        .addra(glb_input_bus[77:64]),
+        .dina(glb_input_bus[63:0]),
         // port b
-        .en_b(glb_output_bus[14]),
-        .addr_b(glb_output_bus[13:0]),
-        .dout_b(glb_doutb)
+        .enb(glb_output_bus[14]),
+        .addrb(glb_output_bus[13:0]),
+        .doutb(glb_doutb)
     );
     ////////// GLB end //////////
 
@@ -125,15 +125,15 @@ module GLB_operator(
         end
         else begin
             case(wb_sel_123)
-                3'b100: ciu_glb_wb_bus_123 <= ciu_glb_wb_bus_1[63:0];
-                3'b010: ciu_glb_wb_bus_123 <= ciu_glb_wb_bus_2[63:0];
-                3'b001: ciu_glb_wb_bus_123 <= ciu_glb_wb_bus_3[63:0];
+                3'b100: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_1[63:0]};
+                3'b010: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_2[63:0]};
+                3'b001: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_3[63:0]};
                 default: ciu_glb_wb_bus_123 <= 65'd0;
             endcase
             case(wb_sel_456)
-                3'b100: ciu_glb_wb_bus_456 <= ciu_glb_wb_bus_4[63:0];
-                3'b010: ciu_glb_wb_bus_456 <= ciu_glb_wb_bus_5[63:0];
-                3'b001: ciu_glb_wb_bus_456 <= ciu_glb_wb_bus_6[63:0];
+                3'b100: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_4[63:0]};
+                3'b010: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_5[63:0]};
+                3'b001: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_6[63:0]};
                 default: ciu_glb_wb_bus_456 <= 65'd0;
             endcase
         end
