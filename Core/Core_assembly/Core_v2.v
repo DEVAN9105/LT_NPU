@@ -105,8 +105,8 @@ module Core(
     wire [63:0] din_store;
     wire [11:0] Waddr;
     wire [7:0] baddr;
-    assign core_tbo_cal_bus = {SR_0[4], addr_cal};
-    assign core_w_storage_bus = {SR_0[4], Waddr};
+    assign core_tbo_cal_bus = {SR_0[4]|SR_0[5], addr_cal};
+    assign core_w_storage_bus = {SR_0[4]|SR_0[5]|SR_0[6], Waddr};
     assign core_b_storage_bus = {SR_0[9], baddr};
     assign core_tbo_store_bus = {SR_1[2], addr_store, din_store};
     ////////// output signal end //////////
@@ -197,7 +197,7 @@ module Core(
     Fdata_buffer fdata_buffer(
         .CLK(CLK),
         .rst(core_rst),
-        .en(SR_0[6]),
+        .en(SR_0[6]|SR_0[7]),
         .set(set),
         .tile_sel(tile_sel), //3*tile
         .mode_in(mode), //function
@@ -219,7 +219,7 @@ module Core(
     Array_buffer array_buffer(
         .CLK(CLK),
         .rst(core_rst),
-        .en(SR_0[7]),
+        .en(SR_0[7]|SR_0[8]),
         .set(set),
         .fdata_0(fdata_0),
         .fdata_1(fdata_1),
@@ -237,7 +237,7 @@ module Core(
     W_buffer w_buffer(
         .CLK(CLK),
         .rst(core_rst),
-        .en(SR_0[7]),
+        .en(SR_0[7]|SR_0[8]),
         .wdata_0(wdata_0),
         .wdata_1(wdata_1),
         .wdata_2(wdata_2),
@@ -253,7 +253,7 @@ module Core(
     B_buffer b_buffer(
         .CLK(CLK),
         .rst(core_rst),
-        .en(SR_0[11]),
+        .en(SR_0[11]|SR_0[12]),
         .bdata_0(bdata_0),
         .bdata_1(bdata_1),
         .bdata_2(bdata_2),
@@ -270,7 +270,7 @@ module Core(
     // PE array instance
     PE_array pe_array(
         .CLK(CLK),
-        .en(SR_0[8]),
+        .en(SR_0[8]|SR_0[9]),
         .rst(rst),
         .set(set),
         .mode_in(mode),
@@ -375,5 +375,25 @@ module Core(
         .core_out(din_store)
     );
     ////////// Output buffer end //////////
+    
+    //tile buffer define(single port ROM)
+    //Tile_buffer_1 tile_buffer_1(.douta(tile_1), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    Tile_buffer_2 tile_buffer_2(.douta(tile_2), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    Tile_buffer_3 tile_buffer_3(.douta(tile_3), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    Tile_buffer_4 tile_buffer_4(.douta(tile_4), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    //Tile_buffer_5 tile_buffer_5(.douta(tile_5), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]n));
+    //Tile_buffer_6 tile_buffer_6(.douta(tile_6), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    
+    //W_storage define(single port ROM)
+    W_storage_0 W_storage_0(.douta(wdata_0), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]));
+    W_storage_1 W_storage_1(.douta(wdata_1), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]));
+    W_storage_2 W_storage_2(.douta(wdata_2), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]));
+    W_storage_3 W_storage_3(.douta(wdata_3), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]));
+
+    //B_storage define(single port ROM)
+    B_storage_0 B_storage_0(.douta(bdata_0), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]));
+    B_storage_1 B_storage_1(.douta(bdata_1), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]));
+    B_storage_2 B_storage_2(.douta(bdata_2), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]));
+    B_storage_3 B_storage_3(.douta(bdata_3), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]));
     
 endmodule

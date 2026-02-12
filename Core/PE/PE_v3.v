@@ -31,17 +31,32 @@ module PE(
     reg signed [15:0] A_reg, B_reg;
     (* use_dsp = "yes" *) reg signed [31:0] mult_reg;
     reg signed [31:0] P;
+    // stage 1
     always@(posedge CLK) begin
         if(rst) begin
             A_reg <= 0;
             B_reg <= 0;
-            mult_reg <= 0;
-            P <= 0;
         end
         else if(en) begin
             A_reg <= PE_A;
             B_reg <= PE_B;
+        end
+    end
+    // stage 2
+    always@(posedge CLK) begin
+        if(rst) begin
+            mult_reg <= 0;
+        end
+        else if(en_sr[0]) begin
             mult_reg <= A_reg * B_reg;
+        end
+    end
+    // stage 3
+    always@(posedge CLK) begin
+        if(rst) begin
+            P <= 0;
+        end
+        else if(en_sr[1]) begin
             P <= mult_reg;
         end
     end
