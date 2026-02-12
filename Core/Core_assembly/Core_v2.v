@@ -11,24 +11,24 @@ module Core(
     input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     ////////// cal tile buffer //////////
     output [8:0] core_tbo_cal_bus, // {valid_cal, addr_cal}
-    input [63:0] tile_1,
-    input [63:0] tile_2,
-    input [63:0] tile_3,
-    input [63:0] tile_4,
-    input [63:0] tile_5,
-    input [63:0] tile_6,
+    input [63:0] tbo_core_cal_data_1,
+    input [63:0] tbo_core_cal_data_2,
+    input [63:0] tbo_core_cal_data_3,
+    input [63:0] tbo_core_cal_data_4,
+    input [63:0] tbo_core_cal_data_5,
+    input [63:0] tbo_core_cal_data_6,
     ////////// W_storage //////////
     output [12:0] core_w_storage_bus, // {W_storage_en, Waddr[11:0]}
-    input [63:0] wdata_0,
-    input [63:0] wdata_1,
-    input [63:0] wdata_2,
-    input [63:0] wdata_3,
+    input [63:0] w_storage_core_data_0,
+    input [63:0] w_storage_core_data_1,
+    input [63:0] w_storage_core_data_2,
+    input [63:0] w_storage_core_data_3,
     ////////// B_storage //////////
     output [8:0] core_b_storage_bus, // {B_storage_en, baddr[7:0]}
-    input [31:0] bdata_0,
-    input [31:0] bdata_1,
-    input [31:0] bdata_2,
-    input [31:0] bdata_3,
+    input [31:0] b_storage_core_data_0,
+    input [31:0] b_storage_core_data_1,
+    input [31:0] b_storage_core_data_2,
+    input [31:0] b_storage_core_data_3,
     ////////// store tile buffer //////////
     output [72:0] core_tbo_store_bus, // {valid, addr, din}
     ////////// core done //////////
@@ -202,12 +202,12 @@ module Core(
         .tile_sel(tile_sel), //3*tile
         .mode_in(mode), //function
         .boundary(boundary),
-        .tile_1(tile_1),
-        .tile_2(tile_2),
-        .tile_3(tile_3),
-        .tile_4(tile_4),
-        .tile_5(tile_5),
-        .tile_6(tile_6),
+        .tile_1(tbo_core_cal_data_1),
+        .tile_2(tbo_core_cal_data_2),
+        .tile_3(tbo_core_cal_data_3),
+        .tile_4(tbo_core_cal_data_4),
+        .tile_5(tbo_core_cal_data_5),
+        .tile_6(tbo_core_cal_data_6),
         .fdata_0(fdata_0),
         .fdata_1(fdata_1),
         .fdata_2(fdata_2),
@@ -377,12 +377,12 @@ module Core(
     ////////// Output buffer end //////////
     
     //tile buffer define(single port ROM)
-    //Tile_buffer_1 tile_buffer_1(.douta(tile_1), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
-    Tile_buffer_2 tile_buffer_2(.douta(tile_2), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
-    Tile_buffer_3 tile_buffer_3(.douta(tile_3), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
-    Tile_buffer_4 tile_buffer_4(.douta(tile_4), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
-    //Tile_buffer_5 tile_buffer_5(.douta(tile_5), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]n));
-    //Tile_buffer_6 tile_buffer_6(.douta(tile_6), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    //Tile_buffer_1 tile_buffer_1(.douta(tbo_core_cal_data_1), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
+    Tile_buffer_2 tile_buffer_2(.douta(tbo_core_cal_data_2), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
+    Tile_buffer_3 tile_buffer_3(.douta(tbo_core_cal_data_3), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
+    Tile_buffer_4 tile_buffer_4(.douta(tbo_core_cal_data_4), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
+    //Tile_buffer_5 tile_buffer_5(.douta(tbo_core_cal_data_5), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]n));
+    //Tile_buffer_6 tile_buffer_6(.douta(tbo_core_cal_data_6), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
     
     //W_storage define(single port ROM)
     W_storage_0 W_storage_0(.douta(wdata_0), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]), .regcea(1'b1));

@@ -1,0 +1,162 @@
+`timescale 1ns / 1ps
+
+module Core_TBO_CIU(
+    input CLK,
+    input rst, // global reset
+
+    ////////// CIU //////////
+    input cycle_en,
+    // AGU C parameters
+    input [15:0] AGU_C_param, // {AGU_C_initial, tile_size}
+    // cycle
+    input [71:0] stream_a_in,
+    output [71:0] stream_a_out,
+    input [71:0] stream_b_in,
+    output [71:0] stream_b_out,
+    // load
+    input [72:0] glb_ciu_load_bus, // {valid_load, addr_load, din_load}
+    output [72:0] ciu_tbo_load_bus, // {valid_load, addr_load, din_load}
+    // write back
+    input [8:0] glb_ciu_wb_bus, // {en_wb, addr_wb_in}
+    output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
+    // cycle done
+    output cycle_done,
+
+    ////////// Tile Buffer Operator //////////
+    // control param
+    input [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
+    ////////// Core //////////
+    input core_en,
+    // control signal
+    input [15:0] core_control, //{mode_in[15:13], tile_sel_in[12:4], stride_X_in[3:2], ReLU_en_in[1], padding}
+    // AGU initial
+    input [27:0] core_AGU_initial, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    // tile size
+    input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+    // W_storage
+    output [12:0] core_w_storage_bus, // {W_storage_en, Waddr[11:0]}
+    input [63:0] w_storage_core_data_0,
+    input [63:0] w_storage_core_data_1,
+    input [63:0] w_storage_core_data_2,
+    input [63:0] w_storage_core_data_3,
+    // B_storage
+    output [8:0] core_b_storage_bus, // {B_storage_en, baddr[7:0]}
+    input [31:0] b_storage_core_data_0,
+    input [31:0] b_storage_core_data_1,
+    input [31:0] b_storage_core_data_2,
+    input [31:0] b_storage_core_data_3,
+    // core done
+    output core_done
+    );
+
+    ////////// CIU //////////
+    // cycle bus
+    wire [72:0] ciu_tbo_cycle_bus_a, ciu_tbo_cycle_bus_b;
+    wire [63:0] tbo_ciu_cycle_data;
+    // load bus
+    wire [72:0] ciu_tbo_load_bus;
+    // write back bus
+    wire [8:0] ciu_tbo_wb_bus;
+    wire [63:0] tbo_ciu_wb_data;
+    // CIU instantiation
+    CIU ciu(
+        .CLK(CLK),
+        .rst(rst), // global reset, will reset whole CIU, including AGU and cycle controller
+        .cycle_en(cycle_en),
+        // cycle
+        .AGU_C_param(AGU_C_param), // {AGU_C_initial, tile_size}
+        .stream_a_in(stream_a_in),
+        .stream_a_out(stream_a_out),
+        .stream_b_in(stream_b_in),
+        .stream_b_out(stream_b_out),
+        .ciu_tbo_cycle_bus_a(ciu_tbo_cycle_bus_a), // {valid_cycle_a, addr_cycle_a, din_cycle_a}
+        .ciu_tbo_cycle_bus_b(ciu_tbo_cycle_bus_b), // {valid_cycle_b, addr_cycle_b, din_cycle_b}
+        .tbo_ciu_cycle_data(tbo_ciu_cycle_data),
+        // load
+        .glb_ciu_load_bus(glb_ciu_load_bus), // {valid_load, addr_load, din_load}
+        .ciu_tbo_load_bus(ciu_tbo_load_bus), // {valid_load, addr_load, din_load}
+        // write back
+        .glb_ciu_wb_bus(glb_ciu_wb_bus), // {en_wb, addr_wb_in}
+        .ciu_tbo_wb_bus(ciu_tbo_wb_bus), // {en_wb, addr_wb}
+        .tbo_ciu_wb_data(tbo_ciu_wb_data),
+        .ciu_glb_wb_bus(ciu_glb_wb_bus), // {data_valid, CIU_wb}
+        // done
+        .cycle_done(cycle_done)
+    );
+    ////////// CIU end //////////
+
+    ////////// Tile Buffer Operator //////////
+    // tbo bus
+    wire [8:0] core_tbo_cal_bus;
+    wire [63:0] tbo_core_cal_data_1;
+    wire [63:0] tbo_core_cal_data_2;
+    wire [63:0] tbo_core_cal_data_3;
+    wire [63:0] tbo_core_cal_data_4;
+    wire [63:0] tbo_core_cal_data_5;
+    wire [63:0] tbo_core_cal_data_6;
+    wire [72:0] core_tbo_store_bus;
+    // TBO instantiation
+    Tile_buffer_operator tbo(
+        .clka(CLK),
+        .clkb(CLK),
+        // Control param
+        .tbo_param(tbo_param), // {tile_sel_cycle, tile_assign}
+        // load
+        .ciu_tbo_load_bus(ciu_tbo_load_bus), // {valid, addr, din}
+        // cycle
+        .ciu_tbo_cycle_bus_a(ciu_tbo_cycle_bus_a), // {valid, addr, din}
+        .ciu_tbo_cycle_bus_b(ciu_tbo_cycle_bus_b), // {valid, addr, din}
+        .tbo_ciu_cycle_data(tbo_ciu_cycle_data),
+        // wb
+        .ciu_tbo_wb_bus(ciu_tbo_wb_bus), // {en_wb, addr_wb}
+        .tbo_ciu_wb_data(tbo_ciu_wb_data),
+        // cal
+        .core_tbo_cal_bus(core_tbo_cal_bus), // {valid_cal, addr_cal}
+        .tbo_core_cal_data_1(tbo_core_cal_data_1),
+        .tbo_core_cal_data_2(tbo_core_cal_data_2),
+        .tbo_core_cal_data_3(tbo_core_cal_data_3),
+        .tbo_core_cal_data_4(tbo_core_cal_data_4),
+        .tbo_core_cal_data_5(tbo_core_cal_data_5),
+        .tbo_core_cal_data_6(tbo_core_cal_data_6),
+        // store
+        .core_tbo_store_bus(core_tbo_store_bus), // {valid, addr, din}
+    );
+    ////////// Tile Buffer Operator end //////////
+
+    ////////// Core //////////
+    Core core(
+        .CLK(CLK), .rst(rst), .en(core_en),
+        // control signal
+        .core_control(core_control), //{mode_in[15:13], tile_sel_in[12:4], stride_X_in[3:2], ReLU_en_in[1], padding}
+        // AGU initial
+        .core_AGU_initial(core_AGU_initial), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        // tile size
+        .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        // cal tile buffer
+        .core_tbo_cal_bus(core_tbo_cal_bus), // {valid_cal, addr_cal}
+        .tbo_core_cal_data_1(tbo_core_cal_data_1),
+        .tbo_core_cal_data_2(tbo_core_cal_data_2),
+        .tbo_core_cal_data_3(tbo_core_cal_data_3),
+        .tbo_core_cal_data_4(tbo_core_cal_data_4),
+        .tbo_core_cal_data_5(tbo_core_cal_data_5),
+        .tbo_core_cal_data_6(tbo_core_cal_data_6),
+        // W_storage
+        .core_w_storage_bus(core_w_storage_bus), // {W_storage_en, Waddr[11:0]}
+        .w_storage_core_data_0(w_storage_core_data_0),
+        .w_storage_core_data_1(w_storage_core_data_1),
+        .w_storage_core_data_2(w_storage_core_data_2),
+        .w_storage_core_data_3(w_storage_core_data_3),
+        // B_storage
+        .core_b_storage_bus(core_b_storage_bus), // {B_storage_en, baddr[7:0]}
+        .b_storage_core_data_0(b_storage_core_data_0),
+        .b_storage_core_data_1(b_storage_core_data_1),
+        .b_storage_core_data_2(b_storage_core_data_2),
+        .b_storage_core_data_3(b_storage_core_data_3),
+        // store tile buffer
+        .core_tbo_store_bus(core_tbo_store_bus), // {valid, addr, din}
+        // core done
+        .core_done(core_done)
+    );
+    ////////// Core end //////////
+
+endmodule
