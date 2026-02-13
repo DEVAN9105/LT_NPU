@@ -4,6 +4,7 @@ module Top_Controller(
     input CLK,
     input asynchronous_rst,
     input PS_en,
+    input PS_rst,
     output reg controller_rst, // Notify PS that controller is ready after reset
     output reg VLIW_rst,
     output reg Weight_loader_rst,
@@ -98,6 +99,22 @@ module Top_Controller(
     end
     ////////// cycle initial end //////////
 
+    ////////// Start Signal //////////
+    reg PS_en_d; // Delayed version of PS_en for edge detection
+    always @(posedge CLK or negedge asynchronous_rst) begin
+        if (!asynchronous_rst) begin
+            PS_en_d <= 0;
+        end
+        else if (controller_rst || PS_rst) begin
+            PS_en_d <= 0; // Latch the start signal
+        end
+        else begin
+            PS_en_d <= PS_en; // Update delayed signal
+        end
+    end
+    wire PS_start_pulse = PS_en & ~PS_en_d; // Detect rising edge of PS_en
+    ////////// Start Signal end //////////
+
     ////////// Next State Logic and PC_step //////////
     always @(*) begin
         next_state = state;
@@ -113,7 +130,7 @@ module Top_Controller(
                 controller_rst = 1;
                 VLIW_rst = 1;
                 Weight_loader_rst = 1;
-                if(PS_en) next_state = S_decode;
+                if(PS_start_pulse) next_state = S_set_0;
                 else next_state = S_idle;
             end
             S_set_0: begin
@@ -184,8 +201,7 @@ module Top_Controller(
             S_finish: begin
                 PC_step = 0;
                 DPU_done = 1; // Notify PS
-                if(PS_en) next_state = S_finish; // Allow new task start
-                else next_state = S_idle;
+                next_state = S_idle;
             end
             default: begin
                 PC_step = 0;
@@ -215,7 +231,26 @@ module Top_Controller(
             core_param <= 0; // {W_initial, B_initial, cycle_tile_size}
             Ch_to_Y_initial <= 0;
             posp_param <= 32'd0; // {hand_th, tool_th, block_th, safe_th}
-        end 
+        end
+        else if(PS_rst) begin
+            state <= S_idle;
+            // VLIW control
+            VLIW_controller_en <= 0;
+            VLIW_initial <= 0;
+            VLIW_end <= 0;
+            cycle_initial <= 0;
+            // Weight Loader control
+            weight_loader_en <= 0;
+            weight_amount <= 0;
+            bias_amount <= 0;
+            // param
+            glb_output_combined <= 0; // {glb_width_out, glb_ch_out, tile_width_out, tile_ch_out}
+            glb_input_combined <= 0;// {glb_width_in, glb_ch_in, tile_width_in, tile_ch_in}
+            glb_initial_combined <= 0; // {glb_width_init, glb_ch_init, tile_width_init, tile_ch_init}
+            core_param <= 0; // {W_initial, B_initial, cycle_tile_size}
+            Ch_to_Y_initial <= 0;
+            posp_param <= 32'd0; // {hand_th, tool_th, block_th, safe_th}
+        end
         else begin
             state <= next_state;
             case (state)
@@ -331,14 +366,14 @@ module Top_Controller(
         if(!asynchronous_rst) begin
             PC <= 0;
         end
-        else if(controller_rst) begin
+        else if(controller_rst || PS_rst) begin
             PC <= 0;
         end
         else begin
             PC <= next_PC;
         end
     end
-    assign IS_PC_bus = {~controller_rst, PC}; // Disable PC increment when reset
+    assign IS_PC_bus = {(~controller_rst & ~PS_rst), PC}; // Disable PC increment when reset
     ////////// PC end //////////
     
 endmodule
