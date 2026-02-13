@@ -40,8 +40,8 @@ module GLB_operator(
     );
 
     ////////// input buffer //////////
-    reg [51:0] input_AGU_param_buffer; // {AGU_T_initial[51:44], AGU_G_initial[43:30], glb_width_in[29:23], glb_ch_in[22:15], tile_width_in[14:8], tile_ch_in[7:0]}
-    reg [51:0] output_AGU_param_buffer; // {AGU_T_initial[51:44], AGU_G_initial[43:30], glb_width_out[29:23], glb_ch_out[22:15], tile_width_out[14:8], tile_ch_out[7:0]}
+    reg [51:0] input_AGU_param_buffer; // {AGU_G_initial[51:38], AGU_T_initial[37:30], glb_width_in[29:23], glb_ch_in[22:15], tile_width_in[14:8], tile_ch_in[7:0]}
+    reg [51:0] output_AGU_param_buffer; // {AGU_G_initial[51:38], AGU_T_initial[37:30], glb_width_out[29:23], glb_ch_out[22:15], tile_width_out[14:8], tile_ch_out[7:0]}
     always@(posedge CLK) begin
         if(rst) begin
             input_AGU_param_buffer <= 52'd0;
@@ -59,14 +59,14 @@ module GLB_operator(
     wire [7:0] glb_ch_in = input_AGU_param_buffer[22:15];
     wire [6:0] glb_width_out = output_AGU_param_buffer[29:23];
     wire [7:0] glb_ch_out = output_AGU_param_buffer[22:15]; // glb_ch = tile_ch*6
-    wire [7:0] input_AGU_T_initial = input_AGU_param_buffer[51:44];
-    wire [7:0] output_AGU_T_initial = output_AGU_param_buffer[51:44];
+    wire [7:0] input_AGU_T_initial = input_AGU_param_buffer[37:30];
+    wire [7:0] output_AGU_T_initial = output_AGU_param_buffer[37:30];
     // GLB input
     wire [22:0] input_AGU_T_param = {input_AGU_T_initial, input_AGU_param_buffer[14:0]};
-    wire [28:0] input_AGU_G_param = {input_AGU_param_buffer[43:30], glb_width_in, glb_ch_in};
+    wire [28:0] input_AGU_G_param = {input_AGU_param_buffer[51:38], glb_width_in, glb_ch_in};
     // GLB output
     wire [22:0] output_AGU_T_param = {output_AGU_T_initial, output_AGU_param_buffer[14:0]};
-    wire [28:0] output_AGU_G_param = {output_AGU_param_buffer[43:30], glb_width_out, glb_ch_out};
+    wire [28:0] output_AGU_G_param = {output_AGU_param_buffer[51:38], glb_width_out, glb_ch_out};
     ////////// tile parameter end /////////
 
     ////////// ch_to_Y //////////

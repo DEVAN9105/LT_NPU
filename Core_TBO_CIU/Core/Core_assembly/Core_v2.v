@@ -4,7 +4,7 @@ module Core(
     // basic
     input CLK, input rst, input en,
     ////////// control signal //////////
-    input [15:0] core_control, //{mode_in[15:13], tile_sel_in[12:4], stride_X_in[3:2], ReLU_en_in[1], padding}
+    input [15:0] core_control, // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
     ////////// AGU initial //////////
     input [27:0] core_AGU_initial, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     ////////// tile size //////////
@@ -50,10 +50,10 @@ module Core(
 
     ////////// input buffer ////////// 
     wire [2:0] mode = core_control[15:13];
-    wire [8:0] tile_sel = core_control[12:4];
-    wire [1:0] stride_X = core_control[3:2];
-    wire ReLU_en = core_control[1];
-    wire padding = core_control[0];
+    wire [1:0] stride_X = core_control[12:11];
+    wire ReLU_en = core_control[10];
+    wire padding = core_control[9];
+    wire [8:0] tile_sel = core_control[8:0];
     wire [6:0] width_in = core_tile_param[29:23];
     wire [7:0] ch_in = core_tile_param[22:15];
     wire [6:0] width_out = core_tile_param[14:8];

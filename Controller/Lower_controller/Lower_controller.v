@@ -15,7 +15,6 @@ module Lower_controller(
     // output control signal
     output [10:0] en_bus,
     output [143:0] VLIW_out,
-    output [8:0] tile_sel,
     // VLIW done
     output VLIW_done
     );
@@ -51,17 +50,6 @@ module Lower_controller(
         .VLIW_rst(VLIW_rst)
     );
     ////////// VLIW FSM end //////////
-
-    ////////// VLIW decoder //////////
-    VLIW_decoder vliw_decoder( 
-        .CLK(CLK),
-        .rst(VLIW_rst),
-        .en(VLIW_decoder_en),
-        .VLIW_in(VLIW_in[143:0]),
-        .VLIW(VLIW_out),
-        .tile_sel(tile_sel)
-    );
-    ////////// VLIW decoder end //////////
 
     ////////// VLIW_PC //////////
     VLIW_PC vliw_pc(

@@ -22,7 +22,6 @@ module Top_Controller(
     output reg VLIW_controller_en, 
     output reg [9:0] VLIW_initial,
     output reg [9:0] VLIW_end,
-    output reg [47:0] cycle_initial,
     // Weight Loader control
     output reg weight_loader_en,
     output reg [11:0] weight_amount,
@@ -30,8 +29,8 @@ module Top_Controller(
     // param
     output reg [31:0] glb_output_combined, // {glb_width_out, glb_ch_out, tile_width_out, tile_ch_out}
     output reg [31:0] glb_input_combined,// {glb_width_in, glb_ch_in, tile_width_in, tile_ch_in}
-    output reg [31:0] glb_initial_combined, // {glb_width_init, glb_ch_init, tile_width_init, tile_ch_init}
-    output reg [29:0] core_param, // {W_initial[29:16], B_initial[15:8], cycle_tile_size[7:0]}
+    output reg [31:0] glb_initial_combined, // {input_glb_initial, output_glb_initial}
+    output reg [27:0] core_agu_param, // {W_initial[27:16], B_initial[15:8], cycle_tile_size[7:0]}
     output reg [10:0] Ch_to_Y_initial,
     output reg [31:0] posp_param, // {hand_th, tool_th, block_th, safe_th}
     ////////// System status //////////
@@ -81,23 +80,6 @@ module Top_Controller(
     localparam S_wait    = 3'd4; // Wait for Done signal
     localparam S_finish  = 3'd5; // Finish state
     ////////// Internal Registers and State end //////////
-
-    ////////// cycle initial //////////
-    wire [7:0] cycle_tile_size = core_param[7:0];
-    always@(posedge CLK) begin
-        if(controller_rst) begin
-            cycle_initial <= 0;
-        end
-        else begin
-            cycle_initial[47:40] <= 0;
-            cycle_initial[39:32] <= cycle_tile_size + 1;
-            cycle_initial[31:24] <= (cycle_tile_size << 1) + 1;
-            cycle_initial[23:16] <= (cycle_tile_size << 1) + cycle_tile_size + 1;
-            cycle_initial[15:8]  <= (cycle_tile_size << 2) + 1;
-            cycle_initial[7:0]   <= (cycle_tile_size << 2) + cycle_tile_size + 1;
-        end
-    end
-    ////////// cycle initial end //////////
 
     ////////// Start Signal //////////
     reg PS_en_d; // Delayed version of PS_en for edge detection
@@ -228,7 +210,7 @@ module Top_Controller(
             glb_output_combined <= 0; // {glb_width_out, glb_ch_out, tile_width_out, tile_ch_out}
             glb_input_combined <= 0;// {glb_width_in, glb_ch_in, tile_width_in, tile_ch_in}
             glb_initial_combined <= 0; // {glb_width_init, glb_ch_init, tile_width_init, tile_ch_init}
-            core_param <= 0; // {W_initial, B_initial, cycle_tile_size}
+            core_agu_param <= 0; // {W_initial, B_initial, cycle_tile_size}
             Ch_to_Y_initial <= 0;
             posp_param <= 32'd0; // {hand_th, tool_th, block_th, safe_th}
         end
@@ -247,7 +229,7 @@ module Top_Controller(
             glb_output_combined <= 0; // {glb_width_out, glb_ch_out, tile_width_out, tile_ch_out}
             glb_input_combined <= 0;// {glb_width_in, glb_ch_in, tile_width_in, tile_ch_in}
             glb_initial_combined <= 0; // {glb_width_init, glb_ch_init, tile_width_init, tile_ch_init}
-            core_param <= 0; // {W_initial, B_initial, cycle_tile_size}
+            core_agu_param <= 0; // {W_initial, B_initial, cycle_tile_size}
             Ch_to_Y_initial <= 0;
             posp_param <= 32'd0; // {hand_th, tool_th, block_th, safe_th}
         end
@@ -268,7 +250,7 @@ module Top_Controller(
                     glb_output_combined <= 0; // {glb_width_out, glb_ch_out, tile_width_out, tile_ch_out}
                     glb_input_combined <= 0;// {glb_width_in, glb_ch_in, tile_width_in, tile_ch_in}
                     glb_initial_combined <= 0; // {glb_width_init, glb_ch_init, tile_width_init, tile_ch_init}
-                    core_param <= 0; // {W_initial, B_initial, cycle_tile_size}
+                    core_agu_param <= 0; // {W_initial, B_initial, cycle_tile_size}
                     Ch_to_Y_initial <= 0;
                     posp_param <= 32'd0; // {hand_th, tool_th, block_th, safe_th}
                 end
@@ -286,7 +268,7 @@ module Top_Controller(
                                     glb_initial_combined  <= {num_1, num_2};
                                 end
                                 FUNC_core_param: begin // Change_core_parameter
-                                    core_param <= {num_1[13:0], num_2};
+                                    core_agu_param <= {num_1[13:0], num_2};
                                 end
                                 FUNC_ch_order: begin // Change_channel_order
                                     Ch_to_Y_initial <= num_1[10:0];

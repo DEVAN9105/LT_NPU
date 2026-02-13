@@ -3,36 +3,20 @@
 module VLIW_decoder(
     input CLK,
     input rst,
-    input en,
-    input [143:0] VLIW_in,
-    output reg [143:0] VLIW,
+    input [132:0] VLIW_in,
     output reg [8:0] tile_sel_cal,
     output reg [2:0] tile_sel_cycle
     );
 
-    ////////// input buffer //////////
-    always@(posedge CLK) begin
-        if(rst) begin
-            VLIW <= 0;
-        end
-        else if(en) begin
-            VLIW <= VLIW_in;
-        end
-        else begin
-            VLIW <= VLIW;
-        end
-    end
-    ////////// input buffer end //////////
-
     ////////// decode tile sel //////////
-    wire [19:0] tile_assign = VLIW_in[76:57];
+    wire [19:0] tile_assign = VLIW_in[75:56];
     reg [5:0] cal_0, cal_1, cal_2;
     reg [5:0] cycle;
      always@(posedge CLK) begin
         if(rst) begin
             tile_sel_cycle <= 0;
         end
-        else if(en) begin
+        else begin
             case(cycle)
                 6'b000001: tile_sel_cycle <= 3'b001;
                 6'b000010: tile_sel_cycle <= 3'b010;
@@ -43,15 +27,12 @@ module VLIW_decoder(
                 default: tile_sel_cycle <= 0;
             endcase
         end
-        else begin
-            tile_sel_cycle <= tile_sel_cycle;
-        end
     end
     always@(posedge CLK) begin
         if(rst) begin
             tile_sel_cal <= 0;
         end
-        else if(en) begin
+        else begin
             case(cal_0)
                 6'b000001: tile_sel_cal[8:6] <= 3'b001;
                 6'b000010: tile_sel_cal[8:6] <= 3'b010;
@@ -79,9 +60,6 @@ module VLIW_decoder(
                 6'b100000: tile_sel_cal[2:0] <= 3'b110;
                 default: tile_sel_cal[2:0] <= 0;
             endcase
-        end
-        else begin
-            tile_sel_cal <= tile_sel_cal;
         end
     end
     always@(*) begin
