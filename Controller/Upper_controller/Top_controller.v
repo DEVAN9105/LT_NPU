@@ -5,7 +5,7 @@ module Top_Controller(
     input asynchronous_rst,
     input PS_en,
     input PS_rst,
-    output reg controller_rst, // Notify PS that controller is ready after reset
+    output reg controller_rst,
     output reg VLIW_rst,
     output reg Weight_loader_rst,
     

@@ -21,7 +21,6 @@ module GLB_output_controller(
     ////////// state define end //////////
 
     ////////// FSM //////////
-    
     always@(*) begin
         //avoid latch
         next_state = state;
