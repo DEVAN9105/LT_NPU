@@ -48,9 +48,10 @@ module Top_Controller(
     ////////// Instruction RAM interface //////////
     // PC
     reg [7:0] PC, next_PC;
-    assign IS_PC_bus = {PC_step, PC};
+    reg PC_en;
+    assign IS_PC_bus = {PC_en, PC};
     always@(*) begin
-        next_PC = PC + PC_step;
+        next_PC = PC + PC_en;
     end
     always@(posedge CLK or negedge asynchronous_rst) begin
         if(!asynchronous_rst) begin
@@ -63,7 +64,6 @@ module Top_Controller(
             PC <= next_PC;
         end
     end
-    assign IS_PC_bus = {(~system_rst & ~PS_rst), PC}; // Disable PC increment when reset
     ////////// Instruction RAM interface end //////////
 
     ////////// OP Code Definitions //////////
@@ -120,90 +120,90 @@ module Top_Controller(
     wire PS_start_pulse = PS_en & ~PS_en_d; // Detect rising edge of PS_en
     ////////// Start Signal end //////////
 
-    ////////// Next State Logic and PC_step //////////
+    ////////// Next State Logic and PC_en //////////
     always @(*) begin
         next_state = state;
-        PC_step = 0;
-        system_rst = 0;
+        PC_en = 0;
         PL_busy = 0;
 
         case (state)
             S_idle: begin
-                system_rst = 1;
                 if(PS_start_pulse) next_state = S_set_0;
                 else next_state = S_idle;
             end
             S_set_0: begin
+                PC_en = 1; // Start fetching instructions
                 PL_busy = 1;
                 next_state = S_set_1;
             end
             S_set_1: begin
                 PL_busy = 1;
+                PC_en = 1; // Continue fetching instructions
                 next_state = S_decode;
             end
             S_decode: begin
                 PL_busy = 1;
                 case (op_cond)
                     COND_none: begin // 0: Direct jump
-                        PC_step = 1;
+                        PC_en = 1;
                         next_state = S_decode;
                     end
                     COND_wait_weight: begin
-                        PC_step = 0;
+                        PC_en = 0;
                         next_state = S_wait;
                     end
                     COND_wait_VLIW: begin
-                        PC_step = 0;
+                        PC_en = 0;
                         next_state = S_wait;
                     end
                     COND_wait_both: begin
-                        PC_step = 0;
+                        PC_en = 0;
                         next_state = S_wait;
                     end
                     default: next_state = S_decode;
                 endcase
             end
             S_wait: begin
-                PC_step = 0;
+                PC_en = 0;
                 PL_busy = 1;
                 case (op_cond)
                     COND_wait_weight: begin
                         if (Weight_done) begin
-                            PC_step = 1;
+                            PC_en = 1;
                             next_state = S_decode;
                         end
                         else begin
-                            PC_step = 0;
+                            PC_en = 0;
                             next_state = S_wait;
                         end
                     end
                     COND_wait_VLIW: begin
                         if (VLIW_done) begin
-                            PC_step = 1;
+                            PC_en = 1;
                             next_state = S_decode;
                         end
                         else begin
-                            PC_step = 0;
+                            PC_en = 0;
                             next_state = S_wait;
                         end
                     end
                     COND_wait_both: begin
                         if (VLIW_done && Weight_done) begin
-                            PC_step = 1;
+                            PC_en = 1;
                             next_state = S_decode;
                         end
                         else begin
-                            PC_step = 0;
+                            PC_en = 0;
                             next_state = S_wait;
                         end
                     end
                     COND_wait_instruction: begin
                         if (instruction_done) begin
-                            PC_step = 1;
+                            PC_en = 1;
                             next_state = S_decode;
                         end
                         else begin
-                            PC_step = 0;
+                            PC_en = 0;
                             next_state = S_wait;
                         end
                     end
@@ -219,17 +219,17 @@ module Top_Controller(
             end
         endcase
     end
-    ////////// Next State Logic and PC_step end //////////
+    ////////// Next State Logic and PC_en end //////////
 
     ////////// FSM and register //////////
     always @(posedge CLK or negedge asynchronous_rst) begin
         if(!asynchronous_rst) begin
             state <= S_idle;
+            system_rst <= 1;
             // VLIW control
             VLIW_controller_en <= 0;
             VLIW_initial <= 0;
             VLIW_end <= 0;
-            cycle_initial <= 0;
             // Weight Loader control
             weight_loader_en <= 0;
             weight_amount <= 0;
@@ -246,11 +246,11 @@ module Top_Controller(
         end
         else if(PS_rst) begin
             state <= S_idle;
+            system_rst <= 1;
             // VLIW control
             VLIW_controller_en <= 0;
             VLIW_initial <= 0;
             VLIW_end <= 0;
-            cycle_initial <= 0;
             // Weight Loader control
             weight_loader_en <= 0;
             weight_amount <= 0;
@@ -267,13 +267,14 @@ module Top_Controller(
         end
         else begin
             state <= next_state;
+            system_rst <= 0;
             case (state)
                 S_idle: begin
+                    system_rst <= 1;
                     // VLIW control
                     VLIW_controller_en <= 0;
                     VLIW_initial <= 0;
                     VLIW_end <= 0;
-                    cycle_initial <= 0;
                     // Weight Loader control
                     weight_loader_en <= 0;
                     weight_amount <= 0;
@@ -334,7 +335,7 @@ module Top_Controller(
                             case (op_func)
                                 FUNC_run_VLIW: begin
                                     VLIW_initial <= num_1[9:0];
-                                    VLIW_end     <= num_2[9:0];
+                                    VLIW_length <= num_2[9:0];
                                     VLIW_controller_en <= 1;
                                 end
                                 FUNC_wait: begin
