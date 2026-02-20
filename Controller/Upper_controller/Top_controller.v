@@ -11,10 +11,10 @@ module Top_Controller(
     output [8:0] IS_PC_bus, // {en, 8bit address}
     input [39:0] IS,
     
-    ////////// Submodule Done signals //////////
-    input instruction_done,
-    input VLIW_done,
-    input Weight_done,
+    ////////// Submodule Busy signals //////////
+    input instruction_busy,
+    input VLIW_busy,
+    input Weight_busy,
 
     ////////// Submodule control and parameter outputs //////////
     // VLIW control
@@ -28,9 +28,9 @@ module Top_Controller(
     // Instruction Loader control
     output reg instruction_loader_en,
     // param
-    output reg [31:0] output_combined,      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
-    output reg [31:0] input_combined,       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
-    output reg [ 2:0] double_buffer_sel,    // {glb, W_storage, B_storage}
+    output reg [25:0] output_combined,      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
+    output reg [25:0] input_combined,       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+    output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
     output reg [10:0] Ch_to_Y_increment,
     output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
@@ -38,9 +38,9 @@ module Top_Controller(
     output reg PL_busy                      // PL working, notify PS
 );
     ////////// Instruction Decoding //////////
-    wire [1:0] op_class  = IS[39:38];
-    wire [2:0] op_func   = IS[37:35];
-    wire [2:0] op_cond   = IS[34:32];
+    wire [2:0] op_class  = IS[39:37];
+    wire [2:0] op_func   = IS[36:34];
+    wire [1:0] op_cond   = IS[33:32];
     wire [31:0] num_1    = IS[31:16];
     wire [15:0] num_2    = IS[15:0];
     ////////// Instruction Decoding end //////////
@@ -68,7 +68,7 @@ module Top_Controller(
 
     ////////// OP Code Definitions //////////
     // Class 0: Change Parameter
-    localparam CLASS_change_param    = 2'd0;
+    localparam CLASS_change_param    = 3'd0;
     localparam FUNC_output_param     = 3'd0;
     localparam FUNC_input_param      = 3'd1;
     localparam FUNC_buffer_initial   = 3'd2;
@@ -76,32 +76,35 @@ module Top_Controller(
     localparam FUNC_ch_order         = 3'd4;
     localparam FUNC_posp_param       = 3'd5;
     // Class 1: DRAM
-    localparam CLASS_dram            = 2'd1;
+    localparam CLASS_dram            = 3'd1;
     localparam FUNC_get_instruction  = 3'd0;
     localparam FUNC_get_weight       = 3'd1;
     // Class 2: Control
-    localparam CLASS_control         = 2'd2;
+    localparam CLASS_control         = 3'd2;
     localparam FUNC_idle             = 3'd0;
     localparam FUNC_run_VLIW         = 3'd1;
     localparam FUNC_wait             = 3'd2;
     localparam FUNC_finish           = 3'd3;
     // Conditions
+    /*
     localparam COND_none             = 3'd0;
     localparam COND_wait_weight      = 3'd1;
     localparam COND_wait_VLIW        = 3'd2;
     localparam COND_wait_both        = 3'd3;
-    localparam COND_wait_instruction = 3'd4;
+    localparam COND_wait_instruction = 3'd4;*/
     ////////// OP Code Definitions end //////////
 
     ////////// Internal Registers and State //////////
     // FSM States
     reg [2:0] state, next_state;
-    localparam S_idle    = 3'd0; // Wait for start
-    localparam S_set_0   = 3'd1;
-    localparam S_set_1   = 3'd2;
-    localparam S_decode  = 3'd3; // Decode and trigger Enable
-    localparam S_wait    = 3'd4; // Wait for Done signal
-    localparam S_finish  = 3'd5; // Finish state
+    localparam S_idle     = 3'd0; // Wait for start
+    localparam S_set_0    = 3'd1;
+    localparam S_set_1    = 3'd2;
+    localparam S_decode   = 3'd3; // Decode and trigger Enable
+    localparam S_buffer_0 = 3'd4;
+    localparam S_buffer_1 = 3'd5;
+    localparam S_wait     = 3'd6; // Wait for Done signal
+    localparam S_finish   = 3'd7; // Finish state
     ////////// Internal Registers and State end //////////
 
     ////////// Start Signal //////////
@@ -143,72 +146,53 @@ module Top_Controller(
             end
             S_decode: begin
                 PL_busy = 1;
-                case (op_cond)
-                    COND_none: begin // 0: Direct jump
-                        PC_en = 1;
-                        next_state = S_decode;
+                PC_en = 1;
+                case(op_class)
+                    CLASS_change_param: begin
+                        next_state = S_decode; // Just set parameters, no need to wait
                     end
-                    COND_wait_weight: begin
-                        PC_en = 0;
-                        next_state = S_wait;
+                    CLASS_dram: begin
+                        next_state = S_decode; // Trigger DRAM access, but we can start decoding next instruction immediately
                     end
-                    COND_wait_VLIW: begin
-                        PC_en = 0;
-                        next_state = S_wait;
-                    end
-                    COND_wait_both: begin
-                        PC_en = 0;
-                        next_state = S_wait;
+                    CLASS_control: begin
+                        case(op_func)
+                            FUNC_idle: begin
+                                next_state = S_decode;
+                            end
+                            FUNC_run_VLIW: begin
+                                next_state = S_decode;
+                            end
+                            FUNC_wait: begin
+                                next_state = S_buffer_0;
+                            end
+                            FUNC_finish: begin
+                                next_state = S_finish;
+                            end
+                            default: next_state = S_decode;
+                        endcase
                     end
                     default: next_state = S_decode;
                 endcase
             end
+            S_buffer_0: begin
+                PL_busy = 1;
+                PC_en = 0;
+                next_state = S_buffer_1;
+            end
+            S_buffer_1: begin
+                PL_busy = 1;
+                PC_en = 0;
+                next_state = S_wait;
+            end
             S_wait: begin
                 PC_en = 0;
                 PL_busy = 1;
-                case (op_cond)
-                    COND_wait_weight: begin
-                        if (Weight_done) begin
-                            PC_en = 1;
-                            next_state = S_decode;
-                        end
-                        else begin
-                            PC_en = 0;
-                            next_state = S_wait;
-                        end
-                    end
-                    COND_wait_VLIW: begin
-                        if (VLIW_done) begin
-                            PC_en = 1;
-                            next_state = S_decode;
-                        end
-                        else begin
-                            PC_en = 0;
-                            next_state = S_wait;
-                        end
-                    end
-                    COND_wait_both: begin
-                        if (VLIW_done && Weight_done) begin
-                            PC_en = 1;
-                            next_state = S_decode;
-                        end
-                        else begin
-                            PC_en = 0;
-                            next_state = S_wait;
-                        end
-                    end
-                    COND_wait_instruction: begin
-                        if (instruction_done) begin
-                            PC_en = 1;
-                            next_state = S_decode;
-                        end
-                        else begin
-                            PC_en = 0;
-                            next_state = S_wait;
-                        end
-                    end
-                    default: next_state = S_decode;
-                endcase
+                if( instruction_busy || VLIW_busy || Weight_busy ) begin
+                    next_state = S_wait; // Stay in wait state until all are done
+                end
+                else begin
+                    next_state = S_decode; // Go back to decode next instruction
+                end
             end
             S_finish: begin
                 PL_busy = 0; // Notify PS
@@ -290,17 +274,20 @@ module Top_Controller(
                     posp_param <= 32'd0;
                 end
                 S_decode: begin
+                    weight_loader_en <= 0;
+                    instruction_loader_en <= 0;
+                    VLIW_controller_en <= 0;
                     case (op_class)
                         CLASS_change_param: begin
                             case (op_func)
                                 FUNC_output_param: begin // Change_GLB_parameter
-                                    output_combined  <= {num_1, num_2};
+                                    output_combined  <= {num_1[9:0], num_2};
                                 end
                                 FUNC_input_param: begin // Change_GLB_parameter
-                                    input_combined  <= {num_1, num_2};
+                                    input_combined  <= {num_1[9:0], num_2};
                                 end
                                 FUNC_buffer_initial: begin // Change_GLB_parameter
-                                    double_buffer_sel  <= num_1[2:0];
+                                    double_buffer_sel  <= num_1[3:0];
                                 end
                                 FUNC_core_param: begin // Change_core_parameter
                                     cycle_tile_size <= num_1[7:0];
@@ -352,32 +339,10 @@ module Top_Controller(
                     endcase
                 end
                 S_wait: begin
-                    case (op_cond)
-                        COND_wait_weight: begin
-                            if (Weight_done) begin
-                                weight_loader_en <= 0;
-                            end
-                        end
-                        COND_wait_VLIW: begin
-                            if (VLIW_done) begin
-                                VLIW_controller_en <= 0;
-                            end
-                        end
-                        COND_wait_both: begin
-                            if (VLIW_done && Weight_done) begin
-                                VLIW_controller_en <= 0;
-                                weight_loader_en <= 0;
-                            end
-                        end
-                        COND_wait_instruction: begin
-                            if (instruction_done) begin
-                                instruction_loader_en <= 0;
-                            end
-                        end
-                        default: begin
-                            // none
-                        end
-                endcase
+                    // none
+                end
+                default: begin
+                    // none
                 end
             endcase
         end
