@@ -20,8 +20,8 @@ module VLIW_decoder(
             case(cycle)
                 6'b000001: tile_sel_cycle <= 3'b001;
                 6'b000010: tile_sel_cycle <= 3'b010;
-                6'b000100: tile_sel_cycle <= 3'b100;
-                6'b001000: tile_sel_cycle <= 3'b011;
+                6'b000100: tile_sel_cycle <= 3'b011;
+                6'b001000: tile_sel_cycle <= 3'b100;
                 6'b010000: tile_sel_cycle <= 3'b101;
                 6'b100000: tile_sel_cycle <= 3'b110;
                 default: tile_sel_cycle <= 0;
@@ -36,8 +36,8 @@ module VLIW_decoder(
             case(cal_0)
                 6'b000001: tile_sel_cal[8:6] <= 3'b001;
                 6'b000010: tile_sel_cal[8:6] <= 3'b010;
-                6'b000100: tile_sel_cal[8:6] <= 3'b100;
-                6'b001000: tile_sel_cal[8:6] <= 3'b011;
+                6'b000100: tile_sel_cal[8:6] <= 3'b011;
+                6'b001000: tile_sel_cal[8:6] <= 3'b100;
                 6'b010000: tile_sel_cal[8:6] <= 3'b101;
                 6'b100000: tile_sel_cal[8:6] <= 3'b110;
                 default: tile_sel_cal[8:6] <= 0;
@@ -45,8 +45,8 @@ module VLIW_decoder(
             case(cal_1)
                 6'b000001: tile_sel_cal[5:3] <= 3'b001;
                 6'b000010: tile_sel_cal[5:3] <= 3'b010;
-                6'b000100: tile_sel_cal[5:3] <= 3'b100;
-                6'b001000: tile_sel_cal[5:3] <= 3'b011;
+                6'b000100: tile_sel_cal[5:3] <= 3'b011;
+                6'b001000: tile_sel_cal[5:3] <= 3'b100;
                 6'b010000: tile_sel_cal[5:3] <= 3'b101;
                 6'b100000: tile_sel_cal[5:3] <= 3'b110;
                 default: tile_sel_cal[5:3] <= 0;
@@ -54,8 +54,8 @@ module VLIW_decoder(
             case(cal_2)
                 6'b000001: tile_sel_cal[2:0] <= 3'b001;
                 6'b000010: tile_sel_cal[2:0] <= 3'b010;
-                6'b000100: tile_sel_cal[2:0] <= 3'b100;
-                6'b001000: tile_sel_cal[2:0] <= 3'b011;
+                6'b000100: tile_sel_cal[2:0] <= 3'b011;
+                6'b001000: tile_sel_cal[2:0] <= 3'b100;
                 6'b010000: tile_sel_cal[2:0] <= 3'b101;
                 6'b100000: tile_sel_cal[2:0] <= 3'b110;
                 default: tile_sel_cal[2:0] <= 0;
