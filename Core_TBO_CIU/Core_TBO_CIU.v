@@ -34,7 +34,7 @@ module Core_TBO_CIU(
     // W_storage
     input [79:0] weight_loader_w_storage_bus, // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
     // B_storage
-    input [43:0] weight_loader_b_storage_bus, // {en_0, en_1, en_2, en_3, addr[39:32], data[31:0]}
+    input [74:0] weight_loader_b_storage_bus, // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
     // core busy
     output core_busy
     );
@@ -221,10 +221,10 @@ module Core_TBO_CIU(
         .clka(CLK),
         .clkb(CLK),
         // port a
-        .ena(weight_loader_b_storage_bus[43]),
-        .wea(weight_loader_b_storage_bus[43]),
-        .addra(weight_loader_b_storage_bus[39:32]),
-        .dina(weight_loader_b_storage_bus[31:0]),
+        .ena(weight_loader_b_storage_bus[74]),
+        .wea(weight_loader_b_storage_bus[74]),
+        .addra(weight_loader_b_storage_bus[70:64]),
+        .dina(weight_loader_b_storage_bus[63:0]),
         // port b
         .enb(core_b_storage_bus[8]),
         .regceb(1'b1),
@@ -235,10 +235,10 @@ module Core_TBO_CIU(
         .clka(CLK),
         .clkb(CLK),
         // port a
-        .ena(weight_loader_b_storage_bus[42]),
-        .wea(weight_loader_b_storage_bus[42]),
-        .addra(weight_loader_b_storage_bus[39:32]),
-        .dina(weight_loader_b_storage_bus[31:0]),
+        .ena(weight_loader_b_storage_bus[73]),
+        .wea(weight_loader_b_storage_bus[73]),
+        .addra(weight_loader_b_storage_bus[70:64]),
+        .dina(weight_loader_b_storage_bus[63:0]),
         // port b
         .enb(core_b_storage_bus[8]),
         .regceb(1'b1),
@@ -249,10 +249,10 @@ module Core_TBO_CIU(
         .clka(CLK),
         .clkb(CLK),
         // port a
-        .ena(weight_loader_b_storage_bus[41]),
-        .wea(weight_loader_b_storage_bus[41]),
-        .addra(weight_loader_b_storage_bus[39:32]),
-        .dina(weight_loader_b_storage_bus[31:0]),
+        .ena(weight_loader_b_storage_bus[72]),
+        .wea(weight_loader_b_storage_bus[72]),
+        .addra(weight_loader_b_storage_bus[70:64]),
+        .dina(weight_loader_b_storage_bus[63:0]),
         // port b
         .enb(core_b_storage_bus[8]),
         .regceb(1'b1),
@@ -263,10 +263,10 @@ module Core_TBO_CIU(
         .clka(CLK),
         .clkb(CLK),
         // port a
-        .ena(weight_loader_b_storage_bus[40]),
-        .wea(weight_loader_b_storage_bus[40]),
-        .addra(weight_loader_b_storage_bus[39:32]),
-        .dina(weight_loader_b_storage_bus[31:0]),
+        .ena(weight_loader_b_storage_bus[71]),
+        .wea(weight_loader_b_storage_bus[71]),
+        .addra(weight_loader_b_storage_bus[70:64]),
+        .dina(weight_loader_b_storage_bus[63:0]),
         // port b
         .enb(core_b_storage_bus[8]),
         .regceb(1'b1),

@@ -12,7 +12,6 @@ module Param_decoder(
     input [25:0] input_combined, // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
     input [3:0] double_buffer_sel, // {output_glb, input_glb, W_storage, B_storage}
     input [7:0] cycle_tile_size,
-    input [10:0] ch_to_Y_initial,
 
     ////////// CIU //////////
     // AGU C parameters
@@ -83,10 +82,10 @@ module Param_decoder(
         else begin
             cycle_initial[47:40] <= 0;
             cycle_initial[39:32] <= cycle_tile_size + 1;
-            cycle_initial[31:24] <= (cycle_tile_size << 1) + 1;
-            cycle_initial[23:16] <= (cycle_tile_size << 1) + cycle_tile_size + 1;
-            cycle_initial[15:8]  <= (cycle_tile_size << 2) + 1;
-            cycle_initial[7:0]   <= (cycle_tile_size << 2) + cycle_tile_size + 1;
+            cycle_initial[31:24] <= ((cycle_tile_size + 1) << 1);
+            cycle_initial[23:16] <= ((cycle_tile_size + 1) << 1) + cycle_tile_size + 1;
+            cycle_initial[15:8]  <= ((cycle_tile_size + 1) << 2);
+            cycle_initial[7:0]   <= ((cycle_tile_size + 1) << 2) + cycle_tile_size + 1;
         end
     end
     ////////// cycle initial end //////////
@@ -105,12 +104,12 @@ module Param_decoder(
         end
         else begin
             if(VLIW_num[132:130] == 3'd2) begin
-                AGU_O_initial_1 <= cycle_tile_size + 1;
-                AGU_O_initial_2 <= (cycle_tile_size << 1) + 1;
-                AGU_O_initial_3 <= (cycle_tile_size << 1) + cycle_tile_size + 1;
-                AGU_O_initial_4 <= (cycle_tile_size << 2) + 1;
-                AGU_O_initial_5 <= (cycle_tile_size << 2) + cycle_tile_size + 1;
-                AGU_O_initial_6 <= (cycle_tile_size << 3) + 1;
+                AGU_O_initial_6 <= 0;
+                AGU_O_initial_2 <= cycle_tile_size + 1;
+                AGU_O_initial_3 <= ((cycle_tile_size + 1) << 1);
+                AGU_O_initial_4 <= ((cycle_tile_size + 1) << 1) + cycle_tile_size + 1;
+                AGU_O_initial_5 <= ((cycle_tile_size + 1) << 2);
+                AGU_O_initial_6 <= ((cycle_tile_size + 1) << 2) + cycle_tile_size + 1;
             end
             else begin
                 AGU_O_initial_1 <= 0;

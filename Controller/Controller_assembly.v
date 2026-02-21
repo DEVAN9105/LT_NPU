@@ -134,7 +134,6 @@ module Controller_assembly(
     wire [25:0] input_combined;       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
     wire [3:0] double_buffer_sel;    // {output_glb, input_glb, W_storage, B_storage}
     wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
-    wire [10:0] Ch_to_Y_initial;
     Top_Controller top_controller(
         .CLK(CLK),
         .asynchronous_rst(asynchronous_rst),
@@ -163,7 +162,7 @@ module Controller_assembly(
         .input_combined(input_combined),       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
         .double_buffer_sel(double_buffer_sel),    // {output_glb, input_glb, W_storage, B_storage}
         .cycle_tile_size(cycle_tile_size),      // {cycle_tile_size[7:0]}
-        .Ch_to_Y_initial(Ch_to_Y_initial),
+        .ch_to_Y_initial(ch_to_Y_initial),
         .posp_param(posp_control_bus[31:0]),           // {hand_th, tool_th, block_th, safe_th}
         // system status
         .PL_busy(PL_busy)                      // PL working, notify PS
@@ -181,7 +180,6 @@ module Controller_assembly(
         .input_combined(input_combined), // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
         .double_buffer_sel(double_buffer_sel), // {output_glb, input_glb, W_storage, B_storage}
         .cycle_tile_size(cycle_tile_size),
-        .Ch_to_Y_initial(Ch_to_Y_initial),
 
         // CIU
         .AGU_C_param_1(AGU_C_param_1), // {AGU_C_initial, tile_size}

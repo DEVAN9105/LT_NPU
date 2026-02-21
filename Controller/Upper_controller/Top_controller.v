@@ -27,12 +27,14 @@ module Top_Controller(
     output reg [6:0] bias_amount,
     // Instruction Loader control
     output reg instruction_loader_en,
+    output reg [7:0] IS_amount,
+    output reg [9:0] VLIW_amount,
     // param
     output reg [25:0] output_combined,      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
     output reg [25:0] input_combined,       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
     output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
-    output reg [10:0] Ch_to_Y_initial,
+    output reg [10:0] ch_to_Y_initial,
     output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
     ////////// System status //////////
     output reg PL_busy                      // PL working, notify PS
@@ -220,7 +222,7 @@ module Top_Controller(
             input_combined <= 0;
             double_buffer_sel <= 0;
             cycle_tile_size <= 0;
-            Ch_to_Y_initial <= 0;
+            ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
         end
         else if(PS_rst) begin
@@ -240,7 +242,7 @@ module Top_Controller(
             input_combined <= 0;
             double_buffer_sel <= 0;
             cycle_tile_size <= 0;
-            Ch_to_Y_initial <= 0;
+            ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
         end
         else begin
@@ -262,7 +264,7 @@ module Top_Controller(
                     input_combined <= 0;
                     double_buffer_sel <= 0;
                     cycle_tile_size <= 0;
-                    Ch_to_Y_initial <= 0;
+                    ch_to_Y_initial <= 0;
                     posp_param <= 32'd0;
                 end
                 S_decode: begin
@@ -285,7 +287,7 @@ module Top_Controller(
                                     cycle_tile_size <= num_1[7:0];
                                 end
                                 FUNC_ch_order: begin // Change_channel_order
-                                    Ch_to_Y_initial <= num_1[10:0];
+                                    ch_to_Y_initial <= num_1[10:0];
                                 end
                                 FUNC_posp_param: begin // Change_postprocess_parameter
                                     posp_param <= {num_1, num_2};
@@ -303,6 +305,8 @@ module Top_Controller(
                                     weight_loader_en <= 1;
                                 end
                                 FUNC_get_instruction: begin // get_instruction
+                                    IS_amount <= num_1[7:0];
+                                    VLIW_amount <= num_2[9:0];
                                     instruction_loader_en <= 1;
                                 end
                                 default: begin
