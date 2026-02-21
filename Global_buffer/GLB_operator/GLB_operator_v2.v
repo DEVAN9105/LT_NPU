@@ -2,13 +2,13 @@
 
 module GLB_operator(
     input CLK,
+    input rst,
     input glb_input_en,
     input glb_output_en,
-    input rst,
     ////////// Control param //////////
     input [10:0] ch_to_Y_initial, // 0~2047
-    input [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[43:0]}
-    input [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[43:0]}
+    input [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[51:0]}
+    input [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[51:0]}
     ////////// GLB_input //////////
     // input tile
     output [8:0] glb_prep_wb_bus,// {en, addr[7:0]}

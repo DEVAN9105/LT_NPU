@@ -1,42 +1,214 @@
 `timescale 1ns / 1ps
 
-module Top_Controller(
+module Controller_assembly(
     input CLK,
     input asynchronous_rst,
     input PS_en,
     input PS_rst,
-    output reg controller_rst, // Notify PS that controller is ready after reset
-    output reg VLIW_rst,
-    output reg Weight_loader_rst,
+    output system_rst,
     
     ////////// Instruction memory interface //////////
-    output [8:0] IS_PC_bus, // {en, 8bit address}
-    input [39:0] IS,
+    input [48:0] IS_load_bus, // {en, address[47:40], IS[39:0]}
+    input [154:0] VLIW_load_bus, // {en, address[153:144], VLIW[143:0]}
     
-    ////////// Submodule Done signals //////////
-    input VLIW_done,
-    input Weight_done,
+    ////////// Submodule Busy signals //////////
+    input instruction_loader_busy,
+    input weight_loader_busy,
+    input [10:0] lower_busy_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
 
-    ////////// Submodule control and parameter outputs //////////
-    // VLIW control
-    output reg VLIW_controller_en, 
-    output reg [9:0] VLIW_initial,
-    output reg [9:0] VLIW_end,
-    output reg [47:0] cycle_initial,
-    // Weight Loader control
-    output reg weight_loader_en,
-    output reg [11:0] weight_amount,
-    output reg [6:0] bias_amount,
-    // param
-    output reg [31:0] glb_output_combined, // {glb_width_out, glb_ch_out, tile_width_out, tile_ch_out}
-    output reg [31:0] glb_input_combined,// {glb_width_in, glb_ch_in, tile_width_in, tile_ch_in}
-    output reg [31:0] glb_initial_combined, // {glb_width_init, glb_ch_init, tile_width_init, tile_ch_init}
-    output reg [29:0] core_param, // {W_initial[29:16], B_initial[15:8], cycle_tile_size[7:0]}
-    output reg [10:0] Ch_to_Y_initial,
-    output reg [31:0] posp_param, // {hand_th, tool_th, block_th, safe_th}
-    ////////// DPU status //////////
-    output reg DPU_done             // entire task done, notify PS
+    ////////// Instruction Loader control //////////
+    output instruction_loader_en,
+
+    ////////// Weight Loader control //////////
+    output [19:0] weight_loader_bus, // {en[19], weight_amount[18:7], bias_amount[6:0]}
+
+    ////////// Core control and parameters //////////
+    // control signal
+    output core_en_1,
+    output core_en_2,
+    output core_en_3,
+    output core_en_4,
+    output core_en_5,
+    output core_en_6,
+    output [15:0] core_control, // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+    // AGU initial
+    output [27:0] core_AGU_initial_1, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [27:0] core_AGU_initial_2, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [27:0] core_AGU_initial_3, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [27:0] core_AGU_initial_4, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [27:0] core_AGU_initial_5, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [27:0] core_AGU_initial_6, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    // tile size
+    output [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+
+    ////////// TBO control and parameters //////////
+    output [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
+
+    ////////// CIU control and parameters //////////
+    output cycle_en,
+    output [15:0] AGU_C_param_1, // {AGU_C_initial, tile_size}
+    output [15:0] AGU_C_param_2, // {AGU_C_initial, tile_size}
+    output [15:0] AGU_C_param_3, // {AGU_C_initial, tile_size}
+    output [15:0] AGU_C_param_4, // {AGU_C_initial, tile_size}
+    output [15:0] AGU_C_param_5, // {AGU_C_initial, tile_size}
+    output [15:0] AGU_C_param_6, // {AGU_C_initial, tile_size}
+
+    ////////// GLB control and parameters //////////
+    output glb_input_en,
+    output glb_output_en,
+    output [10:0] ch_to_Y_initial, // 0~2047
+    output [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[51:0]}
+    output [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[51:0]}
+
+    ////////// PreP control and parameters //////////
+    output [1:0] prep_control_bus, // {prep_en, prep_buffer_sel}
+
+    ////////// PosP control and parameters //////////
+    output [32:0] posp_control_bus, // {posp_en[32], hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+
+    ////////// PL status //////////
+    output PL_busy
 );
-    
+
+    ////////// Instruction RAM //////////
+    // IS
+    wire [8:0] IS_PC_bus; // {en, 8 bit address}
+    wire [39:0] IS;
+    Instruction_RAM instruction_ram(
+        .clka(CLK),
+        .ena(IS_load_bus[48]),
+        .wea(IS_load_bus[48]),
+        .addra(IS_load_bus[47:40]),
+        .dina(IS_load_bus[39:0]),
+        .clkb(CLK),
+        .enb(IS_PC_bus[8]),
+        .addrb(IS_PC_bus[7:0]),
+        .doutb(IS)
+    );
+    // VLIW
+    wire [10:0] VLIW_PC_bus; // {en, 10 bit address}
+    wire [143:0] VLIW;
+    VLIW_RAM vliw_ram(
+        .clka(CLK),
+        .ena(VLIW_load_bus[154]),
+        .wea(VLIW_load_bus[154]),
+        .addra(VLIW_load_bus[153:144]),
+        .dina(VLIW_load_bus[143:0]),
+        .clkb(CLK),
+        .enb(VLIW_PC_bus[10]),
+        .addrb(VLIW_PC_bus[9:0]),
+        .doutb(VLIW)
+    );
+    ////////// Instruction RAM end //////////
+
+    ////////// Lower Controller //////////
+    wire lower_controller_en;
+    wire [9:0] VLIW_initial;
+    wire [9:0] VLIW_length;
+    wire [10:0] lower_en_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+    wire [132:0] VLIW_num;
+    wire lower_controller_busy;
+    assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, cycle_en, glb_input_en, glb_output_en, prep_control_bus[1], posp_control_bus[32]}
+            = lower_en_bus;
+    Lower_Controller lower_controller(
+        .CLK(CLK),
+        .en(lower_controller_en),
+        .rst(system_rst),
+        .VLIW_initial(VLIW_initial),
+        .VLIW_length(VLIW_length),
+        // VLIW interface
+        .VLIW_PC_bus(VLIW_PC_bus), // {en, 10 bit address}
+        .VLIW(VLIW),
+        // busy signals
+        .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+        // output control signals
+        .lower_en_bus(lower_en_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+        .VLIW_num(VLIW_num), // VLIW number
+        // Lower controller status
+        .lower_controller_busy(lower_controller_busy) // VLIW busy signal
+    );
+    ////////// Lower Controller end //////////
+
+    ////////// Top Controller //////////
+    wire [25:0] output_combined;      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
+    wire [25:0] input_combined;       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+    wire [3:0] double_buffer_sel;    // {output_glb, input_glb, W_storage, B_storage}
+    wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
+    wire [10:0] Ch_to_Y_initial;
+    Top_Controller top_controller(
+        .CLK(CLK),
+        .asynchronous_rst(asynchronous_rst),
+        .PS_en(PS_en),
+        .PS_rst(PS_rst),
+        .system_rst(system_rst),
+        // IS interface
+        .IS_PC_bus(IS_PC_bus), // {en, 8bit address}
+        .IS(IS),
+        // busy signals
+        .instruction_loader_busy(instruction_loader_busy),
+        .lower_controller_busy(lower_controller_busy),
+        .weight_loader_busy(weight_loader_busy),
+        // Lower Controller control
+        .lower_controller_en(lower_controller_en), 
+        .VLIW_initial(VLIW_initial),
+        .VLIW_length(VLIW_length),
+        // Weight Loader control
+        .weight_loader_en(weight_loader_bus[19]),
+        .weight_amount(weight_loader_bus[18:7]),
+        .bias_amount(weight_loader_bus[6:0]),
+        // Instruction Loader control
+        .instruction_loader_en(instruction_loader_en),
+        // parameters for Core, CIU, TBO, GLB, PreP, PosP
+        .output_combined(output_combined),      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
+        .input_combined(input_combined),       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+        .double_buffer_sel(double_buffer_sel),    // {output_glb, input_glb, W_storage, B_storage}
+        .cycle_tile_size(cycle_tile_size),      // {cycle_tile_size[7:0]}
+        .Ch_to_Y_initial(Ch_to_Y_initial),
+        .posp_param(posp_control_bus[31:0]),           // {hand_th, tool_th, block_th, safe_th}
+        // system status
+        .PL_busy(PL_busy)                      // PL working, notify PS
+    );
+    ////////// Top Controller end //////////
+
+    ////////// Param Decoder //////////
+    Param_decoder param_decoder(
+        .CLK(CLK),
+        .rst(system_rst),
+
+        // IS/VLIW input
+        .VLIW_num(VLIW_num),
+        .output_combined(output_combined), // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
+        .input_combined(input_combined), // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+        .double_buffer_sel(double_buffer_sel), // {output_glb, input_glb, W_storage, B_storage}
+        .cycle_tile_size(cycle_tile_size),
+        .Ch_to_Y_initial(Ch_to_Y_initial),
+
+        // CIU
+        .AGU_C_param_1(AGU_C_param_1), // {AGU_C_initial, tile_size}
+        .AGU_C_param_2(AGU_C_param_2), // {AGU_C_initial, tile_size}
+        .AGU_C_param_3(AGU_C_param_3), // {AGU_C_initial, tile_size}
+        .AGU_C_param_4(AGU_C_param_4), // {AGU_C_initial, tile_size}
+        .AGU_C_param_5(AGU_C_param_5), // {AGU_C_initial, tile_size}
+        .AGU_C_param_6(AGU_C_param_6), // {AGU_C_initial, tile_size}
+
+        // Tile Buffer Operator
+        .tbo_param(tbo_param), // {tile_sel_cycle, tile_assign}
+
+        // Core
+        .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_4(core_AGU_initial_4), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_5(core_AGU_initial_5), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_6(core_AGU_initial_6), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+
+        // GLB operator
+        .glb_input_param(glb_input_param),
+        .glb_output_param(glb_output_param),
+        .prep_buffer_sel(prep_control_bus[0])
+    );
+    ////////// Param Decoder end //////////
     
 endmodule

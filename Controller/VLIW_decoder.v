@@ -3,13 +3,13 @@
 module VLIW_decoder(
     input CLK,
     input rst,
-    input [132:0] VLIW_in,
+    input [19:0] VLIW_in,
     output reg [8:0] tile_sel_cal,
     output reg [2:0] tile_sel_cycle
     );
 
     ////////// decode tile sel //////////
-    wire [19:0] tile_assign = VLIW_in[75:56];
+    wire [19:0] tile_assign = VLIW_in[19:0];
     reg [5:0] cal_0, cal_1, cal_2;
     reg [5:0] cycle;
      always@(posedge CLK) begin

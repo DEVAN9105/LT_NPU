@@ -12,7 +12,7 @@ module Param_decoder(
     input [25:0] input_combined, // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
     input [3:0] double_buffer_sel, // {output_glb, input_glb, W_storage, B_storage}
     input [7:0] cycle_tile_size,
-    input [10:0] ch_to_Y_increment,
+    input [10:0] ch_to_Y_initial,
 
     ////////// CIU //////////
     // AGU C parameters
@@ -68,7 +68,7 @@ module Param_decoder(
     VLIW_decoder vliw_decoder(
         .CLK(CLK),
         .rst(rst),
-        .VLIW_in(VLIW_num),
+        .VLIW_in(VLIW_num[75:56]),
         .tile_sel_cal(tile_sel_cal),
         .tile_sel_cycle(tile_sel_cycle)
     );

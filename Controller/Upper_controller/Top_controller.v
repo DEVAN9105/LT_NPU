@@ -12,13 +12,13 @@ module Top_Controller(
     input [39:0] IS,
     
     ////////// Submodule Busy signals //////////
-    input instruction_busy,
-    input VLIW_busy,
-    input Weight_busy,
+    input instruction_loader_busy,
+    input lower_controller_busy,
+    input weight_loader_busy,
 
     ////////// Submodule control and parameter outputs //////////
     // VLIW control
-    output reg VLIW_controller_en, 
+    output reg lower_controller_en, 
     output reg [9:0] VLIW_initial,
     output reg [9:0] VLIW_length,
     // Weight Loader control
@@ -32,11 +32,12 @@ module Top_Controller(
     output reg [25:0] input_combined,       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
     output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
-    output reg [10:0] Ch_to_Y_increment,
+    output reg [10:0] Ch_to_Y_initial,
     output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
     ////////// System status //////////
     output reg PL_busy                      // PL working, notify PS
 );
+
     ////////// Instruction Decoding //////////
     wire [2:0] op_class  = IS[39:37];
     wire [2:0] op_func   = IS[36:34];
@@ -187,7 +188,7 @@ module Top_Controller(
             S_wait: begin
                 PC_en = 0;
                 PL_busy = 1;
-                if( instruction_busy || VLIW_busy || Weight_busy ) begin
+                if( instruction_loader_busy || lower_controller_busy || weight_loader_busy ) begin
                     next_state = S_wait; // Stay in wait state until all are done
                 end
                 else begin
@@ -211,7 +212,7 @@ module Top_Controller(
             state <= S_idle;
             system_rst <= 1;
             // VLIW control
-            VLIW_controller_en <= 0;
+            lower_controller_en <= 0;
             VLIW_initial <= 0;
             VLIW_end <= 0;
             // Weight Loader control
@@ -225,14 +226,14 @@ module Top_Controller(
             input_combined <= 0;
             double_buffer_sel <= 0;
             cycle_tile_size <= 0;
-            Ch_to_Y_increment <= 0;
+            Ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
         end
         else if(PS_rst) begin
             state <= S_idle;
             system_rst <= 1;
             // VLIW control
-            VLIW_controller_en <= 0;
+            lower_controller_en <= 0;
             VLIW_initial <= 0;
             VLIW_end <= 0;
             // Weight Loader control
@@ -246,7 +247,7 @@ module Top_Controller(
             input_combined <= 0;
             double_buffer_sel <= 0;
             cycle_tile_size <= 0;
-            Ch_to_Y_increment <= 0;
+            Ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
         end
         else begin
@@ -256,7 +257,7 @@ module Top_Controller(
                 S_idle: begin
                     system_rst <= 1;
                     // VLIW control
-                    VLIW_controller_en <= 0;
+                    lower_controller_en <= 0;
                     VLIW_initial <= 0;
                     VLIW_end <= 0;
                     // Weight Loader control
@@ -270,13 +271,13 @@ module Top_Controller(
                     input_combined <= 0;
                     double_buffer_sel <= 0;
                     cycle_tile_size <= 0;
-                    Ch_to_Y_increment <= 0;
+                    Ch_to_Y_initial <= 0;
                     posp_param <= 32'd0;
                 end
                 S_decode: begin
                     weight_loader_en <= 0;
                     instruction_loader_en <= 0;
-                    VLIW_controller_en <= 0;
+                    lower_controller_en <= 0;
                     case (op_class)
                         CLASS_change_param: begin
                             case (op_func)
@@ -323,7 +324,7 @@ module Top_Controller(
                                 FUNC_run_VLIW: begin
                                     VLIW_initial <= num_1[9:0];
                                     VLIW_length <= num_2[9:0];
-                                    VLIW_controller_en <= 1;
+                                    lower_controller_en <= 1;
                                 end
                                 FUNC_wait: begin
                                     // none

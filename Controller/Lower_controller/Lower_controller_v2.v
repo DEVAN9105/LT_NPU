@@ -19,8 +19,9 @@ module Lower_Controller(
     output [132:0] VLIW_num, // VLIW number
 
     ////////// System status //////////
-    output reg VLIW_busy
+    output reg lower_controller_busy
 );
+
     ////////// Instruction Decoding //////////
     wire [10:0] VLIW_en   = VLIW[143:133];
     assign      VLIW_num  = VLIW[132:0];
@@ -65,7 +66,7 @@ module Lower_Controller(
     always @(*) begin
         next_state = state;
         PC_en = 0;
-        VLIW_busy = 0;
+        lower_controller_busy = 0;
 
         case (state)
             S_idle: begin
@@ -74,16 +75,16 @@ module Lower_Controller(
             end
             S_set_0: begin
                 PC_en = 1;
-                VLIW_busy = 1;
+                lower_controller_busy = 1;
                 next_state = S_set_1;
             end
             S_set_1: begin
-                VLIW_busy = 1;
+                lower_controller_busy = 1;
                 PC_en = 1;
                 next_state = S_decode;
             end
             S_decode: begin // decode
-                VLIW_busy = 1;
+                lower_controller_busy = 1;
                 PC_en = 1;
                 if(count == VLIW_length + 3) begin   
                     next_state = S_finish;
@@ -93,18 +94,18 @@ module Lower_Controller(
                 end
             end
             S_buffer_0: begin
-                VLIW_busy = 1;
+                lower_controller_busy = 1;
                 PC_en = 0;
                 next_state = S_buffer_1;
             end
             S_buffer_1: begin
-                VLIW_busy = 1;
+                lower_controller_busy = 1;
                 PC_en = 0;
                 next_state = S_wait;
             end
             S_wait: begin // wait
                 PC_en = 0;
-                VLIW_busy = 1;
+                lower_controller_busy = 1;
                 if( lower_busy_bus != 11'd0 ) begin
                     next_state = S_wait; // Stay in wait state until all are done
                 end
@@ -113,7 +114,7 @@ module Lower_Controller(
                 end
             end
             S_finish: begin
-                VLIW_busy = 0; // Notify PS
+                lower_controller_busy = 0; // Notify PS
                 next_state = S_idle;
             end
             default: begin
