@@ -24,8 +24,8 @@ module CIU(
     output [8:0] ciu_tbo_wb_bus, // {en_wb, addr_wb}
     input [63:0] tbo_ciu_wb_data,
     output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
-    ////////// done //////////
-    output cycle_done
+    ////////// busy //////////
+    output cycle_busy
     
     // debug
     ,
@@ -73,7 +73,7 @@ module CIU(
         .set(set),
         .cycle_rst(cycle_rst),
         .cycle_SR(cycle_SR),
-        .cycle_done(cycle_done),
+        .cycle_busy(cycle_busy),
         .cc_debug(cc_debug)
     );
     ////////// cycle controller end //////////

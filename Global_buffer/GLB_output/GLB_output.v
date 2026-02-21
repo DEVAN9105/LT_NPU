@@ -16,8 +16,8 @@ module GLB_output(
     input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // output tile
     output [78:0] glb_load_bus, // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
-    // done signal
-    output done
+    // busy signal
+    output glb_output_busy
     );
     
     ////////// GLB control //////////
@@ -36,7 +36,7 @@ module GLB_output(
         .AGU_G_en(AGU_G_en),
         .AGU_G_en_next(AGU_G_en_next),
         .SR(SR),
-        .done(done),
+        .glb_output_busy(glb_output_busy),
         .glb_out_rst(glb_out_rst)
     );
     ////////// GLB control end //////////

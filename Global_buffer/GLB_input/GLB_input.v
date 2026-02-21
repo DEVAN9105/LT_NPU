@@ -20,8 +20,8 @@ module GLB_input(
     input [64:0] ciu_glb_wb_bus_456, // {wb_en_456, wb_data_456[63:0]}
     // glb
     output [78:0] glb_input_bus, // {glb_ena, gaddr[13:0], glb_dina[63:0]}
-    // done signal
-    output done
+    // busy signal
+    output glb_input_busy
     );
     
     ////////// GLB input control //////////
@@ -40,7 +40,7 @@ module GLB_input(
         .AGU_T_done(AGU_T_done),
         .AGU_T_en(AGU_T_en),
         .SR(SR),
-        .done(done),
+        .glb_input_busy(glb_input_busy),
         .glb_in_rst(glb_in_rst)
     );
     ////////// GLB input control end //////////

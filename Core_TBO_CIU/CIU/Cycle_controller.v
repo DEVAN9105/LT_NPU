@@ -9,6 +9,7 @@ module Cycle_controller(
     output reg cycle_rst,
     output reg [7:0] cycle_SR,
     output reg cycle_done,
+    output reg cycle_busy,
     output [2:0] cc_debug
     );
     
@@ -94,7 +95,12 @@ module Cycle_controller(
                 end
             end
             finish: begin
-                next_state = finish;
+                if(en) begin
+                    next_state = finish;
+                end
+                else begin
+                    next_state = idle;
+                end
                 cycle_done = 1;
             end
             default: begin
@@ -107,9 +113,16 @@ module Cycle_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
+            coycle_busy <= 0;
         end
         else begin
             state <= next_state;
+            if(state == set_up || state == processing || state == ending) begin
+                cycle_busy <= 1;
+            end
+            else begin
+                cycle_busy <= 0;
+            end
         end
     end
     ////////// FSM end //////////

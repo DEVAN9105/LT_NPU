@@ -11,6 +11,7 @@ module GLB_input_controller(
     output reg AGU_T_en,
     output reg [5:0] SR,
     output reg done,
+    output reg glb_input_busy,
     output reg glb_in_rst
     );
     
@@ -75,9 +76,16 @@ module GLB_input_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
+            glb_input_busy <= 0;
         end
         else begin
             state <= next_state;
+            if(state == set_up || state == processing || state == ending) begin
+                glb_input_busy <= 1;
+            end
+            else begin
+                glb_input_busy <= 0;
+            end
         end
     end
     ////////// FSM end //////////

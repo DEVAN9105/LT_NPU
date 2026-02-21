@@ -34,9 +34,9 @@ module GLB_operator(
     output [72:0] glb_ciu_load_bus_5, // {en, addr[7:0], data[63:0]}
     output [72:0] glb_ciu_load_bus_6, // {en, addr[7:0], data[63:0]}
     output reg [72:0] glb_posp_load_bus, // {en, addr[7:0], data[63:0]}
-    // done signal
-    output input_done,
-    output output_done
+    // busy signal
+    output input_busy,
+    output output_busy
     );
 
     ////////// input buffer //////////
@@ -175,8 +175,8 @@ module GLB_operator(
         .ciu_glb_wb_bus_456(ciu_glb_wb_bus_456), // {wb_en_456, wb_data_456[63:0]}
         // glb
         .glb_input_bus(glb_input_bus), // {glb_ena, gaddr[13:0], glb_dina[63:0]}
-        // done signal
-        .done(input_done)
+        // busy signal
+        .busy(input_busy)
     );
     ////////// GLB_input end //////////
 
@@ -222,8 +222,8 @@ module GLB_operator(
         .AGU_T_param(output_AGU_T_param), // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
         // output tile
         .glb_load_bus(glb_load_bus), // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
-        // done signal
-        .done(output_done)
+        // busy signal
+        .busy(output_busy)
     );
     ////////// GLB_output end //////////
     

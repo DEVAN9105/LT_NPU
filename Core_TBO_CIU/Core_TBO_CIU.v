@@ -19,8 +19,8 @@ module Core_TBO_CIU(
     // write back
     input [8:0] glb_ciu_wb_bus, // {en_wb, addr_wb_in}
     output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
-    // cycle done
-    output cycle_done,
+    // cycle busy
+    output cycle_busy,
 
     ////////// Tile Buffer Operator //////////
     // control param
@@ -38,8 +38,8 @@ module Core_TBO_CIU(
     // B_storage
     output [8:0] core_b_storage_bus, // {B_storage_en, baddr[7:0]}
     input [127:0] b_storage_core_data, // {data_0, data_1, data_2, data_3}
-    // core done
-    output core_done
+    // core busy
+    output core_busy
     );
 
     ////////// CIU //////////
@@ -73,8 +73,8 @@ module Core_TBO_CIU(
         .ciu_tbo_wb_bus(ciu_tbo_wb_bus), // {en_wb, addr_wb}
         .tbo_ciu_wb_data(tbo_ciu_wb_data),
         .ciu_glb_wb_bus(ciu_glb_wb_bus), // {data_valid, CIU_wb}
-        // done
-        .cycle_done(cycle_done)
+        // busy
+        .cycle_busy(cycle_busy)
     );
     ////////// CIU end //////////
 
@@ -148,8 +148,8 @@ module Core_TBO_CIU(
         .b_storage_core_data_3(b_storage_core_data[31:0]),
         // store tile buffer
         .core_tbo_store_bus(core_tbo_store_bus), // {valid, addr, din}
-        // core done
-        .core_done(core_done)
+        // core busy
+        .core_busy(core_busy)
     );
     ////////// Core end //////////
 

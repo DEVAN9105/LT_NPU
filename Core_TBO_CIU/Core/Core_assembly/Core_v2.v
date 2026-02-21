@@ -31,8 +31,8 @@ module Core(
     input [31:0] b_storage_core_data_3,
     ////////// store tile buffer //////////
     output [72:0] core_tbo_store_bus, // {valid, addr, din}
-    ////////// core done //////////
-    output core_done
+    ////////// core busy //////////
+    output core_busy,
     ////////// debug //////////
     ,
     output [47:0] acc_result_0,
@@ -93,7 +93,7 @@ module Core(
         .set(set),
         .SR_0(SR_0),
         .SR_1(SR_1),
-        .core_done(core_done),
+        .core_busy(core_busy),
         .core_rst(core_rst),
         .state_debug(state_debug)
     );

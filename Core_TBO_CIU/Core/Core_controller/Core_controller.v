@@ -18,6 +18,7 @@ module Core_controller(
     output reg [12:0] SR_0,
     output reg [5:0] SR_1,
     output reg core_done,
+    output reg core_busy,
     output reg core_rst,
     output [2:0] state_debug
     );
@@ -123,9 +124,16 @@ module Core_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
+            core_busy <= 0;
         end
         else begin
             state <= next_state;
+            if(state == set_up || state == processing || state == ending) begin
+                core_busy <= 1;
+            end
+            else begin
+                core_busy <= 0;
+            end
         end
     end
     ////////// FSM end //////////

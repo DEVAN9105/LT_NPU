@@ -12,6 +12,7 @@ module GLB_output_controller(
     output reg set,
     output reg [9:0] SR,
     output reg done,
+    output reg glb_output_busy,
     output reg glb_out_rst
     );
     
@@ -77,9 +78,16 @@ module GLB_output_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
+            glb_output_busy <= 0;
         end
         else begin
             state <= next_state;
+            if(state == set_up || state == processing || state == ending) begin
+                glb_output_busy <= 1;
+            end
+            else begin
+                glb_output_busy <= 0;
+            end
         end
     end
     ////////// FSM end //////////
