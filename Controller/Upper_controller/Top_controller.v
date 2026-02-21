@@ -86,13 +86,6 @@ module Top_Controller(
     localparam FUNC_run_VLIW         = 3'd1;
     localparam FUNC_wait             = 3'd2;
     localparam FUNC_finish           = 3'd3;
-    // Conditions
-    /*
-    localparam COND_none             = 3'd0;
-    localparam COND_wait_weight      = 3'd1;
-    localparam COND_wait_VLIW        = 3'd2;
-    localparam COND_wait_both        = 3'd3;
-    localparam COND_wait_instruction = 3'd4;*/
     ////////// OP Code Definitions end //////////
 
     ////////// Internal Registers and State //////////
@@ -129,9 +122,11 @@ module Top_Controller(
         next_state = state;
         PC_en = 0;
         PL_busy = 0;
+        system_rst = 0;
 
         case (state)
             S_idle: begin
+                system_rst = 1;
                 if(PS_start_pulse) next_state = S_set_0;
                 else next_state = S_idle;
             end
@@ -210,11 +205,10 @@ module Top_Controller(
     always @(posedge CLK or negedge asynchronous_rst) begin
         if(!asynchronous_rst) begin
             state <= S_idle;
-            system_rst <= 1;
             // VLIW control
             lower_controller_en <= 0;
             VLIW_initial <= 0;
-            VLIW_end <= 0;
+            VLIW_length <= 0;
             // Weight Loader control
             weight_loader_en <= 0;
             weight_amount <= 0;
@@ -231,11 +225,10 @@ module Top_Controller(
         end
         else if(PS_rst) begin
             state <= S_idle;
-            system_rst <= 1;
             // VLIW control
             lower_controller_en <= 0;
             VLIW_initial <= 0;
-            VLIW_end <= 0;
+            VLIW_length <= 0;
             // Weight Loader control
             weight_loader_en <= 0;
             weight_amount <= 0;
@@ -252,14 +245,12 @@ module Top_Controller(
         end
         else begin
             state <= next_state;
-            system_rst <= 0;
             case (state)
                 S_idle: begin
-                    system_rst <= 1;
                     // VLIW control
                     lower_controller_en <= 0;
                     VLIW_initial <= 0;
-                    VLIW_end <= 0;
+                    VLIW_length <= 0;
                     // Weight Loader control
                     weight_loader_en <= 0;
                     weight_amount <= 0;
@@ -294,7 +285,7 @@ module Top_Controller(
                                     cycle_tile_size <= num_1[7:0];
                                 end
                                 FUNC_ch_order: begin // Change_channel_order
-                                    Ch_to_Y_increment <= num_1[10:0];
+                                    Ch_to_Y_initial <= num_1[10:0];
                                 end
                                 FUNC_posp_param: begin // Change_postprocess_parameter
                                     posp_param <= {num_1, num_2};
