@@ -49,6 +49,22 @@ module Top_Controller(
     ////////// Instruction Decoding end //////////
 
     ////////// Instruction RAM interface //////////
+    // initial determine
+    reg initial_det;
+    always@(posedge CLK or negedge asynchronous_rst) begin
+        if(!asynchronous_rst) begin
+            initial_det <= 0;
+        end
+        else if(PS_rst) begin
+            initial_det <= 0;
+        end
+        else if(PS_en) begin
+            initial_det <= 1;
+        end
+        else begin
+            initial_det <= initial_det;
+        end
+    end
     // PC
     reg [7:0] PC, next_PC;
     reg PC_en;
@@ -60,8 +76,11 @@ module Top_Controller(
         if(!asynchronous_rst) begin
             PC <= 0;
         end
-        else if(system_rst || PS_rst) begin
+        else if(PS_rst) begin
             PC <= 0;
+        end
+        else if(system_rst && initial_det) begin
+            PC <= 3;
         end
         else begin
             PC <= next_PC;
