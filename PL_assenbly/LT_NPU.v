@@ -11,14 +11,14 @@ module LT_NPU(
     output PL_busy,
 
     ////////// DMA and Memory interface //////////
-    input  wire [63:0] s_axis_tdata_Weight,
-    input  wire        s_axis_tvalid_Weight,
-    output wire        s_axis_tready_Weight,
+    input  wire [63:0] s_axis_weight_tdata,
+    input  wire        s_axis_weight_tvalid,
+    output wire        s_axis_weight_tready,
 
-    input  wire [63:0]  s_axis_tdata_Inmage,
-    input  wire         s_axis_tvalid_Inmage,
-    input  wire         s_axis_tlast_Inmage,
-    output wire         s_axis_tready_Inmage,
+    input  wire [63:0]  s_axis_inmage_tdata,
+    input  wire         s_axis_inmage_tvalid,
+    input  wire         s_axis_inmage_tlast,
+    output wire         s_axis_inmage_tready,
 
     ////////// output //////////
     output [3:0] inference_result
