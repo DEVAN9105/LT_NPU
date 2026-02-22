@@ -105,11 +105,11 @@ module Controller_assembly(
     wire lower_controller_en;
     wire [9:0] VLIW_initial;
     wire [9:0] VLIW_length;
-    wire [10:0] lower_en_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+    wire [10:0] lower_en_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
     wire [132:0] VLIW_num;
     wire lower_controller_busy;
-    assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, cycle_en, glb_input_en, glb_output_en, prep_control_bus[1], posp_control_bus[32]}
-            = lower_en_bus;
+    assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, glb_output_en, glb_input_en, cycle_en, prep_control_bus[1], posp_control_bus[32]}
+        = lower_en_bus;
     Lower_Controller lower_controller(
         .CLK(CLK),
         .en(lower_controller_en),
@@ -120,9 +120,9 @@ module Controller_assembly(
         .VLIW_PC_bus(VLIW_PC_bus), // {en, 10 bit address}
         .VLIW(VLIW),
         // busy signals
-        .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+        .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
         // output control signals
-        .lower_en_bus(lower_en_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+        .lower_en_bus(lower_en_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
         .VLIW_num(VLIW_num), // VLIW number
         // Lower controller status
         .lower_controller_busy(lower_controller_busy) // VLIW busy signal

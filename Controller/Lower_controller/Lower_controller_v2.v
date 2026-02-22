@@ -12,10 +12,10 @@ module Lower_Controller(
     input [143:0] VLIW,
     
     ////////// Submodule Busy signals //////////
-    input [10:0] lower_busy_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+    input [10:0] lower_busy_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
 
     ////////// Control signals and VLIW_num //////////
-    output reg [10:0] lower_en_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+    output reg [10:0] lower_en_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
     output [132:0] VLIW_num, // VLIW number
 
     ////////// System status //////////
