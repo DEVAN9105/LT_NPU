@@ -20,7 +20,7 @@ module Controller_assembly(
     output instruction_loader_en,
 
     ////////// Weight Loader control //////////
-    output [19:0] weight_loader_bus, // {en[19], weight_amount[18:7], bias_amount[6:0]}
+    output [20:0] weight_loader_bus, // {en[20], double_buffer_sel[19], weight_amount[18:7], bias_amount[6:0]}
 
     ////////// Core control and parameters //////////
     // control signal
@@ -134,6 +134,7 @@ module Controller_assembly(
     wire [16:0] input_combined;       // {glb_in_mode, width_in, ch_in}
     wire [3:0] double_buffer_sel;    // {output_glb, input_glb, W_storage, B_storage}
     wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
+    assign weight_loader_bus[19] = double_buffer_sel[1]; // W_storage/B_storage buffer select
     Top_Controller top_controller(
         .CLK(CLK),
         .asynchronous_rst(asynchronous_rst),
@@ -152,7 +153,7 @@ module Controller_assembly(
         .VLIW_initial(VLIW_initial),
         .VLIW_length(VLIW_length),
         // Weight Loader control
-        .weight_loader_en(weight_loader_bus[19]),
+        .weight_loader_en(weight_loader_bus[20]),
         .weight_amount(weight_loader_bus[18:7]),
         .bias_amount(weight_loader_bus[6:0]),
         // Instruction Loader control

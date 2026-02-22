@@ -300,7 +300,7 @@ module Top_Controller(
                                     input_combined  <= {num_1[1:0], num_2[14:0]};
                                 end
                                 FUNC_buffer_initial: begin // Change_GLB_parameter
-                                    double_buffer_sel  <= num_1[3:0];
+                                    double_buffer_sel[3:2]  <= num_1[1:0];
                                 end
                                 FUNC_core_param: begin // Change_core_parameter
                                     cycle_tile_size <= num_1[7:0];
@@ -321,6 +321,7 @@ module Top_Controller(
                                 FUNC_get_weight: begin // get_weight
                                     weight_amount <= num_1[11:0];
                                     bias_amount   <= num_2[6:0];
+                                    double_buffer_sel[1:0]  <= {num_2[7], num_2[7]};
                                     weight_loader_en <= 1;
                                 end
                                 FUNC_get_instruction: begin // get_instruction

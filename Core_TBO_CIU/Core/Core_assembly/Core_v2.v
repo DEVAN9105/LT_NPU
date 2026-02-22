@@ -32,16 +32,7 @@ module Core(
     ////////// store tile buffer //////////
     output [72:0] core_tbo_store_bus, // {valid, addr, din}
     ////////// core busy //////////
-    output core_busy,
-    ////////// debug //////////
-    ,
-    output [47:0] acc_result_0,
-    output [47:0] acc_result_1,
-    output [47:0] acc_result_2,
-    output [47:0] acc_result_3,
-    output [2:0] state_debug,
-    output [12:0] SR_0_debug,
-    output [5:0] SR_1_debug
+    output core_busy
     );
     
     ////////// mode define //////////
@@ -72,8 +63,6 @@ module Core(
     wire core_rst; // to reset FSM and other modules when core is done
     wire [12:0] SR_0;
     wire [5:0] SR_1;
-    assign SR_0_debug = SR_0;
-    assign SR_1_debug = SR_1;
     
     // Core controller instance
     Core_controller core_controller(
@@ -94,8 +83,7 @@ module Core(
         .SR_0(SR_0),
         .SR_1(SR_1),
         .core_busy(core_busy),
-        .core_rst(core_rst),
-        .state_debug(state_debug)
+        .core_rst(core_rst)
     );
     ////////// Controller end //////////
 
@@ -307,8 +295,6 @@ module Core(
         .PE_out_3_in(PE_out_3[127:96]),
         .acc_out(acc_out_0),
         .acc_done(acc_done)
-        ,
-        .acc_result(acc_result_0)
     );
     Accumulator acc_1(
         .CLK(CLK),
@@ -325,8 +311,6 @@ module Core(
         .PE_out_2_in(PE_out_2[95:64]),
         .PE_out_3_in(PE_out_3[95:64]),
         .acc_out(acc_out_1)
-        ,
-        .acc_result(acc_result_1)
     );
     Accumulator acc_2(
         .CLK(CLK),
@@ -343,8 +327,6 @@ module Core(
         .PE_out_2_in(PE_out_2[63:32]),
         .PE_out_3_in(PE_out_3[63:32]),
         .acc_out(acc_out_2)
-        ,
-        .acc_result(acc_result_2)
     );
     Accumulator acc_3(
         .CLK(CLK),
@@ -361,8 +343,6 @@ module Core(
         .PE_out_2_in(PE_out_2[31:0]),
         .PE_out_3_in(PE_out_3[31:0]),
         .acc_out(acc_out_3)
-        ,
-        .acc_result(acc_result_3)
     );
     ////////// Accumulator end //////////
 
