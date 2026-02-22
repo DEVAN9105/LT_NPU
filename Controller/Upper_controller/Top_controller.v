@@ -30,8 +30,8 @@ module Top_Controller(
     output reg [7:0] IS_amount,
     output reg [9:0] VLIW_amount,
     // param
-    output reg [25:0] output_combined,      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
-    output reg [25:0] input_combined,       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+    output reg [16:0] output_combined,      // {glb_out_mode, width_out, ch_out}
+    output reg [16:0] input_combined,       // {glb_in_mode, width_in, ch_in}
     output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
     output reg [10:0] ch_to_Y_initial,
@@ -275,10 +275,10 @@ module Top_Controller(
                         CLASS_change_param: begin
                             case (op_func)
                                 FUNC_output_param: begin // Change_GLB_parameter
-                                    output_combined  <= {num_1[9:0], num_2};
+                                    output_combined  <= {num_1[1:0], num_2[14:0]};
                                 end
                                 FUNC_input_param: begin // Change_GLB_parameter
-                                    input_combined  <= {num_1[9:0], num_2};
+                                    input_combined  <= {num_1[1:0], num_2[14:0]};
                                 end
                                 FUNC_buffer_initial: begin // Change_GLB_parameter
                                     double_buffer_sel  <= num_1[3:0];

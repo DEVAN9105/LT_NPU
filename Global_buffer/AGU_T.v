@@ -32,7 +32,7 @@ module AGU_T(
             AGU_T_initial <= AGU_T_param[22:15];
             tile_width <= AGU_T_param[14:8];
             tile_ch <= AGU_T_param[7:0];
-            ch_stride <= AGU_T_param[14:8] + 1; //stride = tile_width
+            ch_stride <= AGU_T_param[14:8] + 1; //stride = tile_width + 1
         end
         else begin
             AGU_T_initial <= AGU_T_initial;

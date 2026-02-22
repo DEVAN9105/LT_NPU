@@ -130,8 +130,8 @@ module Controller_assembly(
     ////////// Lower Controller end //////////
 
     ////////// Top Controller //////////
-    wire [25:0] output_combined;      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
-    wire [25:0] input_combined;       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+    wire [16:0] output_combined;      // {glb_out_mode, width_out, ch_out}
+    wire [16:0] input_combined;       // {glb_in_mode, width_in, ch_in}
     wire [3:0] double_buffer_sel;    // {output_glb, input_glb, W_storage, B_storage}
     wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
     Top_Controller top_controller(
@@ -158,8 +158,8 @@ module Controller_assembly(
         // Instruction Loader control
         .instruction_loader_en(instruction_loader_en),
         // parameters for Core, CIU, TBO, GLB, PreP, PosP
-        .output_combined(output_combined),      // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
-        .input_combined(input_combined),       // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+        .output_combined(output_combined),
+        .input_combined(input_combined),
         .double_buffer_sel(double_buffer_sel),    // {output_glb, input_glb, W_storage, B_storage}
         .cycle_tile_size(cycle_tile_size),      // {cycle_tile_size[7:0]}
         .ch_to_Y_initial(ch_to_Y_initial),
@@ -176,8 +176,8 @@ module Controller_assembly(
 
         // IS/VLIW input
         .VLIW_num(VLIW_num),
-        .output_combined(output_combined), // {glb_out_mode, glb_width_out, glb_ch_out, tile_ch_out}
-        .input_combined(input_combined), // {glb_in_mode, glb_width_in, glb_ch_in, tile_ch_in}
+        .output_combined(output_combined), // {glb_out_mode, width_out, ch_out}
+        .input_combined(input_combined), // {glb_in_mode, width_in, ch_in}
         .double_buffer_sel(double_buffer_sel), // {output_glb, input_glb, W_storage, B_storage}
         .cycle_tile_size(cycle_tile_size),
 
