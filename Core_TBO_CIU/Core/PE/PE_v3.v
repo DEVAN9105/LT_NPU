@@ -13,13 +13,13 @@ module PE(
     );
     
     ////////// SR //////////
-    reg [1:0] en_sr;
+    reg [2:0] en_sr;
     always@(posedge CLK) begin
         if(rst) begin
             en_sr <= 0;
         end
         else begin
-            en_sr <= {en_sr[0], en};
+            en_sr <= {en_sr[1:0], en};
         end
     end
     ////////// SR end //////////
@@ -96,18 +96,18 @@ module PE(
         else begin
             case(PE_mode)
                 MAC: begin
-                    if(en_sr[1] == 1) PE_out <= out_buffer;
-                    else PE_out <= PE_out;
+                    if(en_sr[2] == 1) PE_out <= out_buffer;
+                    else PE_out <= 0;
                 end
                 GAP: begin
                     if(en_sr[0] == 1) PE_out <= out_buffer;
-                    else PE_out <= PE_out;
+                    else PE_out <= 0;
                 end
                 pass: begin
                     if(en_sr[0] == 1) PE_out <= out_buffer;
-                    else PE_out <= PE_out;
+                    else PE_out <= 0;
                 end
-                default: PE_out <= PE_out;
+                default: PE_out <= 0;
             endcase
         end
     end

@@ -38,7 +38,20 @@ module Fdata_buffer(
             mode <= mode;
         end
     end
-     ////////// input buffer end //////////
+    ////////// input buffer end //////////
+     
+    ////////// boundary delay //////////
+    reg boundary_buffer_0, boundary_buffer_1;
+    always@(posedge CLK) begin
+        if(rst) begin
+            boundary_buffer_0 <= 0;
+            boundary_buffer_1 <= 0;
+        end
+        else begin
+            boundary_buffer_0 <= boundary;
+            boundary_buffer_1 <= boundary_buffer_0;
+        end
+    end
     
     //tile selecting
     reg [63:0]mux_out_0,mux_out_1,mux_out_2;
@@ -93,9 +106,9 @@ module Fdata_buffer(
             end
             else begin
                 // (Conv/Pool/DW) + Padding
-                fdata_0 <= (boundary) ? 64'd0 : mux_out_0;
-                fdata_1 <= (boundary) ? 64'd0 : mux_out_1;
-                fdata_2 <= (boundary) ? 64'd0 : mux_out_2;
+                fdata_0 <= (boundary_buffer_1) ? 64'd0 : mux_out_0;
+                fdata_1 <= (boundary_buffer_1) ? 64'd0 : mux_out_1;
+                fdata_2 <= (boundary_buffer_1) ? 64'd0 : mux_out_2;
                 fdata_3 <= 64'd0;
             end
         end

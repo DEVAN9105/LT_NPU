@@ -7,6 +7,7 @@ module AGU_F(
     input en,
     input rst,
     input set,
+    input padding_in,
     input [6:0] width_in_in,    // Map Width (0~127)
     input [6:0] width_out_in,   // down sampling
     input [7:0] ch_in_in,
@@ -34,39 +35,32 @@ module AGU_F(
     reg [7:0] ch_stride;
     always@(posedge CLK) begin
         if(rst) begin
-            padding <= 0;
             stride_Y <= 0;
             AGU_offset_X <= 0;
         end
         else if(set) begin
             case (mode_in)
                 conv: begin
-                    padding <= 1;
                     stride_Y <= 0;
                     AGU_offset_X <= 2;
                 end
                 maxpooling: begin
-                    padding <= 1;
                     stride_Y <= width_in_in + 1;
                     AGU_offset_X <= 2;
                 end
                 DW: begin
-                    padding <= 1;
                     stride_Y <= width_in_in + 1;
                     AGU_offset_X <= 2;
                 end
                 PW: begin
-                    padding <= 0;
                     stride_Y <= 0;
                     AGU_offset_X <= 0;
                 end
                 GAP: begin
-                    padding <= 0;
                     stride_Y <= width_in_in + 1;
                     AGU_offset_X <= 3;
                 end
                 default: begin
-                    padding <= 0;
                     stride_Y <= width_in_in + 1;
                     AGU_offset_X <= 0;
                 end
@@ -76,6 +70,7 @@ module AGU_F(
     always@(posedge CLK) begin
         if(rst) begin
             mode <= 0;
+            padding <= padding_in;
             stride_X <= 0;
             width_in <= 0;
             width_out <= 0;
@@ -85,6 +80,7 @@ module AGU_F(
         end
         else if(set) begin
             mode <= mode_in;
+            padding <= padding_in;
             stride_X <= stride_X_in;
             width_in <= width_in_in;
             width_out <= width_out_in;
@@ -253,6 +249,10 @@ module AGU_F(
     end
     always@(posedge CLK) begin
         if(rst) begin
+            X <= 0;
+            x_count <= 0;
+        end
+        else if(set) begin
             X <= $signed(0 - padding);
             x_count <= 0;
         end

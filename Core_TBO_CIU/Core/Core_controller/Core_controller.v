@@ -19,8 +19,7 @@ module Core_controller(
     output reg [5:0] SR_1,
     output reg core_done,
     output reg core_busy,
-    output reg core_rst,
-    output [2:0] state_debug
+    output reg core_rst
     );
     
     ////////// state define //////////
@@ -67,7 +66,6 @@ module Core_controller(
     
     ////////// FSM //////////
     reg [2:0] state, next_state;
-    assign state_debug = state;
     always@(*) begin
         //avoid latch
         next_state = state;
@@ -75,6 +73,7 @@ module Core_controller(
         core_en_counter_en = 0;
         core_rst = 0;
         set = 0;
+        core_busy = 0;
         
         case(state)
             idle: begin
@@ -88,10 +87,12 @@ module Core_controller(
             end
             set_up: begin
                 next_state = processing;
+                core_busy = 1;
                 set = 1;
             end
             processing: begin
                 core_en_counter_en = 1;
+                core_busy = 1;
                 if(core_en_counter_done) begin
                     next_state = ending;
                 end
@@ -100,6 +101,7 @@ module Core_controller(
                 end
             end
             ending: begin
+                core_busy = 1;
                 if(AGU_O_done) begin
                     next_state = finish;
                 end
@@ -124,16 +126,9 @@ module Core_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
-            core_busy <= 0;
         end
         else begin
             state <= next_state;
-            if(state == set_up || state == processing || state == ending) begin
-                core_busy <= 1;
-            end
-            else begin
-                core_busy <= 0;
-            end
         end
     end
     ////////// FSM end //////////

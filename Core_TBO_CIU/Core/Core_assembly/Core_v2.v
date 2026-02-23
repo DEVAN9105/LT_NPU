@@ -226,10 +226,10 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_0[7]),
-        .wdata_0(wdata_0),
-        .wdata_1(wdata_1),
-        .wdata_2(wdata_2),
-        .wdata_3(wdata_3),
+        .wdata_0(w_storage_core_data_0),
+        .wdata_1(w_storage_core_data_1),
+        .wdata_2(w_storage_core_data_2),
+        .wdata_3(w_storage_core_data_3),
         .PE_win_0(PE_win_0),
         .PE_win_1(PE_win_1),
         .PE_win_2(PE_win_2),
@@ -242,10 +242,10 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_0[11]),
-        .bdata_0(bdata_0),
-        .bdata_1(bdata_1),
-        .bdata_2(bdata_2),
-        .bdata_3(bdata_3),
+        .bdata_0(b_storage_core_data_0),
+        .bdata_1(b_storage_core_data_1),
+        .bdata_2(b_storage_core_data_2),
+        .bdata_3(b_storage_core_data_3),
         .bias_0(bias_0),
         .bias_1(bias_1),
         .bias_2(bias_2),
@@ -355,25 +355,5 @@ module Core(
         .core_out(din_store)
     );
     ////////// Output buffer end //////////
-    
-    //tile buffer define(single port ROM)
-    //Tile_buffer_1 tile_buffer_1(.douta(tbo_core_cal_data_1), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
-    Tile_buffer_2 tile_buffer_2(.douta(tbo_core_cal_data_2), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
-    Tile_buffer_3 tile_buffer_3(.douta(tbo_core_cal_data_3), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
-    Tile_buffer_4 tile_buffer_4(.douta(tbo_core_cal_data_4), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]), .regcea(1'b1));
-    //Tile_buffer_5 tile_buffer_5(.douta(tbo_core_cal_data_5), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]n));
-    //Tile_buffer_6 tile_buffer_6(.douta(tbo_core_cal_data_6), .addra(core_tbo_cal_bus[7:0]), .clka(CLK), .ena(core_tbo_cal_bus[8]));
-    
-    //W_storage define(single port ROM)
-    W_storage_0 W_storage_0(.douta(wdata_0), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]), .regcea(1'b1));
-    W_storage_1 W_storage_1(.douta(wdata_1), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]), .regcea(1'b1));
-    W_storage_2 W_storage_2(.douta(wdata_2), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]), .regcea(1'b1));
-    W_storage_3 W_storage_3(.douta(wdata_3), .addra(core_w_storage_bus[11:0]), .clka(CLK), .ena(core_w_storage_bus[12]), .regcea(1'b1));
-
-    //B_storage define(single port ROM)
-    B_storage_0 B_storage_0(.douta(bdata_0), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]), .regcea(1'b1));
-    B_storage_1 B_storage_1(.douta(bdata_1), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]), .regcea(1'b1));
-    B_storage_2 B_storage_2(.douta(bdata_2), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]), .regcea(1'b1));
-    B_storage_3 B_storage_3(.douta(bdata_3), .addra(core_b_storage_bus[7:0]), .clka(CLK), .ena(core_b_storage_bus[8]), .regcea(1'b1));
     
 endmodule
