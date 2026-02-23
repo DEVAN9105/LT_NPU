@@ -26,11 +26,6 @@ module CIU(
     output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
     ////////// busy //////////
     output cycle_busy
-    
-    // debug
-    ,
-    output [7:0] caddr_debug,
-    output [2:0] cc_debug
     );
 
     ////////// SR //////////
@@ -46,8 +41,6 @@ module CIU(
     assign ciu_tbo_cycle_bus_a[63:0] = stream_a_in[63:0];
     assign ciu_tbo_cycle_bus_b[63:0] = stream_b_in[63:0];
     ////////// signals for tile buffer operator end //////////
-    
-    assign caddr_debug = caddr;
 
     ////////// AGU //////////
     wire set;
@@ -73,8 +66,7 @@ module CIU(
         .set(set),
         .cycle_rst(cycle_rst),
         .cycle_SR(cycle_SR),
-        .cycle_busy(cycle_busy),
-        .cc_debug(cc_debug)
+        .cycle_busy(cycle_busy)
     );
     ////////// cycle controller end //////////
 

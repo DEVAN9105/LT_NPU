@@ -9,15 +9,13 @@ module Cycle_controller(
     output reg cycle_rst,
     output reg [7:0] cycle_SR,
     output reg cycle_done,
-    output reg cycle_busy,
-    output [2:0] cc_debug
+    output reg cycle_busy
     );
     
     ////////// control counter //////////
     reg cc_en;
     reg [2:0] cc_end;
     reg [2:0] cc, next_cc;
-    assign cc_debug = cc;
     always@(*) begin
         //avoid latch
         if(cc == cc_end) begin
@@ -53,6 +51,7 @@ module Cycle_controller(
         set = 0;
         cycle_rst = 0;
         cc_end = 0;
+        cycle_busy = 0;
         //FSM logic
         case(state)
             idle: begin
@@ -68,6 +67,7 @@ module Cycle_controller(
                 cc_en = 1;
                 cc_end = 1;
                 set = 1;
+                cycle_busy = 1;
                 if(cc == 3'd1) begin
                     next_state = processing;
                 end
@@ -78,6 +78,7 @@ module Cycle_controller(
             processing: begin
                 cc_en = 1;
                 cc_end = 2;
+                cycle_busy = 1;
                 
                 if(AGU_C_done) begin
                     next_state = ending;
@@ -87,6 +88,7 @@ module Cycle_controller(
                 end
             end
             ending: begin
+                cycle_busy = 1;
                 if(cycle_SR == 8'b00000000) begin
                     next_state = finish;
                 end
@@ -113,16 +115,9 @@ module Cycle_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
-            coycle_busy <= 0;
         end
         else begin
             state <= next_state;
-            if(state == set_up || state == processing || state == ending) begin
-                cycle_busy <= 1;
-            end
-            else begin
-                cycle_busy <= 0;
-            end
         end
     end
     ////////// FSM end //////////

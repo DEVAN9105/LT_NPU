@@ -29,6 +29,7 @@ module GLB_output_controller(
         AGU_G_en = 0;
         set = 0;
         glb_out_rst = 0;
+        glb_output_busy = 0;
         
         case(state)
             idle: begin
@@ -42,10 +43,12 @@ module GLB_output_controller(
             end
             set_up: begin
                 set = 1;
+                glb_output_busy = 1;
                 next_state = processing;
             end
             processing: begin
                 AGU_G_en = 1;
+                glb_output_busy = 1;
                 if(AGU_G_done) begin
                     next_state = ending;
                 end
@@ -54,6 +57,7 @@ module GLB_output_controller(
                 end
             end
             ending: begin
+                glb_output_busy = 1;
                 if(SR != 0) begin
                     next_state = ending;
                 end
@@ -78,16 +82,9 @@ module GLB_output_controller(
     always@(posedge CLK) begin
         if(rst) begin
             state <= idle;
-            glb_output_busy <= 0;
         end
         else begin
             state <= next_state;
-            if(state == set_up || state == processing || state == ending) begin
-                glb_output_busy <= 1;
-            end
-            else begin
-                glb_output_busy <= 0;
-            end
         end
     end
     ////////// FSM end //////////
