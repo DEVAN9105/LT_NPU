@@ -77,7 +77,7 @@ module GLB_operator(
     assign input_ch = ch_to_Y_initial + input_ch_to_Y_bus[9:0];
     assign output_ch = ch_to_Y_initial + output_ch_to_Y_bus[9:0];
     // Ch_to_Y instance
-    ch_to_Y ch_to_Y(
+    Ch_to_Y ch_to_Y(
         // port a
         .clka(CLK),
         .ena(input_ch_to_Y_bus[10]),
