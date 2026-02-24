@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module Top_Controller(
+module Top_controller(
     input CLK,
     input asynchronous_rst,
     input PS_en,

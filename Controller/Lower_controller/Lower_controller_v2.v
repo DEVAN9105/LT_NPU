@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module Lower_Controller(
+module Lower_controller(
     input CLK,
     input en,
     input rst,
