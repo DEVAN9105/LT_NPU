@@ -36,6 +36,7 @@ module LT_NPU(
     wire cycle_busy = core_1_busy | core_2_busy | core_3_busy | core_4_busy | core_5_busy | core_6_busy;
     wire prep_busy, posp_busy;
     wire [10:0] lower_busy_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
+    assign lower_busy_bus = {core_1_busy, core_2_busy, core_3_busy, core_4_busy, core_5_busy, core_6_busy, glb_output_busy, glb_input_busy, cycle_busy, prep_busy, posp_busy};
     // cloader control
     wire [19:0] weight_loader_bus; // {en[19], weight_amount[18:7], bias_amount[6:0]}
     // core control
@@ -70,7 +71,7 @@ module LT_NPU(
         // Submodule Busy signals
         .instruction_loader_busy(instruction_loader_busy),
         .weight_loader_busy(weight_loader_busy),
-        .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+        .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_in, GLB_out, CIU, PreP, PosP}
 
         // Weight Loader control
         .weight_loader_bus(weight_loader_bus), // {en[19], weight_amount[18:7], bias_amount[6:0}
@@ -147,7 +148,7 @@ module LT_NPU(
     GLB_operator glb_operator(
         // basic
         .CLK(CLK),
-        .rst(rst),
+        .rst(system_rst),
         .glb_input_en(glb_input_en),
         .glb_output_en(glb_output_en),
         // Control param
@@ -205,12 +206,12 @@ module LT_NPU(
     Core_TBO_CIU core_1(
         // basic
         .CLK(CLK),
-        .rst(rst), // global reset
+        .rst(system_rst), // system reset
 
         // CIU
         .cycle_en(cycle_en),
         .AGU_C_param(AGU_C_param_1), // {AGU_C_initial, tile_size}
-        .stream_a_in(stream_a_41),
+        .stream_a_in(stream_a_21),
         .stream_a_out(stream_a_14),
         .stream_b_in(stream_b_41),
         .stream_b_out(stream_b_12),
@@ -236,7 +237,7 @@ module LT_NPU(
     Core_TBO_CIU core_2(
         // basic
         .CLK(CLK),
-        .rst(rst), // global reset
+        .rst(system_rst), // system reset
 
         // CIU
         .cycle_en(cycle_en),
@@ -267,7 +268,7 @@ module LT_NPU(
     Core_TBO_CIU core_3(
         // basic
         .CLK(CLK),
-        .rst(rst), // global reset
+        .rst(system_rst), // system reset
 
         // CIU
         .cycle_en(cycle_en),
@@ -298,7 +299,7 @@ module LT_NPU(
     Core_TBO_CIU core_4(
         // basic
         .CLK(CLK),
-        .rst(rst), // global reset
+        .rst(system_rst), // system reset
 
         // CIU
         .cycle_en(cycle_en),
@@ -329,7 +330,7 @@ module LT_NPU(
     Core_TBO_CIU core_5(
         // basic
         .CLK(CLK),
-        .rst(rst), // global reset
+        .rst(system_rst), // system reset
 
         // CIU
         .cycle_en(cycle_en),
@@ -360,14 +361,14 @@ module LT_NPU(
     Core_TBO_CIU core_6(
         // basic
         .CLK(CLK),
-        .rst(rst), // global reset
+        .rst(system_rst), // system reset
 
         // CIU
         .cycle_en(cycle_en),
         .AGU_C_param(AGU_C_param_6), // {AGU_C_initial, tile_size}
         .stream_a_in(stream_a_56),
         .stream_a_out(stream_a_63),
-        .stream_b_in(stream_b_46),
+        .stream_b_in(stream_b_36),
         .stream_b_out(stream_b_65),
         .glb_ciu_load_bus(glb_ciu_load_bus_6), // {valid_load, addr_load, din_load}
         .glb_ciu_wb_bus(glb_ciu_wb_bus_6), // {en_wb, addr_wb_in}

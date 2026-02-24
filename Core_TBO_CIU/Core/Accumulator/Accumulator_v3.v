@@ -18,11 +18,6 @@ module Accumulator(
     input signed [31:0]PE_out_3_in,
     output reg signed [15:0]acc_out,
     output acc_done
-    ,
-    output [7:0] acc_count_tb,
-    output rst_bias_tb,
-    output [33:0] adder_result_tb,
-    output [47:0] acc_result
     );
     // mode define
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
@@ -320,10 +315,5 @@ module Accumulator(
         end
     end
     ////////// Output register end //////////
-    
-    assign acc_count_tb = acc_count;
-    assign rst_bias_tb = rst_bias_sr[1];
-    assign adder_result_tb = adder_result;
-    assign acc_result = accumulator_reg;
     
 endmodule
