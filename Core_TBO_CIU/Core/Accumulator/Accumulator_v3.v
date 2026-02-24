@@ -94,7 +94,7 @@ module Accumulator(
             end
             else begin
                 acc_count <= acc_count;
-                done <= next_done;
+                done <= done;
             end
         end
     end

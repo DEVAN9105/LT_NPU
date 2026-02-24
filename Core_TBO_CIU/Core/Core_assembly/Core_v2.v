@@ -103,7 +103,7 @@ module Core(
     // conv1 counter
     reg [1:0] conv_count;
     always@(posedge CLK) begin
-        if(rst) begin
+        if(core_rst) begin
             conv_count <= 0;
         end
         else begin
@@ -259,7 +259,7 @@ module Core(
     PE_array pe_array(
         .CLK(CLK),
         .en(SR_0[8]),
-        .rst(rst),
+        .rst(core_rst),
         .set(set),
         .mode_in(mode),
         .PE_fin_0(PE_fin_0),

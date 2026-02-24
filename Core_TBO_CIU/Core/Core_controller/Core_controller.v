@@ -53,7 +53,7 @@ module Core_controller(
     Core_en_counter core_en_counter(
         .CLK(CLK),
         .en(core_en_counter_en),
-        .rst(rst),
+        .rst(core_rst),
         .set(set),
         .mode(mode_in),
         .width_out_in(width_out_in),
@@ -135,7 +135,7 @@ module Core_controller(
 
     ////////// SR_0 //////////
     always@(posedge CLK) begin
-        if (rst) begin
+        if (core_rst) begin
             SR_0 <= 13'b0;
         end
         else begin
@@ -169,7 +169,7 @@ module Core_controller(
 
     ////////// SR_1 //////////
     always@(posedge CLK) begin
-        if(rst) begin
+        if(core_rst) begin
             SR_1 <= 6'b0;
         end
         else begin

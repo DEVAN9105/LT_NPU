@@ -33,11 +33,12 @@ module LT_NPU(
     wire core_1_busy, core_2_busy, core_3_busy, core_4_busy, core_5_busy, core_6_busy;
     wire glb_input_busy, glb_output_busy;
     wire cycle_1_busy, cycle_2_busy, cycle_3_busy, cycle_4_busy, cycle_5_busy, cycle_6_busy;
-    wire cycle_busy = core_1_busy | core_2_busy | core_3_busy | core_4_busy | core_5_busy | core_6_busy;
-    wire prep_busy, posp_busy;
+    wire cycle_busy = cycle_1_busy | cycle_2_busy | cycle_3_busy | cycle_4_busy | cycle_5_busy | cycle_6_busy;
+    wire prep_busy;
+    wire posp_busy;
     wire [10:0] lower_busy_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
     assign lower_busy_bus = {core_1_busy, core_2_busy, core_3_busy, core_4_busy, core_5_busy, core_6_busy, glb_output_busy, glb_input_busy, cycle_busy, prep_busy, posp_busy};
-    // cloader control
+    // loader control
     wire [19:0] weight_loader_bus; // {en[19], weight_amount[18:7], bias_amount[6:0]}
     // core control
     wire core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6;
@@ -59,6 +60,12 @@ module LT_NPU(
     wire [1:0] prep_control_bus; // {prep_en, prep_buffer_sel}
     // PosP control
     wire [32:0] posp_control_bus; // {posp_en[32], hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+
+    ////////// idle assign //////////
+    assign instruction_loader_busy = 1'b0;
+    assign weight_loader_busy = 1'b0;
+    assign prep_busy = 1'b0;
+    ////////// idle assign end //////////
 
     Controller_assembly controller_assembly_inst(
         // basic
@@ -145,6 +152,10 @@ module LT_NPU(
     wire [72:0] glb_ciu_load_bus_6; // {en, addr[7:0], data[63:0]}
     wire [72:0] glb_posp_load_bus; // {en, addr[7:0], data[63:0]}
 
+    ////////// idle assign //////////
+    assign prep_glb_wb_bus = 0;
+    ////////// idle assign end //////////
+
     GLB_operator glb_operator(
         // basic
         .CLK(CLK),
@@ -179,8 +190,8 @@ module LT_NPU(
         .glb_ciu_load_bus_6(glb_ciu_load_bus_6), // {en, addr[7:0], data[63:0]}
         .glb_posp_load_bus(glb_posp_load_bus), // {en, addr[7:0], data[63:0]}
         // busy signal
-        .input_busy(glb_input_busy),
-        .output_busy(glb_output_busy)
+        .glb_input_busy(glb_input_busy),
+        .glb_output_busy(glb_output_busy)
     );
     ////////// Global Buffer Assembly end //////////
 
@@ -388,5 +399,23 @@ module LT_NPU(
         .core_busy(core_6_busy)
     );
     ////////// Core_TBO_CIU Assembly end //////////
+
+    ////////// Post-processing //////////
+    Post_processing post_processing(
+        // basic
+        .CLK(CLK),
+        .rst(system_rst),
+        .en(posp_control_bus[32]),
+        // control bus
+        .input_label(posp_control_bus[31:0]), // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+        // input data
+        .input_data_valid(glb_posp_load_bus[72]),
+        .input_data(glb_posp_load_bus[63:0]),
+        // output
+        .result(inference_result),
+        // busy
+        .busy(posp_busy)
+    );
+    ////////// Post-processing end //////////
 
 endmodule

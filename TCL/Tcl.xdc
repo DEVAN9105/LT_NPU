@@ -72,3 +72,18 @@ set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/Core/Conv_last/Bias0.3.
 reset_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/B_storage_3/B_storage_3.xci]
 generate_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/B_storage_3/B_storage_3.xci]
 
+#---------- LT_NPU ----------#
+# GLB
+set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/LT_NPU/shuffle_unit/GLB.coe}] [get_ips GLB]
+reset_target all [get_files  C:/Code/Vivado/LT_NPU_v1/LT_NPU_v1.srcs/sources_1/ip/GLB/GLB.xci]
+generate_target all [get_files  C:/Code/Vivado/LT_NPU_v1/LT_NPU_v1.srcs/sources_1/ip/GLB/GLB.xci]
+
+# W_storage
+set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/LT_NPU/shuffle_unit/Weight0.0.coe}] [get_ips W_storage_00]
+reset_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/W_storage_00/W_storage_00.xci]
+generate_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/W_storage_00/W_storage_00.xci]
+
+# B_storage
+set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/LT_NPU/shuffle_unit/Bias0.0.coe}] [get_ips B_storage_00]
+reset_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/B_storage_00/B_storage_00.xci]
+generate_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/B_storage_00/B_storage_00.xci]

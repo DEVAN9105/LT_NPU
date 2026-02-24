@@ -8,8 +8,8 @@ module Controller_assembly(
     output system_rst,
     
     ////////// Instruction memory interface //////////
-    input [48:0] IS_load_bus, // {en, address[47:40], IS[39:0]}
-    input [154:0] VLIW_load_bus, // {en, address[153:144], VLIW[143:0]}
+    /*input [48:0] IS_load_bus, // {en, address[47:40], IS[39:0]}
+    input [154:0] VLIW_load_bus, // {en, address[153:144], VLIW[143:0]}*/
     
     ////////// Submodule Busy signals //////////
     input instruction_loader_busy,
@@ -74,30 +74,20 @@ module Controller_assembly(
     // IS
     wire [8:0] IS_PC_bus; // {en, 8 bit address}
     wire [39:0] IS;
-    Instruction_RAM instruction_ram(
+    IS_storage is_storage(
         .clka(CLK),
-        .ena(IS_load_bus[48]),
-        .wea(IS_load_bus[48]),
-        .addra(IS_load_bus[47:40]),
-        .dina(IS_load_bus[39:0]),
-        .clkb(CLK),
-        .enb(IS_PC_bus[8]),
-        .addrb(IS_PC_bus[7:0]),
-        .doutb(IS)
+        .ena(IS_PC_bus[8]),
+        .addra(IS_PC_bus[7:0]),
+        .douta(IS)
     );
     // VLIW
     wire [10:0] VLIW_PC_bus; // {en, 10 bit address}
     wire [143:0] VLIW;
-    VLIW_RAM vliw_ram(
+    VLIW_storage vliw_storage(
         .clka(CLK),
-        .ena(VLIW_load_bus[154]),
-        .wea(VLIW_load_bus[154]),
-        .addra(VLIW_load_bus[153:144]),
-        .dina(VLIW_load_bus[143:0]),
-        .clkb(CLK),
-        .enb(VLIW_PC_bus[10]),
-        .addrb(VLIW_PC_bus[9:0]),
-        .doutb(VLIW)
+        .ena(VLIW_PC_bus[10]),
+        .addra(VLIW_PC_bus[9:0]),
+        .douta(VLIW)
     );
     ////////// Instruction RAM end //////////
 
@@ -110,7 +100,7 @@ module Controller_assembly(
     wire lower_controller_busy;
     assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, glb_output_en, glb_input_en, cycle_en, prep_control_bus[1], posp_control_bus[32]}
         = lower_en_bus;
-    Lower_Controller lower_controller(
+    Lower_controller lower_controller(
         .CLK(CLK),
         .en(lower_controller_en),
         .rst(system_rst),
@@ -135,7 +125,7 @@ module Controller_assembly(
     wire [3:0] double_buffer_sel;    // {output_glb, input_glb, W_storage, B_storage}
     wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
     assign weight_loader_bus[19] = double_buffer_sel[1]; // W_storage/B_storage buffer select
-    Top_Controller top_controller(
+    Top_controller top_controller(
         .CLK(CLK),
         .asynchronous_rst(asynchronous_rst),
         .PS_en(PS_en),

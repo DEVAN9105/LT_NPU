@@ -49,18 +49,6 @@ module Param_decoder(
     output prep_buffer_sel
     );
 
-    ////////// VLIW input buffer //////////
-    reg [132:0] VLIW_buffer;
-    always@(posedge CLK) begin
-        if(rst) begin
-            VLIW_buffer <= 0;
-        end
-        else begin
-            VLIW_buffer <= VLIW_num;
-        end
-    end
-     ////////// VLIW input buffer end //////////
-
     ////////// VLIW decoder //////////
     wire [2:0] tile_sel_cycle;
     wire [8:0] tile_sel_cal;
@@ -75,50 +63,35 @@ module Param_decoder(
 
     ////////// cycle initial //////////
     reg [47:0] cycle_initial;
-    always@(posedge CLK) begin
-        if(rst) begin
-            cycle_initial <= 0;
-        end
-        else begin
-            cycle_initial[47:40] <= 0;
-            cycle_initial[39:32] <= cycle_tile_size + 1;
-            cycle_initial[31:24] <= ((cycle_tile_size + 1) << 1);
-            cycle_initial[23:16] <= ((cycle_tile_size + 1) << 1) + cycle_tile_size + 1;
-            cycle_initial[15:8]  <= ((cycle_tile_size + 1) << 2);
-            cycle_initial[7:0]   <= ((cycle_tile_size + 1) << 2) + cycle_tile_size + 1;
-        end
+    always@(*) begin
+        cycle_initial[47:40] = 0;
+        cycle_initial[39:32] = cycle_tile_size + 1;
+        cycle_initial[31:24] = ((cycle_tile_size + 1) << 1);
+        cycle_initial[23:16] = ((cycle_tile_size + 1) << 1) + cycle_tile_size + 1;
+        cycle_initial[15:8]  = ((cycle_tile_size + 1) << 2);
+        cycle_initial[7:0]   = ((cycle_tile_size + 1) << 2) + cycle_tile_size + 1;
     end
     ////////// cycle initial end //////////
 
     ////////// AGU initial //////////
     // AGU_O_initial
     reg [7:0] AGU_O_initial_1, AGU_O_initial_2, AGU_O_initial_3, AGU_O_initial_4, AGU_O_initial_5, AGU_O_initial_6;
-    always@(posedge CLK) begin
-        if(rst) begin
-            AGU_O_initial_1 <= 0;
-            AGU_O_initial_2 <= 0;
-            AGU_O_initial_3 <= 0;
-            AGU_O_initial_4 <= 0;
-            AGU_O_initial_5 <= 0;
-            AGU_O_initial_6 <= 0;
+    always@(*) begin
+        if(VLIW_num[132:130] == 3'd2) begin
+            AGU_O_initial_6 = 0;
+            AGU_O_initial_2 = cycle_tile_size + 1;
+            AGU_O_initial_3 = ((cycle_tile_size + 1) << 1);
+            AGU_O_initial_4 = ((cycle_tile_size + 1) << 1) + cycle_tile_size + 1;
+            AGU_O_initial_5 = ((cycle_tile_size + 1) << 2);
+            AGU_O_initial_6 = ((cycle_tile_size + 1) << 2) + cycle_tile_size + 1;
         end
         else begin
-            if(VLIW_num[132:130] == 3'd2) begin
-                AGU_O_initial_6 <= 0;
-                AGU_O_initial_2 <= cycle_tile_size + 1;
-                AGU_O_initial_3 <= ((cycle_tile_size + 1) << 1);
-                AGU_O_initial_4 <= ((cycle_tile_size + 1) << 1) + cycle_tile_size + 1;
-                AGU_O_initial_5 <= ((cycle_tile_size + 1) << 2);
-                AGU_O_initial_6 <= ((cycle_tile_size + 1) << 2) + cycle_tile_size + 1;
-            end
-            else begin
-                AGU_O_initial_1 <= 0;
-                AGU_O_initial_2 <= 0;
-                AGU_O_initial_3 <= 0;
-                AGU_O_initial_4 <= 0;
-                AGU_O_initial_5 <= 0;
-                AGU_O_initial_6 <= 0;
-            end
+            AGU_O_initial_1 = 0;
+            AGU_O_initial_2 = 0;
+            AGU_O_initial_3 = 0;
+            AGU_O_initial_4 = 0;
+            AGU_O_initial_5 = 0;
+            AGU_O_initial_6 = 0;
         end
     end
     // AGU_W, AGU_B, AGU_G, AGU_T
@@ -127,47 +100,37 @@ module Param_decoder(
     reg [13:0] input_AGU_G_initial, output_AGU_G_initial;
     reg [7:0] input_AGU_T_initial, output_AGU_T_initial;
 
-    always@(posedge CLK) begin
-        if(rst) begin
-            AGU_W_initial <= 0;
-            AGU_B_initial <= 0;
-            input_AGU_G_initial <= 0;
-            output_AGU_G_initial <= 0;
-            input_AGU_T_initial <= 0;
-            output_AGU_T_initial <= 0;
+    always@(*) begin
+        // output AGU_G
+        if(double_buffer_sel[3]) begin
+            output_AGU_G_initial = 14'd8192 + VLIW_num[33:20];
         end
         else begin
-            // output AGU_G
-            if(double_buffer_sel[3]) begin
-                output_AGU_G_initial <= 14'd8192 + VLIW_num[33:20];
-            end
-            else begin
-                output_AGU_G_initial <= 14'd0 + VLIW_num[33:20];
-            end
-            // input AGU_G
-            if(double_buffer_sel[2]) begin
-                input_AGU_G_initial <= 14'd8192 + VLIW_num[55:42];
-            end
-            else begin
-                input_AGU_G_initial <= 14'd0 + VLIW_num[55:42];
-            end
-            // AGU_W
-            if(double_buffer_sel[1]) begin
-                AGU_W_initial <= 12'd2048 + VLIW_num[125:114];
-            end
-            else begin
-                AGU_W_initial <= 12'd0 + VLIW_num[125:114];
-            end
-            // AGU_B
-            if(double_buffer_sel[0]) begin
-                AGU_B_initial <= 8'd128 + VLIW_num[113:106];
-            end
-            else begin
-                AGU_B_initial <= 8'd0 + VLIW_num[113:106];
-            end
-            input_AGU_T_initial <= VLIW_num[41:34];
-            output_AGU_T_initial <= VLIW_num[19:12];
+            output_AGU_G_initial = 14'd0 + VLIW_num[33:20];
         end
+        // input AGU_G
+        if(double_buffer_sel[2]) begin
+            input_AGU_G_initial = 14'd8192 + VLIW_num[55:42];
+        end
+        else begin
+            input_AGU_G_initial = 14'd0 + VLIW_num[55:42];
+        end
+        // AGU_W
+        if(double_buffer_sel[1]) begin
+            AGU_W_initial = 12'd2048 + VLIW_num[125:114];
+        end
+        else begin
+            AGU_W_initial = 12'd0 + VLIW_num[125:114];
+        end
+        // AGU_B
+        if(double_buffer_sel[0]) begin
+            AGU_B_initial = 8'd128 + VLIW_num[113:106];
+        end
+        else begin
+            AGU_B_initial = 8'd0 + VLIW_num[113:106];
+        end
+        input_AGU_T_initial = VLIW_num[41:34];
+        output_AGU_T_initial = VLIW_num[19:12];
     end
     ////////// AGU initial end //////////
 
@@ -184,67 +147,55 @@ module Param_decoder(
     reg [7:0] glb_ch_out, glb_ch_in;
     reg [6:0] tile_width_out, tile_width_in;
     reg [7:0] tile_ch_out, tile_ch_in;
-    always@(posedge CLK) begin
-        if(rst) begin
-            glb_width_out <= 0;
-            glb_ch_out <= 0;
-            glb_width_in <= 0;
-            glb_ch_in <= 0;
-            tile_width_out <= 0;
-            tile_ch_out <= 0;
-            tile_width_in <= 0;
-            tile_ch_in <= 0;
-        end
-        else begin
-            // decode output parameters
-            case(output_combined[16:15]) // glb_out_mode
-                0: begin // broadcast mode
-                    glb_width_out <= width_out;
-                    glb_ch_out <= ch_out;
-                    tile_width_out <= width_out;
-                    tile_ch_out <= ch_out;
-                end
-                1: begin // multi-cast mode
-                    glb_width_out <= width_out;
-                    glb_ch_out <= ((ch_out + 1) << 2) + ((ch_out + 1) << 1) - 1;
-                    tile_width_out <= width_out;
-                    tile_ch_out <= ch_out;
-                end
-                2: begin // post-processing mode
-                    glb_width_out <= width_out;
-                    glb_ch_out <= ch_out;
-                    tile_width_out <= width_out;
-                    tile_ch_out <= ch_out;
-                end
-                default: begin
-                    glb_width_out <= width_out;
-                    glb_ch_out <= ch_out;
-                    tile_width_out <= width_out;
-                    tile_ch_out <= ch_out;
-                end
-            endcase
-            // decode input parameters
-            case(input_combined[16:15]) // glb_in_mode
-                0: begin // uni-write mode
-                    glb_width_in <= width_in;
-                    glb_ch_in <= ch_in;
-                    tile_width_in <= width_in;
-                    tile_ch_in <= ch_in;
-                end
-                1: begin // multi-write mode
-                    glb_width_in <= width_in;
-                    glb_ch_in <= ((ch_in + 1) << 2) + ((ch_in + 1) << 1) - 1;
-                    tile_width_in <= width_in;
-                    tile_ch_in <= ch_in;
-                end
-                default: begin
-                    glb_width_in <= width_in;
-                    glb_ch_in <= ch_in;
-                    tile_width_in <= width_in;
-                    tile_ch_in <= ch_in;
-                end
-            endcase
-        end
+    always@(*) begin
+        // decode output parameters
+        case(output_combined[16:15]) // glb_out_mode
+            0: begin // broadcast mode
+                glb_width_out = width_out;
+                glb_ch_out = ch_out;
+                tile_width_out = width_out;
+                tile_ch_out = ch_out;
+            end
+            1: begin // multi-cast mode
+                glb_width_out = width_out;
+                glb_ch_out = ((ch_out + 1) << 2) + ((ch_out + 1) << 1) - 1;
+                tile_width_out = width_out;
+                tile_ch_out = ch_out;
+            end
+            2: begin // post-processing mode
+                glb_width_out = width_out;
+                glb_ch_out = ch_out;
+                tile_width_out = width_out;
+                tile_ch_out = ch_out;
+            end
+            default: begin
+                glb_width_out = width_out;
+                glb_ch_out = ch_out;
+                tile_width_out = width_out;
+                tile_ch_out = ch_out;
+            end
+        endcase
+        // decode input parameters
+        case(input_combined[16:15]) // glb_in_mode
+            0: begin // uni-write mode
+                glb_width_in = width_in;
+                glb_ch_in = ch_in;
+                tile_width_in = width_in;
+                tile_ch_in = ch_in;
+            end
+            1: begin // multi-write mode
+                glb_width_in = width_in;
+                glb_ch_in = ((ch_in + 1) << 2) + ((ch_in + 1) << 1) - 1;
+                tile_width_in = width_in;
+                tile_ch_in = ch_in;
+            end
+            default: begin
+                glb_width_in = width_in;
+                glb_ch_in = ch_in;
+                tile_width_in = width_in;
+                tile_ch_in = ch_in;
+            end
+        endcase
     end
 
     ////////// combine control signals //////////
@@ -256,21 +207,21 @@ module Param_decoder(
     assign AGU_C_param_5 = {cycle_initial[15:8], cycle_tile_size};
     assign AGU_C_param_6 = {cycle_initial[7:0], cycle_tile_size};
     // TBO control
-    assign tbo_param = {tile_sel_cycle, VLIW_buffer[75:56]};
+    assign tbo_param = {tile_sel_cycle, VLIW_num[75:56]};
     // Core control
-    assign core_control = {VLIW_buffer[132:126], tile_sel_cal};
+    assign core_control = {VLIW_num[132:126], tile_sel_cal};
     assign core_AGU_initial_1 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_1};
     assign core_AGU_initial_2 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_2};
     assign core_AGU_initial_3 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_3};
     assign core_AGU_initial_4 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_4};
     assign core_AGU_initial_5 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_5};
     assign core_AGU_initial_6 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_6};
-    assign core_tile_param = VLIW_buffer[105:76];
+    assign core_tile_param = VLIW_num[105:76];
     // GLB control
-    assign glb_input_param = {input_combined[25:24], input_AGU_G_initial, input_AGU_T_initial, glb_width_in, glb_ch_in, tile_width_in, tile_ch_in};
-    assign glb_output_param = {output_combined[25:24], output_AGU_G_initial, output_AGU_T_initial, glb_width_out, glb_ch_out, tile_width_out, tile_ch_out};
+    assign glb_input_param = {input_combined[16:15], input_AGU_G_initial, input_AGU_T_initial, glb_width_in, glb_ch_in, tile_width_in, tile_ch_in};
+    assign glb_output_param = {output_combined[16:15], output_AGU_G_initial, output_AGU_T_initial, glb_width_out, glb_ch_out, tile_width_out, tile_ch_out};
     // prep control
-    assign prep_buffer_sel = VLIW_buffer[11];
+    assign prep_buffer_sel = VLIW_num[11];
     ////////// combine control signals end //////////
 
 endmodule

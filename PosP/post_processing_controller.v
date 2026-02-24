@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module post_processing_controller(
+module Post_processing_controller(
     output reg [1:0] state,
     input CLK,
     input rst,
@@ -22,20 +22,22 @@ module post_processing_controller(
         case(state)
             2'b00:
                 begin
-                    if(valid & en)
+                    if(en)
                         next_state = 2'b01;
                     else
                         next_state = state;
                 end
             2'b01:
-                next_state = 2'b10;
-            2'b10:
                 begin
-                    if(!en)
-                        next_state = 2'b00;
+                    if(valid)
+                        next_state = 2'b10;
                     else
                         next_state = state;
                 end
+            2'b10:
+                next_state = 2'b00;
+            default:
+                next_state = 2'b00;
         endcase
     end
 endmodule

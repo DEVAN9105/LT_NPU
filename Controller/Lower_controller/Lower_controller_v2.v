@@ -16,7 +16,7 @@ module Lower_controller(
 
     ////////// Control signals and VLIW_num //////////
     output reg [10:0] lower_en_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
-    output [132:0] VLIW_num, // VLIW number
+    output reg [132:0] VLIW_num, // VLIW number
 
     ////////// System status //////////
     output reg lower_controller_busy
@@ -24,7 +24,6 @@ module Lower_controller(
 
     ////////// Instruction Decoding //////////
     wire [10:0] VLIW_en   = VLIW[143:133];
-    assign      VLIW_num  = VLIW[132:0];
     ////////// Instruction Decoding end //////////
 
     ////////// Internal Registers and State //////////
@@ -129,6 +128,7 @@ module Lower_controller(
         if(rst) begin
             state <= S_idle;
             lower_en_bus <= 11'd0;
+            VLIW_num <= 0;
         end
         else begin
             state <= next_state;
@@ -136,20 +136,25 @@ module Lower_controller(
             case (state)
                 S_idle: begin
                     lower_en_bus <= 11'd0;
+                    VLIW_num <= 0;
                 end
                 S_decode: begin
                     if(count == VLIW_length + 3) begin
                         lower_en_bus <= 11'd0; // No more instructions, disable all submodules
+                        VLIW_num <= VLIW_num;
                     end
                     else begin
                         lower_en_bus <= VLIW_en; // Enable the submodules according to the instruction
+                        VLIW_num <= VLIW[132:0];
                     end
                 end
                 S_wait: begin
                     lower_en_bus <= 11'd0; // Disable all submodules while waiting
+                    VLIW_num <= VLIW_num;
                 end
                 default: begin
                     lower_en_bus <= 11'd0; // Default to disabling all submodules
+                    VLIW_num <= VLIW_num;
                 end
             endcase
         end
