@@ -57,6 +57,7 @@ module GLB_output(
         .rst(glb_out_rst),
         .set(set),
         .AGU_G_param(AGU_G_param),
+        .pass_through(1'b0),
         .ch_to_Y_bus(ch_to_Y_bus),
         .Y(ch_to_Y_Y),
         .gaddr(gaddr),
