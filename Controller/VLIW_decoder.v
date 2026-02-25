@@ -12,7 +12,7 @@ module VLIW_decoder(
     wire [19:0] tile_assign = VLIW_in[19:0];
     reg [5:0] cal_0, cal_1, cal_2;
     reg [5:0] cycle;
-     always@(posedge CLK) begin
+    always@(posedge CLK) begin
         if(rst) begin
             tile_sel_cycle <= 0;
         end

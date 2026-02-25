@@ -14,7 +14,7 @@ module Controller_assembly(
     ////////// Submodule Busy signals //////////
     input instruction_loader_busy,
     input weight_loader_busy,
-    input [10:0] lower_busy_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, CIU, GLB_in, GLB_out, PreP, PosP}
+    input [10:0] lower_busy_bus, // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
 
     ////////// Instruction Loader control //////////
     output instruction_loader_en,
