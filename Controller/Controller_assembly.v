@@ -56,7 +56,8 @@ module Controller_assembly(
     ////////// GLB control and parameters //////////
     output glb_input_en,
     output glb_output_en,
-    output [10:0] ch_to_Y_initial, // 0~2047
+    output [10:0] output_ch_to_Y_initial,
+    output [10:0] input_ch_to_Y_initial, // 0~2047
     output [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[51:0]}
     output [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[51:0]}
 
@@ -100,6 +101,15 @@ module Controller_assembly(
     wire lower_controller_busy;
     assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, glb_output_en, glb_input_en, cycle_en, prep_control_bus[1], posp_control_bus[32]}
         = lower_en_bus;
+    reg [10:0] lower_busy_bus_buffer;
+    always@(posedge CLK) begin
+        if(system_rst) begin
+            lower_busy_bus_buffer <= 0;
+        end
+        else begin
+            lower_busy_bus_buffer <= lower_busy_bus;
+        end
+    end
     Lower_controller lower_controller(
         .CLK(CLK),
         .en(lower_controller_en),
@@ -110,7 +120,7 @@ module Controller_assembly(
         .VLIW_PC_bus(VLIW_PC_bus), // {en, 10 bit address}
         .VLIW(VLIW),
         // busy signals
-        .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
+        .lower_busy_bus(lower_busy_bus_buffer), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
         // output control signals
         .lower_en_bus(lower_en_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
         .VLIW_num(VLIW_num), // VLIW number
@@ -153,7 +163,8 @@ module Controller_assembly(
         .input_combined(input_combined),
         .double_buffer_sel(double_buffer_sel),    // {output_glb, input_glb, W_storage, B_storage}
         .cycle_tile_size(cycle_tile_size),      // {cycle_tile_size[7:0]}
-        .ch_to_Y_initial(ch_to_Y_initial),
+        .output_ch_to_Y_initial(output_ch_to_Y_initial),
+        .input_ch_to_Y_initial(input_ch_to_Y_initial),
         .posp_param(posp_control_bus[31:0]),           // {hand_th, tool_th, block_th, safe_th}
         // system status
         .PL_busy(PL_busy)                      // PL working, notify PS

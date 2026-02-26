@@ -6,7 +6,8 @@ module GLB_operator(
     input glb_input_en,
     input glb_output_en,
     ////////// Control param //////////
-    input [10:0] ch_to_Y_initial, // 0~2047
+    input [10:0] output_ch_to_Y_initial, // 0~2047
+    input [10:0] input_ch_to_Y_initial, // 0~2047
     input [53:0] glb_input_param, // {glb_in_mode[1:0], input_AGU_param[51:0]}
     input [53:0] glb_output_param, // {glb_out_mode[1:0], output_AGU_param[51:0]}
     ////////// GLB_input //////////
@@ -74,8 +75,8 @@ module GLB_operator(
     wire [13:0] input_Y, output_Y; // real addr
     // ch_to_Y addr calculation
     wire [10:0] input_ch, output_ch;
-    assign input_ch = ch_to_Y_initial + input_ch_to_Y_bus[9:0];
-    assign output_ch = ch_to_Y_initial + output_ch_to_Y_bus[9:0];
+    assign output_ch = output_ch_to_Y_initial + output_ch_to_Y_bus[9:0];
+    assign input_ch = input_ch_to_Y_initial + input_ch_to_Y_bus[9:0];
     // Ch_to_Y instance
     Ch_to_Y ch_to_Y(
         // port a

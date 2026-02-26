@@ -23,6 +23,14 @@ set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/CIU/tile_buffer_6_CIU.c
 reset_target all [get_files  C:/Code/Vivado/LT_debug/LT_debug.srcs/sources_1/ip/Tile_buffer_6/Tile_buffer_6.xci]
 generate_target all [get_files  C:/Code/Vivado/LT_debug/LT_debug.srcs/sources_1/ip/Tile_buffer_6/Tile_buffer_6.xci]
 
+set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/LT_NPU/down_sampling_L/IS.coe}] [get_ips IS_storage]
+reset_target all [get_files  C:/Code/Vivado/LT_debug/LT_debug.srcs/sources_1/ip/IS_storage/IS_storage.xci]
+generate_target all [get_files  C:/Code/Vivado/LT_debug/LT_debug.srcs/sources_1/ip/IS_storage/IS_storage.xci]
+
+set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/LT_NPU/down_sampling_L/VLIW.coe}] [get_ips VLIW_storage]
+reset_target all [get_files  C:/Code/Vivado/LT_debug/LT_debug.srcs/sources_1/ip/VLIW_storage/VLIW_storage.xci]
+generate_target all [get_files  C:/Code/Vivado/LT_debug/LT_debug.srcs/sources_1/ip/VLIW_storage/VLIW_storage.xci]
+
 # LT_NPU_104
 set_property -dict [list CONFIG.Coe_File {C:/Vivado_test/Core/DW_downsampling/tile_buffer_1.coe}] [get_ips Tile_buffer_3]
 reset_target all [get_files  C:/Code/Vivado/LT_NPU_104/LT_NPU_104.srcs/sources_1/ip/Tile_buffer_3/Tile_buffer_3.xci]

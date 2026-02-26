@@ -53,7 +53,8 @@ module LT_NPU(
     // GLB control
     wire glb_input_en;
     wire glb_output_en;
-    wire [10:0] ch_to_Y_initial; // 0~2047
+    wire [10:0] output_ch_to_Y_initial;
+    wire [10:0] input_ch_to_Y_initial;
     wire [53:0] glb_input_param; // {glb_in_mode[1:0], input_AGU_param[51:0]}
     wire [53:0] glb_output_param; // {glb_out_mode[1:0], output_AGU_param[51:0]}
     // PreP control
@@ -114,7 +115,8 @@ module LT_NPU(
         // GLB control and parameters
         .glb_input_en(glb_input_en),
         .glb_output_en(glb_output_en),
-        .ch_to_Y_initial(ch_to_Y_initial), // 0~2047
+        .output_ch_to_Y_initial(output_ch_to_Y_initial),
+        .input_ch_to_Y_initial(input_ch_to_Y_initial),
         .glb_input_param(glb_input_param), // {glb_in_mode[1:0], input_AGU_param[51:0]}
         .glb_output_param(glb_output_param), // {glb_out_mode[1:0], output_AGU_param[51:0]}
 
@@ -163,7 +165,8 @@ module LT_NPU(
         .glb_input_en(glb_input_en),
         .glb_output_en(glb_output_en),
         // Control param
-        .ch_to_Y_initial(ch_to_Y_initial), // 0~2047
+        .output_ch_to_Y_initial(output_ch_to_Y_initial), // 0~2047
+        .input_ch_to_Y_initial(input_ch_to_Y_initial), // 0~2047
         .glb_input_param(glb_input_param), // {glb_in_mode[1:0], input_AGU_param[51:0]}
         .glb_output_param(glb_output_param), // {glb_out_mode[1:0], output_AGU_param[51:0]}
         // GLB_input

@@ -18,7 +18,7 @@ module Top_controller(
 
     ////////// Submodule control and parameter outputs //////////
     // VLIW control
-    output reg lower_controller_en, 
+    output reg lower_controller_en,
     output reg [9:0] VLIW_initial,
     output reg [9:0] VLIW_length,
     // Weight Loader control
@@ -35,7 +35,8 @@ module Top_controller(
     output reg [16:0] input_combined,       // {glb_in_mode, width_in, ch_in}
     output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
-    output reg [10:0] ch_to_Y_initial,
+    output reg [10:0] output_ch_to_Y_initial,
+    output reg [10:0] input_ch_to_Y_initial,
     output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
     ////////// System status //////////
     output reg PL_busy                      // PL working, notify PS
@@ -242,7 +243,8 @@ module Top_controller(
             input_combined <= 0;
             double_buffer_sel <= 0;
             cycle_tile_size <= 0;
-            ch_to_Y_initial <= 0;
+            output_ch_to_Y_initial <= 0;
+            input_ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
         end
         else if(PS_rst) begin
@@ -262,7 +264,8 @@ module Top_controller(
             input_combined <= 0;
             double_buffer_sel <= 0;
             cycle_tile_size <= 0;
-            ch_to_Y_initial <= 0;
+            output_ch_to_Y_initial <= 0;
+            input_ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
         end
         else begin
@@ -284,7 +287,8 @@ module Top_controller(
                     input_combined <= 0;
                     double_buffer_sel <= 0;
                     cycle_tile_size <= 0;
-                    ch_to_Y_initial <= 0;
+                    output_ch_to_Y_initial <= 0;
+                    input_ch_to_Y_initial <= 0;
                     posp_param <= 32'd0;
                 end
                 S_decode: begin
@@ -307,7 +311,8 @@ module Top_controller(
                                     cycle_tile_size <= num_1[7:0];
                                 end
                                 FUNC_ch_order: begin // Change_channel_order
-                                    ch_to_Y_initial <= num_1[10:0];
+                                    output_ch_to_Y_initial <= num_1[10:0];
+                                    input_ch_to_Y_initial <= num_2[10:0];
                                 end
                                 FUNC_posp_param: begin // Change_postprocess_parameter
                                     posp_param <= {num_1, num_2};
