@@ -135,7 +135,6 @@ module GLB_input(
         .rst(glb_in_rst),
         .set(set),
         .AGU_G_param(AGU_G_param),
-        .pass_through(glb_in_mode[1]),
         .ch_to_Y_bus(ch_to_Y_bus),
         .Y(ch_to_Y_Y),
         .gaddr(gaddr)

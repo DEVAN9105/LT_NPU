@@ -10,7 +10,6 @@ module AGU_G(
     // parameter
     input [28:0] AGU_G_param, // {AGU_G_initial[13:0], glb_width[6:0], glb_ch[7:0]}
     // ch_to_Y
-    input pass_through,
     output [10:0] ch_to_Y_bus, // {ch_to_Y_en, ch_sum[9:0]}
     input [13:0] Y,
     // output
@@ -44,7 +43,7 @@ module AGU_G(
 
     ////////// en SR //////////
     reg [5:0] en_SR;
-    assign ch_to_Y_bus[10] = (pass_through) ? 0 : en_SR[2];
+    assign ch_to_Y_bus[10] = en_SR[2];
     always@(posedge CLK) begin
         if(rst) begin
             en_SR <= 0;
@@ -284,12 +283,7 @@ module AGU_G(
         end
         else begin
             if(en_SR[3]) begin
-                if(pass_through) begin
-                    reg_addr_1_2 <= reg_addr_1_1 + ch_sum;
-                end
-                else begin
-                    reg_addr_1_2 <= reg_addr_1_1;
-                end
+                reg_addr_1_2 <= reg_addr_1_1;
             end
             else begin
                 reg_addr_1_2 <= reg_addr_1_2;
@@ -305,12 +299,7 @@ module AGU_G(
         end
         else begin
             if(en_SR[4]) begin
-                if(pass_through) begin
-                    gaddr <= reg_addr_1_2;
-                end
-                else begin
-                    gaddr <= reg_addr_1_2 + Y;
-                end
+                gaddr <= reg_addr_1_2 + Y;
             end
             else begin
                 gaddr <= gaddr;
