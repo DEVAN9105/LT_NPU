@@ -1,18 +1,18 @@
 `timescale 1ns / 1ps
 
 (* DONT_TOUCH = "TRUE" *)
-module W_storage (
+module GLB (
     input CLK,
     input rst,         // Reset (只重置輸出 Register，不清除內部陣列資料)
     ///// Port A (Write) /////
     input ena,
     input wea,
-    input [11:0] addra,
+    input [13:0] addra,
     input [63:0] dina,
     ///// Port B (Read) /////
     input enb,
     input regceb,
-    input [11:0] addrb,
+    input [13:0] addrb,
     output [63:0] doutb
 );
 
@@ -20,15 +20,15 @@ module W_storage (
     // XPM_MEMORY_SDPRAM: Simple Dual Port RAM for UltraRAM
     // -------------------------------------------------------------------------
     xpm_memory_sdpram #(
-        .ADDR_WIDTH_A(12),               // 修正：地址寬度 12 bits (2^12 = 4096)
-        .ADDR_WIDTH_B(12),               // 修正：讀取端與寫入端一致
+        .ADDR_WIDTH_A(14),               // 地址寬度: 14 bits (2^14 = 16384)
+        .ADDR_WIDTH_B(14),               // 讀取端與寫入端一致
         .BYTE_WRITE_WIDTH_A(64),         // 64: 不使用 Byte Enable (一次寫64bit)
         .CLOCKING_MODE("common_clock"),  // 讀寫共用同一個 Clock
         .ECC_MODE("no_ecc"),             // 不需要 ECC
         .MEMORY_INIT_FILE("none"),       // URAM 不支援初始值檔案
         .MEMORY_OPTIMIZATION("true"),    // 讓 Vivado 自動優化
         .MEMORY_PRIMITIVE("ultra"),      // ★★★ 關鍵：強制指定 "ultra" (URAM) ★★★
-        .MEMORY_SIZE(262144),            // 總容量 bits = 64 * 4096 = 262,144
+        .MEMORY_SIZE(1048576),           // 總容量 bits = 64 * 16384 = 1,048,576
         .MESSAGE_CONTROL(0),
         .READ_DATA_WIDTH_B(64),          // 讀取寬度
         .READ_LATENCY_B(2),              // already has core output reg outside the GLB
@@ -44,13 +44,13 @@ module W_storage (
         .rstb(rst),          // URAM 的 Reset 主要是清空 Output Register
 
         // Port A (Write)
-        .ena(ena),          
-        .wea(wea),          
+        .ena(ena),          // 修正：對應 Module Port
+        .wea(wea),          // 修正：對應 Module Port
         .addra(addra),
         .dina(dina),
         
         // Port B (Read)
-        .enb(enb),          
+        .enb(enb),          // 修正：對應 Module Port
         .addrb(addrb),
         .doutb(doutb),
         

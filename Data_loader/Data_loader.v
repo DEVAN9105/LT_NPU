@@ -1,11 +1,18 @@
 `timescale 1ns / 1ps
 
+// =============================================================================
+// 模組名稱: Input_Write_Subsystem
+// 描述: 輸入寫入子系統頂層模組。
+//       整合 AXI-Stream 接收器、影像內部緩衝 BRAM (Prep_buffer_sdp)，
+//       以及權重緩衝路由器 (WBR) 的菊花鏈架構。
+// =============================================================================
+
 module Data_loader (
     input  wire         clk,
     input  wire         rst_n,
 
     // ==========================================
-    // 1. AXI-Stream 介面 (直接接外部 DMA)
+    // 1. AXI-Stream 介面 (連接外部 DMA)
     // ==========================================
     input  wire [63:0]  s_axis_image_tdata,
     input  wire         s_axis_image_tvalid,
@@ -17,34 +24,39 @@ module Data_loader (
     output wire         s_axis_weight_tready,
 
     // ==========================================
-    // 2. 控制與狀態介面 (接 Controller)
+    // 2. 控制與狀態介面 (連接 Controller)
     // ==========================================
     input  wire         i_image_start,
     input  wire         i_weight_start,
-    input  wire         i_buffer_sel,
+    
+    // 獨立的乒乓緩衝區選擇訊號
+    input  wire         i_image_buffer_sel,
+    input  wire         i_weight_buffer_sel,
+    
     input  wire         i_image_done,
     
-    // 權重控制 (從隊友的 weight_loader_bus 拆解過來)
+    // 權重參數 (來自 Controller 的 weight_loader_bus)
     input  wire [11:0]  i_weight_len,
     input  wire [6:0]   i_bias_len,
 
-    // 狀態回傳
+    // 狀態輸出
     output wire         o_image_busy,
     output wire         o_weight_busy,
     output wire         o_image_tile_done,
     output wire         o_weight_layer_done,
 
     // ==========================================
-    // 3. 影像輸出介面 (接頂層的 Ping-Pong BRAM)
+    // 3. 影像讀取介面 (連接後級 Global Buffer)
     // ==========================================
-    output wire [6:0]   o_img_uram_addr,
-    output wire         o_img_uram_we,
-    output wire [127:0] o_img_uram_data,
+    input  wire         i_prep_rd_en,    // 讀取致能
+    input  wire [6:0]   i_prep_rd_addr,  // 讀取位址
+    output wire         o_prep_rd_valid, // 讀取資料有效訊號 (經過 3 拍延遲對齊)
+    output wire [63:0]  o_prep_rd_data,  // 讀取資料 (經過管線化暫存)
 
     // ==========================================
-    // 4. 權重與偏差輸出匯流排 (接 6 個 Core)
+    // 4. 權重與偏差輸出匯流排 (連接 6 個運算核心)
     // ==========================================
-    // {we[3:0], addr[11:0], data[63:0]} = 80-bit
+    // 格式: {we[3:0], addr[11:0], data[63:0]} = 80-bit
     output wire [79:0]  o_wgt_storage_bus_1,
     output wire [79:0]  o_wgt_storage_bus_2,
     output wire [79:0]  o_wgt_storage_bus_3,
@@ -52,7 +64,7 @@ module Data_loader (
     output wire [79:0]  o_wgt_storage_bus_5,
     output wire [79:0]  o_wgt_storage_bus_6,
 
-    // {we[3:0], addr[6:0], data[63:0]} = 75-bit
+    // 格式: {we[3:0], addr[6:0], data[63:0]} = 75-bit
     output wire [74:0]  o_bias_storage_bus_1,
     output wire [74:0]  o_bias_storage_bus_2,
     output wire [74:0]  o_bias_storage_bus_3,
@@ -62,7 +74,7 @@ module Data_loader (
 );
 
     // =========================================================================
-    // 內部接線宣告
+    // 內部訊號宣告
     // =========================================================================
     wire [63:0] wgt_g_data;
     wire [11:0] wgt_g_w_addr;
@@ -70,7 +82,7 @@ module Data_loader (
     wire [23:0] wgt_g_w_we, wgt_g_b_we;
     wire        wgt_layer_done;
 
-    // Daisy-chain 轉發線 (L0 -> L1 -> L2 -> L3 -> L4 -> L5)
+    // 菊花鏈轉發訊號 (L0 -> L1 -> L2 -> L3 -> L4 -> L5)
     wire [63:0] L1_d, L2_d, L3_d, L4_d, L5_d;
     wire [11:0] L1_wa, L2_wa, L3_wa, L4_wa, L5_wa;
     wire [6:0]  L1_ba, L2_ba, L3_ba, L4_ba, L5_ba;
@@ -80,15 +92,22 @@ module Data_loader (
     wire        L1_busy, L2_busy, L3_busy, L4_busy, L5_busy, L6_busy;
     wire        wgt_sub_busy; 
 
-    // 各層 Local 輸出
+    // 各核心本地輸出訊號
     wire [63:0] l_d1, l_d2, l_d3, l_d4, l_d5, l_d6;
     wire [11:0] l_wa1, l_wa2, l_wa3, l_wa4, l_wa5, l_wa6;
     wire [6:0]  l_ba1, l_ba2, l_ba3, l_ba4, l_ba5, l_ba6;
     wire [3:0]  l_wwe1, l_wwe2, l_wwe3, l_wwe4, l_wwe5, l_wwe6;
     wire [3:0]  l_bwe1, l_bwe2, l_bwe3, l_bwe4, l_bwe5, l_bwe6;
 
+    // 影像內部 BRAM 接線
+    wire [6:0]  internal_img_addr;
+    wire        internal_img_we;
+    wire [63:0] internal_img_data;
+    
+    wire [63:0] bram_rd_data;
+
     // =========================================================================
-    // 實例化 1: 影像子系統
+    // 實例化 1: 影像寫入子系統
     // =========================================================================
     Image_Write_Subsystem u_image_sub (
         .clk            (clk),
@@ -98,17 +117,66 @@ module Data_loader (
         .s_axis_tlast   (s_axis_image_tlast),
         .s_axis_tready  (s_axis_image_tready),
         .i_layer_start  (i_image_start),
-        .i_buffer_sel   (i_buffer_sel),
+        .i_buffer_sel   (i_image_buffer_sel),
         .i_image_done   (i_image_done),
         .o_tile_done    (o_image_tile_done),
         .o_busy         (o_image_busy),
-        .o_uram_addr    (o_img_uram_addr),
-        .o_uram_we      (o_img_uram_we),
-        .o_uram_data    (o_img_uram_data)
+        
+        .o_uram_addr    (internal_img_addr),
+        .o_uram_we      (internal_img_we),
+        .o_uram_data    (internal_img_data)
     );
 
     // =========================================================================
-    // 實例化 2: 權重總站
+    // 實例化 1.5: 影像緩衝 BRAM (Prep_buffer_sdp)
+    // =========================================================================
+    Prep_buffer_sdp prep_buffer(
+        // Port A: 寫入端 (由 Image_Write_Subsystem 控制)
+        .clka   (clk),
+        .ena    (1'b1),               
+        .wea    (internal_img_we),    
+        .addra  (internal_img_addr),  
+        .dina   (internal_img_data),  
+        
+        // Port B: 讀取端 (由外部 Global Buffer 透過管線控制讀取)
+        .clkb   (clk),
+        .enb    (i_prep_rd_en),       
+        .regceb (1'b1),               // BRAM 輸出暫存器 Enable (產生 1 拍額外延遲)
+        .addrb  (i_prep_rd_addr),     
+        .doutb  (bram_rd_data)        // 輸出接至內部 wire 進行管線化
+    );
+
+    // =========================================================================
+    // 輸出管線暫存與 Valid 訊號產生邏輯 (3-Stage Pipeline)
+    // =========================================================================
+    reg [63:0]  prep_rd_data_reg;
+    reg         prep_rd_valid_d1;
+    reg         prep_rd_valid_d2;
+    reg         prep_rd_valid_d3;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            prep_rd_data_reg <= 64'b0;
+            prep_rd_valid_d1 <= 1'b0;
+            prep_rd_valid_d2 <= 1'b0;
+            prep_rd_valid_d3 <= 1'b0;
+        end else begin
+            // 1. 資料打一拍：將 BRAM 輸出的資料鎖定後再輸出，以改善長佈線之時序 (Timing)
+            prep_rd_data_reg <= bram_rd_data;
+            
+            // 2. Valid 訊號延遲對齊 (總共 3 拍)：
+            prep_rd_valid_d1 <= i_prep_rd_en;     // 第 1 拍 (對應 BRAM 記憶體陣列讀取延遲)
+            prep_rd_valid_d2 <= prep_rd_valid_d1; // 第 2 拍 (對應 BRAM 內建輸出暫存器 regceb 延遲)
+            prep_rd_valid_d3 <= prep_rd_valid_d2; // 第 3 拍 (對應外部 prep_rd_data_reg 暫存器延遲)
+        end
+    end
+
+    // 賦值至外部輸出腳位
+    assign o_prep_rd_data  = prep_rd_data_reg;
+    assign o_prep_rd_valid = prep_rd_valid_d3;
+
+    // =========================================================================
+    // 實例化 2: 權重寫入總站
     // =========================================================================
     Weight_Write_Subsystem u_weight_sub (
         .clk                  (clk),
@@ -119,7 +187,7 @@ module Data_loader (
         .i_weight_len         (i_weight_len),
         .i_bias_len           (i_bias_len),
         .i_layer_start        (i_weight_start),
-        .i_buffer_sel         (i_buffer_sel),
+        .i_buffer_sel         (i_weight_buffer_sel),
         .i_image_done         (i_image_done),
         .o_aligned_data       (wgt_g_data),
         .o_aligned_w_addr     (wgt_g_w_addr),
@@ -132,24 +200,18 @@ module Data_loader (
         .o_busy               (wgt_sub_busy)
     );
 
-
     // =========================================================================
-    // 實例化 3: WBR 路由器 x6 (菊花鏈)
+    // 實例化 3: 權重緩衝路由器 WBR x6 (菊花鏈架構)
     // =========================================================================
     WBR u_wbr_1 (.clk(clk), .rst_n(rst_n), .i_data(wgt_g_data), .i_w_addr(wgt_g_w_addr), .i_b_addr(wgt_g_b_addr), .i_w_we_group(wgt_g_w_we), .i_b_we_group(wgt_g_b_we), .i_layer_done(wgt_layer_done), .i_busy(wgt_sub_busy), .o_local_data(l_d1), .o_local_w_we(l_wwe1), .o_local_b_we(l_bwe1), .o_local_w_addr(l_wa1), .o_local_b_addr(l_ba1), .o_next_data(L1_d), .o_next_w_addr(L1_wa), .o_next_b_addr(L1_ba), .o_next_w_we_group(L1_wwe), .o_next_b_we_group(L1_bwe), .o_next_layer_done(L1_ld), .o_next_busy(L1_busy));
-    
     WBR u_wbr_2 (.clk(clk), .rst_n(rst_n), .i_data(L1_d), .i_w_addr(L1_wa), .i_b_addr(L1_ba), .i_w_we_group(L1_wwe), .i_b_we_group(L1_bwe), .i_layer_done(L1_ld), .i_busy(L1_busy), .o_local_data(l_d2), .o_local_w_we(l_wwe2), .o_local_b_we(l_bwe2), .o_local_w_addr(l_wa2), .o_local_b_addr(l_ba2), .o_next_data(L2_d), .o_next_w_addr(L2_wa), .o_next_b_addr(L2_ba), .o_next_w_we_group(L2_wwe), .o_next_b_we_group(L2_bwe), .o_next_layer_done(L2_ld), .o_next_busy(L2_busy));
-    
     WBR u_wbr_3 (.clk(clk), .rst_n(rst_n), .i_data(L2_d), .i_w_addr(L2_wa), .i_b_addr(L2_ba), .i_w_we_group(L2_wwe), .i_b_we_group(L2_bwe), .i_layer_done(L2_ld), .i_busy(L2_busy), .o_local_data(l_d3), .o_local_w_we(l_wwe3), .o_local_b_we(l_bwe3), .o_local_w_addr(l_wa3), .o_local_b_addr(l_ba3), .o_next_data(L3_d), .o_next_w_addr(L3_wa), .o_next_b_addr(L3_ba), .o_next_w_we_group(L3_wwe), .o_next_b_we_group(L3_bwe), .o_next_layer_done(L3_ld), .o_next_busy(L3_busy));
-    
     WBR u_wbr_4 (.clk(clk), .rst_n(rst_n), .i_data(L3_d), .i_w_addr(L3_wa), .i_b_addr(L3_ba), .i_w_we_group(L3_wwe), .i_b_we_group(L3_bwe), .i_layer_done(L3_ld), .i_busy(L3_busy), .o_local_data(l_d4), .o_local_w_we(l_wwe4), .o_local_b_we(l_bwe4), .o_local_w_addr(l_wa4), .o_local_b_addr(l_ba4), .o_next_data(L4_d), .o_next_w_addr(L4_wa), .o_next_b_addr(L4_ba), .o_next_w_we_group(L4_wwe), .o_next_b_we_group(L4_bwe), .o_next_layer_done(L4_ld), .o_next_busy(L4_busy));
-    
     WBR u_wbr_5 (.clk(clk), .rst_n(rst_n), .i_data(L4_d), .i_w_addr(L4_wa), .i_b_addr(L4_ba), .i_w_we_group(L4_wwe), .i_b_we_group(L4_bwe), .i_layer_done(L4_ld), .i_busy(L4_busy), .o_local_data(l_d5), .o_local_w_we(l_wwe5), .o_local_b_we(l_bwe5), .o_local_w_addr(l_wa5), .o_local_b_addr(l_ba5), .o_next_data(L5_d), .o_next_w_addr(L5_wa), .o_next_b_addr(L5_ba), .o_next_w_we_group(L5_wwe), .o_next_b_we_group(L5_bwe), .o_next_layer_done(L5_ld), .o_next_busy(L5_busy));
-    
     WBR u_wbr_6 (.clk(clk), .rst_n(rst_n), .i_data(L5_d), .i_w_addr(L5_wa), .i_b_addr(L5_ba), .i_w_we_group(L5_wwe), .i_b_we_group(L5_bwe), .i_layer_done(L5_ld), .i_busy(L5_busy), .o_local_data(l_d6), .o_local_w_we(l_wwe6), .o_local_b_we(l_bwe6), .o_local_w_addr(l_wa6), .o_local_b_addr(l_ba6), .o_next_data(), .o_next_w_addr(), .o_next_b_addr(), .o_next_w_we_group(), .o_next_b_we_group(), .o_next_layer_done(L6_ld), .o_next_busy(L6_busy));
 
     // =========================================================================
-    // 5. 輸出打包 (Packaging into Buses) 
+    // 5. 輸出匯流排打包 (Bus Packaging)
     // =========================================================================
     assign o_wgt_storage_bus_1 = {l_wwe1, l_wa1, l_d1};
     assign o_wgt_storage_bus_2 = {l_wwe2, l_wa2, l_d2};
@@ -165,12 +227,13 @@ module Data_loader (
     assign o_bias_storage_bus_5 = {l_bwe5, l_ba5, l_d5};
     assign o_bias_storage_bus_6 = {l_bwe6, l_ba6, l_d6};
     
-
     // =========================================================================
-    // Done 訊號：必須等「最後一個 (L6)」做完，才是真正的做完！
+    // 系統狀態輸出邏輯
+    // =========================================================================
+    // Done 訊號: 待最後一個節點 (L6) 完成，即代表該層權重全數處理完畢
     assign o_weight_layer_done = L6_ld;
 
-    // Busy 訊號：只要管線上「任何一個」還在忙，整個子系統就標示為忙碌！
+    // Busy 訊號: 若管線內任一節點處於忙碌狀態，則整個子系統視為忙碌
     assign o_weight_busy = wgt_sub_busy | L1_busy | L2_busy | L3_busy | L4_busy | L5_busy | L6_busy;
 
 endmodule

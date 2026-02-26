@@ -11,14 +11,14 @@ module LT_NPU(
     output PL_busy,
 
     ////////// DMA and Memory interface //////////
-    input  wire [63:0] s_axis_weight_tdata,
+    /*input  wire [63:0] s_axis_weight_tdata,
     input  wire        s_axis_weight_tvalid,
     output wire        s_axis_weight_tready,
 
-    input  wire [63:0]  s_axis_image_tdata,
-    input  wire         s_axis_image_tvalid,
-    input  wire         s_axis_image_tlast,
-    output wire         s_axis_image_tready,
+    input  wire [63:0]  s_axis_inmage_tdata,
+    input  wire         s_axis_inmage_tvalid,
+    input  wire         s_axis_inmage_tlast,
+    output wire         s_axis_inmage_tready,*/
 
     ////////// output //////////
     output [3:0] inference_result
@@ -39,7 +39,7 @@ module LT_NPU(
     wire [10:0] lower_busy_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
     assign lower_busy_bus = {core_1_busy, core_2_busy, core_3_busy, core_4_busy, core_5_busy, core_6_busy, glb_output_busy, glb_input_busy, cycle_busy, prep_busy, posp_busy};
     // loader control
-    wire [20:0] weight_loader_bus; // {en[20], double_buffer_sel[19], weight_amount[18:7], bias_amount[6:0]}
+    wire [19:0] weight_loader_bus; // {en[19], weight_amount[18:7], bias_amount[6:0]}
     // core control
     wire core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6;
     wire [15:0] core_control; // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
@@ -62,11 +62,11 @@ module LT_NPU(
     // PosP control
     wire [32:0] posp_control_bus; // {posp_en[32], hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
 
-    ////////// dummy assign //////////
+    ////////// idle assign //////////
     assign instruction_loader_busy = 1'b0;
-    //assign weight_loader_busy = 1'b0;
-    //assign prep_busy = 1'b0;
-    ////////// dummy assign end //////////
+    assign weight_loader_busy = 1'b0;
+    assign prep_busy = 1'b0;
+    ////////// idle assign end //////////
 
     Controller_assembly controller_assembly_inst(
         // basic
@@ -82,7 +82,7 @@ module LT_NPU(
         .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_in, GLB_out, CIU, PreP, PosP}
 
         // Weight Loader control
-        .weight_loader_bus(weight_loader_bus),  // {en[20], double_buffer_sel[19], weight_amount[18:7], bias_amount[6:0]}
+        .weight_loader_bus(weight_loader_bus), // {en[19], weight_amount[18:7], bias_amount[6:0}
 
         // Core control and parameters
         .core_en_1(core_en_1),
@@ -154,9 +154,9 @@ module LT_NPU(
     wire [72:0] glb_ciu_load_bus_6; // {en, addr[7:0], data[63:0]}
     wire [72:0] glb_posp_load_bus; // {en, addr[7:0], data[63:0]}
 
-    ////////// dummy assign //////////
-    //assign prep_glb_wb_bus = 0;
-    ////////// dummy assign end //////////
+    ////////// idle assign //////////
+    assign prep_glb_wb_bus = 0;
+    ////////// idle assign end //////////
 
     GLB_operator glb_operator(
         // basic
@@ -217,7 +217,7 @@ module LT_NPU(
         weight_loader_b_storage_bus_6; // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
     
     // Core 1
-    Core_TBO_CIU core_1(
+    Core_TBO_CIU_1 core_1(
         // basic
         .CLK(CLK),
         .rst(system_rst), // system reset
@@ -248,7 +248,7 @@ module LT_NPU(
     );
 
     // Core 2
-    Core_TBO_CIU core_2(
+    Core_TBO_CIU_2 core_2(
         // basic
         .CLK(CLK),
         .rst(system_rst), // system reset
@@ -279,7 +279,7 @@ module LT_NPU(
     );
 
     // Core 3
-    Core_TBO_CIU core_3(
+    Core_TBO_CIU_3 core_3(
         // basic
         .CLK(CLK),
         .rst(system_rst), // system reset
@@ -310,7 +310,7 @@ module LT_NPU(
     );
 
     // Core 4
-    Core_TBO_CIU core_4(
+    Core_TBO_CIU_4 core_4(
         // basic
         .CLK(CLK),
         .rst(system_rst), // system reset
@@ -341,7 +341,7 @@ module LT_NPU(
     );
 
     // Core 5
-    Core_TBO_CIU core_5(
+    Core_TBO_CIU_5 core_5(
         // basic
         .CLK(CLK),
         .rst(system_rst), // system reset
@@ -372,7 +372,7 @@ module LT_NPU(
     );
 
     // Core 6
-    Core_TBO_CIU core_6(
+    Core_TBO_CIU_6 core_6(
         // basic
         .CLK(CLK),
         .rst(system_rst), // system reset
@@ -420,54 +420,5 @@ module LT_NPU(
         .busy(posp_busy)
     );
     ////////// Post-processing end //////////
-
-    ////////// Data Loader //////////
-    wire [6:0]   img_uram_addr;
-    wire         img_uram_we;
-    wire [127:0] img_uram_data;
-
-    Data_loader data_loader(
-        // 時脈與重置訊號
-        .clk                  (CLK),
-        .rst_n                (~system_rst), // 假設子系統採用低電位重置 (Active-low)
-        // AXI-Stream 影像介面
-        .s_axis_image_tdata   (s_axis_image_tdata),
-        .s_axis_image_tvalid  (s_axis_image_tvalid),
-        .s_axis_image_tlast   (s_axis_image_tlast),
-        .s_axis_image_tready  (s_axis_image_tready),
-        // AXI-Stream 權重介面
-        .s_axis_weight_tdata  (s_axis_weight_tdata),
-        .s_axis_weight_tvalid (s_axis_weight_tvalid),
-        .s_axis_weight_tready (s_axis_weight_tready),
-        // 控制訊號 (Controller 至子系統)
-        .i_image_start        (prep_control_bus[1]), // TODO: 連接影像啟動控制訊號
-        .i_weight_start       (weight_loader_bus[20]),
-        .i_buffer_sel         (prep_control_bus[0]), // TODO: 連接乒乓緩衝區切換訊號
-        .i_weight_len         (weight_loader_bus[18:7]),
-        .i_bias_len           (weight_loader_bus[6:0]),
-        // 狀態訊號 (子系統至 Controller)
-        .o_image_busy         (prep_busy), // TODO: 連接至 lower_busy_bus 的影像對應位元
-        .o_weight_busy        (weight_loader_busy),
-        // 影像 BRAM 介面 (接至外部乒乓 BRAM)
-        .i_prep_rd_en         (glb_prep_wb_bus[8]),     // Enable 訊號 (最高位)
-        .i_prep_rd_addr       (glb_prep_wb_bus[7:0]),     // Address 訊號
-        .o_prep_rd_valid      (prep_glb_wb_bus[64]),     // 讀出資料有效訊號 (最高位)
-        .o_prep_rd_data       (prep_glb_wb_bus[63:0]),     // 讀出 128-bit 影像資料
-        // 權重儲存匯流排 (子系統至 6 個運算核心)
-        .o_wgt_storage_bus_1  (weight_loader_w_storage_bus_1),
-        .o_wgt_storage_bus_2  (weight_loader_w_storage_bus_2),
-        .o_wgt_storage_bus_3  (weight_loader_w_storage_bus_3),
-        .o_wgt_storage_bus_4  (weight_loader_w_storage_bus_4),
-        .o_wgt_storage_bus_5  (weight_loader_w_storage_bus_5),
-        .o_wgt_storage_bus_6  (weight_loader_w_storage_bus_6),
-        // 偏差儲存匯流排 (子系統至 6 個運算核心)
-        .o_bias_storage_bus_1 (weight_loader_b_storage_bus_1),
-        .o_bias_storage_bus_2 (weight_loader_b_storage_bus_2),
-        .o_bias_storage_bus_3 (weight_loader_b_storage_bus_3),
-        .o_bias_storage_bus_4 (weight_loader_b_storage_bus_4),
-        .o_bias_storage_bus_5 (weight_loader_b_storage_bus_5),
-        .o_bias_storage_bus_6 (weight_loader_b_storage_bus_6)
-    );
-    ////////// Data Loader end //////////
 
 endmodule
