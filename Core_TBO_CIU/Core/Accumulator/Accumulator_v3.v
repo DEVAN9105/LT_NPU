@@ -224,7 +224,7 @@ module Accumulator(
     ////////// Stage 3 //////////
     // accumulate
     (* use_dsp = "yes" *) reg signed [47:0] accumulator_reg;
-    wire signed [47:0] bias_ext = {{16{bias_buffer[31]}}, bias_buffer};
+    wire signed [47:0] bias_ext = (mode == maxpooling || mode == GAP) ? 48'sd0 : {{16{bias_buffer[31]}}, bias_buffer};
     wire signed [47:0] adder_result_ext = {{14{adder_result[33]}}, adder_result};
     always@(posedge CLK) begin
         if(rst == 1) begin

@@ -77,7 +77,7 @@ module Param_decoder(
     // AGU_O_initial
     reg [7:0] AGU_O_initial_1, AGU_O_initial_2, AGU_O_initial_3, AGU_O_initial_4, AGU_O_initial_5, AGU_O_initial_6;
     always@(*) begin
-        if(VLIW_num[132:130] == 3'd2) begin
+        if(VLIW_num[132:130] == 3'd2 || VLIW_num[132:130] == 3'd4) begin
             AGU_O_initial_6 = 0;
             AGU_O_initial_2 = cycle_tile_size + 1;
             AGU_O_initial_3 = ((cycle_tile_size + 1) << 1);

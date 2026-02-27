@@ -79,7 +79,7 @@ module GLB_input(
     ////////// write back enable //////////
     reg [6:0] wb_sel;
     always@(*) begin
-        if(glb_in_mode == 2'b00) begin
+        if(glb_in_mode == 2'd0) begin
             wb_sel = 7'b0000001;
         end
         else begin
