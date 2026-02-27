@@ -6,6 +6,7 @@ module GLB_input_controller(
     input rst,
     input wb_data_valid,
     // AGU_T
+    input AGU_G_done,
     input AGU_T_done,
     output reg set,
     output reg AGU_T_en,
@@ -56,7 +57,7 @@ module GLB_input_controller(
             end
             ending: begin
                 glb_input_busy = 1;
-                if(SR == 6'd0) begin
+                if(AGU_G_done) begin
                     next_state = finish;
                 end
                 else begin
@@ -98,7 +99,7 @@ module GLB_input_controller(
                 SR <= {SR[4:0], wb_data_valid};
             end
             else begin
-                SR <= SR;
+                SR <= 0;
             end
         end
     end

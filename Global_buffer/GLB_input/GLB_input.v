@@ -29,7 +29,7 @@ module GLB_input(
     wire [5:0] SR;
     wire set;
     wire glb_in_rst;
-    wire AGU_T_done;
+    wire AGU_T_done, AGU_G_done;
     wire wb_data_valid = (ciu_glb_wb_bus_123[64] | ciu_glb_wb_bus_456[64] | prep_glb_wb_bus[64]);
     GLB_input_controller glb_input_control(
         .CLK(CLK),
@@ -37,6 +37,7 @@ module GLB_input(
         .rst(rst),
         .set(set),
         .wb_data_valid(wb_data_valid),
+        .AGU_G_done(AGU_G_done),
         .AGU_T_done(AGU_T_done),
         .AGU_T_en(AGU_T_en),
         .SR(SR),
@@ -79,11 +80,11 @@ module GLB_input(
     ////////// write back enable //////////
     reg [6:0] wb_sel;
     always@(*) begin
-        if(glb_in_mode == 2'd0) begin
-            wb_sel = 7'b0000001;
-        end
-        else begin
-            if(write_back_en) begin
+        if(write_back_en) begin
+            if(glb_in_mode == 2'd0) begin
+                wb_sel = 7'b0000001;
+            end
+            else begin
                 case(core_pointer)
                     0: wb_sel = 7'b1000000;
                     1: wb_sel = 7'b0100000;
@@ -94,9 +95,9 @@ module GLB_input(
                     default: wb_sel = 7'b0000000;
                 endcase
             end
-            else begin
-                wb_sel = 7'b0000000;
-            end
+        end
+        else begin
+            wb_sel = 7'b0000000;
         end
     end
     assign glb_prep_wb_bus = {wb_sel[0], taddr};
@@ -137,7 +138,8 @@ module GLB_input(
         .AGU_G_param(AGU_G_param),
         .ch_to_Y_bus(ch_to_Y_bus),
         .Y(ch_to_Y_Y),
-        .gaddr(gaddr)
+        .gaddr(gaddr),
+        .done(AGU_G_done)
     );
     ////////// AGU_G end //////////
 
