@@ -325,7 +325,7 @@ module Top_controller(
                         CLASS_dram: begin
                             case (op_func)
                                 FUNC_get_weight: begin // get_weight
-                                    weight_loader_buffer_sel <= num_2[7];
+                                    weight_loader_buffer_sel <= num_2[8];
                                     weight_amount <= num_1[11:0];
                                     bias_amount   <= num_2[6:0];
                                     weight_loader_en <= 1;
