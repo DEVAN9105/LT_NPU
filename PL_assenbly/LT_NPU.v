@@ -408,6 +408,7 @@ module LT_NPU(
         // basic
         .CLK(CLK),
         .rst(system_rst),
+        .PS_rst(PS_rst),
         .en(posp_control_bus[32]),
         // control bus
         .input_label(posp_control_bus[31:0]), // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
