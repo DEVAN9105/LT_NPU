@@ -11,7 +11,7 @@ module Post_processing_controller(
     
     ////////// state define //////////
     reg [1:0] next_state;
-    parameter idle = 0, processing = 1, finish = 2;
+    parameter idle = 0, processing = 1, ending = 2, finish = 3;
     ////////// state define end //////////
 
     ////////// FSM //////////
@@ -31,11 +31,15 @@ module Post_processing_controller(
             processing: begin
                 busy = 1;
                 if(valid) begin
-                    next_state = finish;
+                    next_state = ending;
                 end
                 else begin
                     next_state = processing;
                 end
+            end
+            ending: begin
+                busy = 1;
+                next_state = finish;
             end
             finish: begin
                 if(en) begin
