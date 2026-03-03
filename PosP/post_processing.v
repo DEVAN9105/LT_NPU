@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-
 module Post_processing(
     output busy,
     output reg [3:0] result,         //{'Hand', 'Tool', 'Block', 'Save_Operation'}
@@ -56,7 +55,7 @@ module Post_processing(
             input_data_valid_save <= input_data_valid;
             input_label_save <= input_label;
             input_data_save <= input_data;
-            input_data_use <= input_label_save;
+            input_data_use <= input_data_save;
         end
     end
     

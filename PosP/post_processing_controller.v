@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-
 module Post_processing_controller(
     output reg [1:0] state,
     input CLK,
