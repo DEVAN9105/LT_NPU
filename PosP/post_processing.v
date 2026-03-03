@@ -15,6 +15,7 @@ module Post_processing(
     reg input_data_valid_save;
     reg [31:0] input_label_save;
     reg [63:0] input_data_save;
+    reg [63:0] input_data_use;
     wire [1:0] state;
     wire [3:0] next_result;
     wire signed [15:0] label [3:0];
@@ -27,12 +28,12 @@ module Post_processing(
     assign label[1] = {{2{input_label_save[15]}}, input_label_save[15:8], 6'b0};
     assign label[0] = {{2{input_label_save[7]}}, input_label_save[7:0], 6'b0};
 
-    assign {data[3], data[2], data[1], data[0]} = input_data_save;
+    assign {data[3], data[2], data[1], data[0]} = input_data_use;
 
-    assign next_result[3] = state[1]? data[3] > label[3] : result;
-    assign next_result[2] = state[1]? data[2] > label[2] : result;
-    assign next_result[1] = state[1]? data[1] > label[1] : result;
-    assign next_result[0] = state[1]? data[0] > label[0] : result;
+    assign next_result[3] = state[1]? data[3] > label[3] : result[3];
+    assign next_result[2] = state[1]? data[2] > label[2] : result[2];
+    assign next_result[1] = state[1]? data[1] > label[1] : result[1];
+    assign next_result[0] = state[1]? data[0] > label[0] : result[0];
 
 
     Post_processing_controller controller(
@@ -49,12 +50,13 @@ module Post_processing(
             input_data_valid_save <= 1'b0;
             input_label_save <= 32'b0;
             input_data_save <= 64'b0;
-
+            input_data_use <= 64'b0;
         end else begin
             result <= next_result;
             input_data_valid_save <= input_data_valid;
             input_label_save <= input_label;
             input_data_save <= input_data;
+            input_data_use <= input_label_save;
         end
     end
     

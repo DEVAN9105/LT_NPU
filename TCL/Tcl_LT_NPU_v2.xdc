@@ -13,6 +13,6 @@ reset_target all [get_files  C:/Code/Vivado/LT_NPU_v2/LT_NPU_v2.srcs/sources_1/i
 generate_target all [get_files  C:/Code/Vivado/LT_NPU_v2/LT_NPU_v2.srcs/sources_1/ip/VLIW_storage/VLIW_storage.xci]
 
 ## GLB
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {C:/Vivado_test/LT_NPU/Shufflenet/GLB.coe}] [get_ips GLB]
-reset_target all [get_files  C:/Code/Vivado/LT_NPU_v2/LT_NPU_v2.srcs/sources_1/ip/GLB/GLB.xci]
-generate_target all [get_files  C:/Code/Vivado/LT_NPU_v2/LT_NPU_v2.srcs/sources_1/ip/GLB/GLB.xci]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {C:/Vivado_test/LT_NPU/Shufflenet/GLB.coe}] [get_ips GLB_1]
+reset_target all [get_files  C:/Code/Vivado/LT_NPU_v2/LT_NPU_v2.srcs/sources_1/ip/GLB_1/GLB_1.xci]
+generate_target all [get_files  C:/Code/Vivado/LT_NPU_v2/LT_NPU_v2.srcs/sources_1/ip/GLB_1/GLB_1.xci]

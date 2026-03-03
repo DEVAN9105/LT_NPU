@@ -3,8 +3,6 @@
 module LT_NPU(
     ////////// control and CLK //////////
     input CLK,
-    // button rst
-    input asynchronous_rst,
     // PS control
     input PS_en,
     input PS_rst,
@@ -71,7 +69,6 @@ module LT_NPU(
     Controller_assembly controller_assembly_inst(
         // basic
         .CLK(CLK),
-        .asynchronous_rst(asynchronous_rst),
         .PS_en(PS_en),
         .PS_rst(PS_rst),
         .system_rst(system_rst),
@@ -407,8 +404,7 @@ module LT_NPU(
     Post_processing post_processing(
         // basic
         .CLK(CLK),
-        .rst(system_rst),
-        .PS_rst(PS_rst),
+        .rst(PS_rst),
         .en(posp_control_bus[32]),
         // control bus
         .input_label(posp_control_bus[31:0]), // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
@@ -443,7 +439,8 @@ module LT_NPU(
         // 控制訊號 (Controller 至子系統)
         .i_image_start        (prep_control_bus[1]), // TODO: 連接影像啟動控制訊號
         .i_weight_start       (weight_loader_bus[20]),
-        .i_buffer_sel         (prep_control_bus[0]), // TODO: 連接乒乓緩衝區切換訊號
+        .i_image_buffer_sel   (prep_control_bus[0]), // TODO: 連接乒乓緩衝區切換訊號
+        .i_weight_buffer_sel  (weight_loader_bus[19]),
         .i_weight_len         (weight_loader_bus[18:7]),
         .i_bias_len           (weight_loader_bus[6:0]),
         // 狀態訊號 (子系統至 Controller)
