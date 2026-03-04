@@ -70,7 +70,12 @@ module GLB_output(
     wire [7:0] taddr;
     wire [2:0] core_pointer;
     wire AGU_T_en_next;
-
+    // core logic
+    always@(*) begin
+        if(glb_out_mode == 2'd1) core = 3'd5;
+        else core = 3'd0;
+    end
+    // agu_t instance
     AGU_T agu_t(
         .CLK(CLK),
         .en(SR[3]),
