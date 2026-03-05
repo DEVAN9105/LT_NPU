@@ -6,9 +6,11 @@ module tb_AGU_F;
     reg CLK;
     reg en;
     reg rst;
+    reg set;
+    reg padding;
     reg [1:0] stride;
-    reg [7:0] width_in;
-    reg [7:0] width_out;
+    reg [6:0] width_in;
+    reg [6:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
     reg [2:0] mode;
@@ -21,9 +23,11 @@ module tb_AGU_F;
     // --- Instantiation ---
     AGU_F uut (
         .CLK(CLK), 
-        .en(en),       // [修正 1] 改回正確的 port name ".en"
+        .en(en),
         .rst(rst), 
-        .mode(mode),
+        .set(set),
+        .mode_in(mode),
+        .padding_in(padding),
         .stride_X_in(stride),
         .width_in_in(width_in), 
         .width_out_in(width_out),
@@ -48,34 +52,34 @@ module tb_AGU_F;
         // 1. Initialization
         en = 0;
         rst = 1;
+        set = 0;
         
         // [修正 2] 關鍵！Post-Synthesis Simulation 必須等待 Global Reset (GSR) 釋放
-        // Xilinx 預設 GSR 時間約為 100ns。不加這行，前面的操作都會無效。
-        
-        // --- Parameters ---
-        mode = DW;
-        stride = 2;
-        width_in = 15;           // Width 0~3 (ch_stride = 4)
-        width_out = 7; 
-        ch_in = 3;
-        ch_out = 3;               
+        // Xilinx 預設 GSR 時間約為 100ns。不加這行，前面的操作都會無效。       
         
         #100;
+        
 
         // 2. Reset Sequence
         // 確保在 GSR 結束後，給一個乾淨的 Reset
         @(negedge  CLK); 
         rst = 1;
-        #20;
+        // --- Parameters ---
+        mode = maxpooling;
+        padding = 1;
+        stride = 2;
+        width_in = 63;
+        width_out = 31; 
+        ch_in = 0;
+        ch_out = 0; 
+        #5;
         rst = 0;
         
         // 等幾個 Clock 讓訊號穩定
         //repeat (5) @(posedge CLK);
-        /*#20;
-        en = 1;
+        set = 1;
         #10;
-        en = 0;*/
-        #5;
+        set = 0;
         en = 1;
         
         // 等待直到 Done 訊號拉高
