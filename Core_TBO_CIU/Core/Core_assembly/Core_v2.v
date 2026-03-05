@@ -32,7 +32,19 @@ module Core(
     ////////// store tile buffer //////////
     output [72:0] core_tbo_store_bus, // {valid, addr, din}
     ////////// core busy //////////
-    output core_busy
+    output core_busy,
+    ////////// debug //////////
+    output [15:0] debug_core_control,
+    output [63:0] debug_tbo_core_cal_data_1,
+    output [63:0] debug_tbo_core_cal_data_2,
+    output [63:0] debug_tbo_core_cal_data_3,
+    output [63:0] debug_tbo_core_cal_data_4,
+    output [63:0] debug_tbo_core_cal_data_5,
+    output [63:0] debug_tbo_core_cal_data_6,
+    output [63:0] debug_w_storage_core_data_0,
+    output [63:0] debug_b_storage_core_data_0,
+    output [72:0] debug_core_tbo_store_bus,
+    output [7:0] debug_addr_cal
     );
     
     ////////// mode define //////////
@@ -355,5 +367,19 @@ module Core(
         .core_out(din_store)
     );
     ////////// Output buffer end //////////
+    
+    ////////// debug //////////
+    assign debug_core_control = core_control;
+    assign debug_tbo_core_cal_data_1 = tbo_core_cal_data_1;
+    assign debug_tbo_core_cal_data_2 = tbo_core_cal_data_2;
+    assign debug_tbo_core_cal_data_3 = tbo_core_cal_data_3;
+    assign debug_tbo_core_cal_data_4 = tbo_core_cal_data_4;
+    assign debug_tbo_core_cal_data_5 = tbo_core_cal_data_5;
+    assign debug_tbo_core_cal_data_6 = tbo_core_cal_data_6;
+    assign debug_w_storage_core_data_0 = w_storage_core_data_0;
+    assign debug_b_storage_core_data_0 = b_storage_core_data_0;
+    assign debug_core_tbo_store_bus = core_tbo_store_bus;
+    assign debug_addr_cal = addr_cal;
+    ////////// debug end //////////
     
 endmodule
