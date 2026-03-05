@@ -223,7 +223,7 @@ module AGU_F(
 
     ////////// Stage 3 //////////
     reg [7:0] x_count,next_x_count;
-    reg signed [8:0] X, next_X; //max 127
+    reg [8:0] X, next_X; //max 127
     reg s3_done;
     reg s4_en;
     always@(posedge CLK) begin
@@ -237,7 +237,7 @@ module AGU_F(
         next_x_count = x_count;
         s3_done = 0;
         if (x_count == width_out) begin
-            next_X = $signed(0 - padding);
+            next_X = 0;
             next_x_count = 0;
             s3_done = 1;
         end
@@ -250,10 +250,6 @@ module AGU_F(
     always@(posedge CLK) begin
         if(rst) begin
             X <= 0;
-            x_count <= 0;
-        end
-        else if(set) begin
-            X <= $signed(0 - padding);
             x_count <= 0;
         end
         else begin
@@ -276,7 +272,7 @@ module AGU_F(
         end
         else begin
             if(adder_en[1]) begin
-                adder_3 <= $signed({1'b0, adder_2}) + X;
+                adder_3 <= adder_2 + X;
             end
             else begin
                 adder_3 <= adder_3;
@@ -330,7 +326,7 @@ module AGU_F(
         end
         else begin
             if(adder_en[2]) begin
-                faddr <= adder_3 + Y;
+                faddr <= adder_3 + Y - padding;
             end
             else begin
                 faddr <= faddr;
@@ -340,8 +336,7 @@ module AGU_F(
     ////////// Stage 4 end //////////
     
     //boundary signal
-    wire signed [8:0] addr_X = $signed({1'b0, adder_3});
-    wire boundary_cond = ( (addr_X < 0) || (addr_X > width_in) ) ? 1 : 0;
+    wire boundary_cond = ( (adder_3 == 0) || (adder_3 > width_in + 1) ) ? 1 : 0;
     always@(posedge CLK) begin
         if ( (padding == 1) && boundary_cond) begin
             boundary <= 1;
