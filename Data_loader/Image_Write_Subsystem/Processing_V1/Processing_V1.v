@@ -50,7 +50,6 @@ module Processing_V1 (
     // Stage 1a: Control & Intermediate Data
     reg       reg_s1a_valid_a, reg_s1a_valid_b;
     reg [1:0] reg_s1a_phase;
-    // 【修正】加回中間暫存器以對齊控制訊號的 2 cycle 延遲
     reg signed [24:0] r_sum_a_reg, g_sum_a_reg, b_sum_a_reg;
     reg signed [24:0] r_sum_b_reg, g_sum_b_reg, b_sum_b_reg;
 
@@ -100,26 +99,30 @@ module Processing_V1 (
                 x_clk_cnt <= x_clk_cnt + 1;
             end
 
-            if ((mod3_cnt == 2'd0) && (x_clk_cnt >= CNT_CROP_END) && (x_clk_cnt < CNT_ACTIVE_END)) begin
+            // 🌟 垂直降採樣: mod3_cnt == 1 (取第 1, 4, 7... 行)
+            if ((mod3_cnt == 2'd1) && (x_clk_cnt >= CNT_CROP_END) && (x_clk_cnt < CNT_ACTIVE_END)) begin
                 s1_phase_ref <= phase_cnt; 
                 case (phase_cnt)
                     2'd0: begin
-                        s1_y_a <= {5'd0, in_y0}; s1_u_a <= {5'd0, in_u0}; s1_v_a <= {5'd0, in_v0};
+                        // 🌟 取中心點 1 (對應此拍的 y1)
+                        s1_y_a <= {5'd0, in_y1}; s1_u_a <= {5'd0, in_u0}; s1_v_a <= {5'd0, in_v0};
                         s1_valid_a <= 1;
-                        s1_y_b <= {5'd0, in_y3}; s1_u_b <= {5'd0, in_u2}; s1_v_b <= {5'd0, in_v2};
-                        s1_valid_b <= 1;
+                        s1_valid_b <= 0; // 只取一個點
                         phase_cnt <= 2'd1;
                     end
                     2'd1: begin
-                        s1_y_a <= {5'd0, in_y2}; s1_u_a <= {5'd0, in_u2}; s1_v_a <= {5'd0, in_v2};
+                        // 🌟 取中心點 2 (對應此拍的 y0) 與 中心點 3 (對應此拍的 y3)
+                        s1_y_a <= {5'd0, in_y0}; s1_u_a <= {5'd0, in_u0}; s1_v_a <= {5'd0, in_v0};
                         s1_valid_a <= 1;
-                        s1_valid_b <= 0;
+                        s1_y_b <= {5'd0, in_y3}; s1_u_b <= {5'd0, in_u2}; s1_v_b <= {5'd0, in_v2};
+                        s1_valid_b <= 1; // 取兩個點
                         phase_cnt <= 2'd2;
                     end
                     2'd2: begin
-                        s1_y_a <= {5'd0, in_y1}; s1_u_a <= {5'd0, in_u0}; s1_v_a <= {5'd0, in_v0};
+                        // 🌟 取中心點 4 (對應此拍的 y2)
+                        s1_y_a <= {5'd0, in_y2}; s1_u_a <= {5'd0, in_u2}; s1_v_a <= {5'd0, in_v2};
                         s1_valid_a <= 1;
-                        s1_valid_b <= 0;
+                        s1_valid_b <= 0; // 只取一個點
                         phase_cnt <= 2'd0;
                     end
                 endcase
@@ -136,7 +139,7 @@ module Processing_V1 (
     end
 
     // =========================================================================
-    // 4. Stage 1: DSP Multiplication
+    // 4. Stage 1: DSP Multiplication (維持不變)
     // =========================================================================
     (* use_dsp = "yes" *) wire signed [24:0] mult_y_298_a = s1_y_a * 298;
     (* use_dsp = "yes" *) wire signed [24:0] mult_u_100_a = s1_u_a * 100;
@@ -151,9 +154,8 @@ module Processing_V1 (
     (* use_dsp = "yes" *) wire signed [24:0] mult_v_409_b = s1_v_b * 409;
 
     // =========================================================================
-    // Stage 1a: Summation Logic (Force LUTs + Align Timing)
+    // Stage 1a: Summation Logic (維持不變)
     // =========================================================================
-    // 1. 先用 wire 定義純邏輯加法 (強制不使用 DSP)
     (* use_dsp = "no" *) wire signed [24:0] w_r_sum_a = mult_y_298_a + mult_v_409_a + R_CONST;
     (* use_dsp = "no" *) wire signed [24:0] w_g_sum_a = mult_y_298_a - mult_u_100_a - mult_v_208_a + G_CONST;
     (* use_dsp = "no" *) wire signed [24:0] w_b_sum_a = mult_y_298_a + mult_u_516_a + B_CONST;
@@ -162,18 +164,15 @@ module Processing_V1 (
     (* use_dsp = "no" *) wire signed [24:0] w_g_sum_b = mult_y_298_b - mult_u_100_b - mult_v_208_b + G_CONST;
     (* use_dsp = "no" *) wire signed [24:0] w_b_sum_b = mult_y_298_b + mult_u_516_b + B_CONST;
 
-    // 2. 存入暫存器 (Stage 1a) 以對齊 reg_s1a_valid 的延遲
     always @(posedge aclk or negedge aresetn) begin
         if (!aresetn) begin
             reg_s1a_valid_a <= 0;
             reg_s1a_valid_b <= 0;
             s2_valid_a <= 0;
             s2_valid_b <= 0;
-            // Data regs reset is optional
         end else if (m_axis_tready) begin 
-            // --- Pipeline Stage 1a (Alignment) ---
             if (s1_valid_a) begin
-                r_sum_a_reg <= w_r_sum_a; // 存入中間暫存
+                r_sum_a_reg <= w_r_sum_a; 
                 g_sum_a_reg <= w_g_sum_a;
                 b_sum_a_reg <= w_b_sum_a;
             end
@@ -183,12 +182,11 @@ module Processing_V1 (
                 b_sum_b_reg <= w_b_sum_b;
             end
             
-            reg_s1a_valid_a <= s1_valid_a; // 延遲 1
+            reg_s1a_valid_a <= s1_valid_a; 
             reg_s1a_valid_b <= s1_valid_b;
             reg_s1a_phase   <= s1_phase_ref;
 
-            // --- Pipeline Stage 2 (Output) ---
-            s2_r_a <= r_sum_a_reg; // 讀取中間暫存 (延遲 2)
+            s2_r_a <= r_sum_a_reg; 
             s2_g_a <= g_sum_a_reg;
             s2_b_a <= b_sum_a_reg;
             
@@ -196,7 +194,7 @@ module Processing_V1 (
             s2_g_b <= g_sum_b_reg;
             s2_b_b <= b_sum_b_reg;
             
-            s2_valid_a   <= reg_s1a_valid_a; // 讀取延遲後的 Valid (延遲 2)
+            s2_valid_a   <= reg_s1a_valid_a; 
             s2_valid_b   <= reg_s1a_valid_b;
             s2_phase_ref <= reg_s1a_phase;
         end
@@ -233,8 +231,20 @@ module Processing_V1 (
             if (s2_valid_a) begin
                 case (s2_phase_ref)
                     2'd0: begin
-                        m_axis_tdata  <= {pixel_b, pixel_a};
+                        // 🌟 只收到中心點 1 (pixel_a)，寫入暫存器等待
+                        pending_pixel_reg <= pixel_a;
+                        m_axis_tvalid <= 0; 
+                    end
+
+                    2'd1: begin
+                        // 🌟 收到中心點 2 (pixel_a) 與中心點 3 (pixel_b)
+                        // 把 {新的 pixel_a, 舊的暫存} 包裝成 128-bit 吐出去
+                        m_axis_tdata  <= {pixel_a, pending_pixel_reg};
                         m_axis_tvalid <= 1;
+                        // 🌟 同一拍，把中心點 3 (pixel_b) 蓋掉舊暫存，留給下一拍用
+                        // (利用非阻塞 <=，m_axis_tdata 吃到的是更新前的 pending_pixel_reg)
+                        pending_pixel_reg <= pixel_b;
+
                         if (out_x_cnt == 63) begin
                             out_x_cnt <= 0;
                             if (out_y_cnt == 127) begin
@@ -248,14 +258,12 @@ module Processing_V1 (
                         end
                     end
 
-                    2'd1: begin
-                        pending_pixel_reg <= pixel_a;
-                        m_axis_tvalid <= 0; 
-                    end
-
                     2'd2: begin
+                        // 🌟 收到中心點 4 (pixel_a)
+                        // 把 {新的 pixel_a, 剛才存的中心點 3} 包裝成 128-bit 吐出去
                         m_axis_tdata  <= {pixel_a, pending_pixel_reg};
                         m_axis_tvalid <= 1;
+                        
                         if (out_x_cnt == 63) begin
                             out_x_cnt <= 0;
                             if (out_y_cnt == 127) begin

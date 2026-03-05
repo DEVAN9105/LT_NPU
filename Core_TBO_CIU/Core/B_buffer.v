@@ -6,14 +6,14 @@ module B_buffer(
     input CLK,
     input rst,
     input en,
-    input [63:0]bdata_0,
-    input [63:0]bdata_1,
-    input [63:0]bdata_2,
-    input [63:0]bdata_3,
-    output reg [63:0]bias_0,
-    output reg [63:0]bias_1,
-    output reg [63:0]bias_2,
-    output reg [63:0]bias_3
+    input [31:0]bdata_0,
+    input [31:0]bdata_1,
+    input [31:0]bdata_2,
+    input [31:0]bdata_3,
+    output reg [31:0]bias_0,
+    output reg [31:0]bias_1,
+    output reg [31:0]bias_2,
+    output reg [31:0]bias_3
     );
     
     always@(posedge CLK) begin

@@ -2,7 +2,6 @@
 
 module Top_controller(
     input CLK,
-    input asynchronous_rst,
     input PS_en,
     input PS_rst,
     output reg system_rst,
@@ -53,11 +52,8 @@ module Top_controller(
     ////////// Instruction RAM interface //////////
     // initial determine
     reg initial_det;
-    always@(posedge CLK or negedge asynchronous_rst) begin
-        if(!asynchronous_rst) begin
-            initial_det <= 0;
-        end
-        else if(PS_rst) begin
+    always@(posedge CLK) begin
+        if(PS_rst) begin
             initial_det <= 0;
         end
         else if(PS_en) begin
@@ -74,11 +70,8 @@ module Top_controller(
     always@(*) begin
         next_PC = PC + PC_en;
     end
-    always@(posedge CLK or negedge asynchronous_rst) begin
-        if(!asynchronous_rst) begin
-            PC <= 0;
-        end
-        else if(PS_rst) begin
+    always@(posedge CLK) begin
+        if(PS_rst) begin
             PC <= 0;
         end
         else if(system_rst && initial_det) begin
@@ -126,11 +119,8 @@ module Top_controller(
 
     ////////// Start Signal //////////
     reg PS_en_d; // Delayed version of PS_en for edge detection
-    always @(posedge CLK or negedge asynchronous_rst) begin
-        if (!asynchronous_rst) begin
-            PS_en_d <= 0;
-        end
-        else if (PS_rst) begin
+    always @(posedge CLK) begin
+        if (PS_rst) begin
             PS_en_d <= 0; // Latch the start signal
         end
         else begin
@@ -150,7 +140,7 @@ module Top_controller(
         case (state)
             S_idle: begin
                 system_rst = 1;
-                if(PS_start_pulse) next_state = S_set_0;
+                if(PS_en) next_state = S_set_0;
                 else next_state = S_idle;
             end
             S_set_0: begin
@@ -225,29 +215,8 @@ module Top_controller(
     ////////// Next State Logic and PC_en end //////////
 
     ////////// FSM and register //////////
-    always @(posedge CLK or negedge asynchronous_rst) begin
-        if(!asynchronous_rst) begin
-            state <= S_idle;
-            // VLIW control
-            lower_controller_en <= 0;
-            VLIW_initial <= 0;
-            VLIW_length <= 0;
-            // Weight Loader control
-            weight_loader_en <= 0;
-            weight_amount <= 0;
-            bias_amount <= 0;
-            // Instruction Loader control
-            instruction_loader_en <= 0;
-            // param
-            output_combined <= 0;
-            input_combined <= 0;
-            double_buffer_sel <= 0;
-            cycle_tile_size <= 0;
-            output_ch_to_Y_initial <= 0;
-            input_ch_to_Y_initial <= 0;
-            posp_param <= 32'd0;
-        end
-        else if(PS_rst) begin
+    always @(posedge CLK) begin
+        if(PS_rst) begin
             state <= S_idle;
             // VLIW control
             lower_controller_en <= 0;

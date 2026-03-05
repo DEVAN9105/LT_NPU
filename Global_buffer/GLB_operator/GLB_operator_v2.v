@@ -105,8 +105,8 @@ module GLB_operator(
     end
     // glb instance
     GLB glb(
-        .clka(CLK),
-        .clkb(CLK),
+        .CLK(CLK),
+        .rst(rst),
         // port a
         .ena(glb_input_bus[78]),
         .wea(glb_input_bus[78]),

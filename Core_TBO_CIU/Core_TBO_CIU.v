@@ -159,8 +159,8 @@ module Core_TBO_CIU(
 
     ////////// W_storage //////////
     W_storage w_storage_0(
-        .clka(CLK),
-        .clkb(CLK),
+        .CLK(CLK),
+        .rst(rst),
         // port a
         .ena(weight_loader_w_storage_bus[79]),
         .wea(weight_loader_w_storage_bus[79]),
@@ -173,8 +173,8 @@ module Core_TBO_CIU(
         .doutb(w_storage_core_data[255:192])
     );
     W_storage w_storage_1(
-        .clka(CLK),
-        .clkb(CLK),
+        .CLK(CLK),
+        .rst(rst),
         // port a
         .ena(weight_loader_w_storage_bus[78]),
         .wea(weight_loader_w_storage_bus[78]),
@@ -187,8 +187,8 @@ module Core_TBO_CIU(
         .doutb(w_storage_core_data[191:128])
     );
     W_storage w_storage_2(
-        .clka(CLK),
-        .clkb(CLK),
+        .CLK(CLK),
+        .rst(rst),
         // port a
         .ena(weight_loader_w_storage_bus[77]),
         .wea(weight_loader_w_storage_bus[77]),
@@ -201,8 +201,8 @@ module Core_TBO_CIU(
         .doutb(w_storage_core_data[127:64])
     );
     W_storage w_storage_3(
-        .clka(CLK),
-        .clkb(CLK),
+        .CLK(CLK),
+        .rst(rst),
         // port a
         .ena(weight_loader_w_storage_bus[76]),
         .wea(weight_loader_w_storage_bus[76]),

@@ -2,7 +2,6 @@
 
 module Controller_assembly(
     input CLK,
-    input asynchronous_rst,
     input PS_en,
     input PS_rst,
     output system_rst,
@@ -136,7 +135,6 @@ module Controller_assembly(
     wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
     Top_controller top_controller(
         .CLK(CLK),
-        .asynchronous_rst(asynchronous_rst),
         .PS_en(PS_en),
         .PS_rst(PS_rst),
         .system_rst(system_rst),

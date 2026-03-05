@@ -49,7 +49,7 @@ module Data_loader (
     // 3. 影像讀取介面 (連接後級 Global Buffer)
     // ==========================================
     input  wire         i_prep_rd_en,    // 讀取致能
-    input  wire [6:0]   i_prep_rd_addr,  // 讀取位址
+    input  wire [7:0]   i_prep_rd_addr,  // 讀取位址
     output wire         o_prep_rd_valid, // 讀取資料有效訊號 (經過 3 拍延遲對齊)
     output wire [63:0]  o_prep_rd_data,  // 讀取資料 (經過管線化暫存)
 
@@ -102,7 +102,7 @@ module Data_loader (
     // 影像內部 BRAM 接線
     wire [6:0]  internal_img_addr;
     wire        internal_img_we;
-    wire [63:0] internal_img_data;
+    wire [127:0] internal_img_data;
     
     wire [63:0] bram_rd_data;
 
@@ -213,19 +213,21 @@ module Data_loader (
     // =========================================================================
     // 5. 輸出匯流排打包 (Bus Packaging)
     // =========================================================================
-    assign o_wgt_storage_bus_1 = {l_wwe1, l_wa1, l_d1};
-    assign o_wgt_storage_bus_2 = {l_wwe2, l_wa2, l_d2};
-    assign o_wgt_storage_bus_3 = {l_wwe3, l_wa3, l_d3};
-    assign o_wgt_storage_bus_4 = {l_wwe4, l_wa4, l_d4};
-    assign o_wgt_storage_bus_5 = {l_wwe5, l_wa5, l_d5};
-    assign o_wgt_storage_bus_6 = {l_wwe6, l_wa6, l_d6};
+    // === Weight Storage Bus (wwe 順序反轉: 3 2 1 0 -> 0 1 2 3) ===
+    assign o_wgt_storage_bus_1 = {{l_wwe1[0], l_wwe1[1], l_wwe1[2], l_wwe1[3]}, l_wa1, l_d1};
+    assign o_wgt_storage_bus_2 = {{l_wwe2[0], l_wwe2[1], l_wwe2[2], l_wwe2[3]}, l_wa2, l_d2};
+    assign o_wgt_storage_bus_3 = {{l_wwe3[0], l_wwe3[1], l_wwe3[2], l_wwe3[3]}, l_wa3, l_d3};
+    assign o_wgt_storage_bus_4 = {{l_wwe4[0], l_wwe4[1], l_wwe4[2], l_wwe4[3]}, l_wa4, l_d4};
+    assign o_wgt_storage_bus_5 = {{l_wwe5[0], l_wwe5[1], l_wwe5[2], l_wwe5[3]}, l_wa5, l_d5};
+    assign o_wgt_storage_bus_6 = {{l_wwe6[0], l_wwe6[1], l_wwe6[2], l_wwe6[3]}, l_wa6, l_d6};
 
-    assign o_bias_storage_bus_1 = {l_bwe1, l_ba1, l_d1};
-    assign o_bias_storage_bus_2 = {l_bwe2, l_ba2, l_d2};
-    assign o_bias_storage_bus_3 = {l_bwe3, l_ba3, l_d3};
-    assign o_bias_storage_bus_4 = {l_bwe4, l_ba4, l_d4};
-    assign o_bias_storage_bus_5 = {l_bwe5, l_ba5, l_d5};
-    assign o_bias_storage_bus_6 = {l_bwe6, l_ba6, l_d6};
+    // === Bias Storage Bus (bwe 順序反轉: 3 2 1 0 -> 0 1 2 3) ===
+    assign o_bias_storage_bus_1 = {{l_bwe1[0], l_bwe1[1], l_bwe1[2], l_bwe1[3]}, l_ba1, l_d1};
+    assign o_bias_storage_bus_2 = {{l_bwe2[0], l_bwe2[1], l_bwe2[2], l_bwe2[3]}, l_ba2, l_d2};
+    assign o_bias_storage_bus_3 = {{l_bwe3[0], l_bwe3[1], l_bwe3[2], l_bwe3[3]}, l_ba3, l_d3};
+    assign o_bias_storage_bus_4 = {{l_bwe4[0], l_bwe4[1], l_bwe4[2], l_bwe4[3]}, l_ba4, l_d4};
+    assign o_bias_storage_bus_5 = {{l_bwe5[0], l_bwe5[1], l_bwe5[2], l_bwe5[3]}, l_ba5, l_d5};
+    assign o_bias_storage_bus_6 = {{l_bwe6[0], l_bwe6[1], l_bwe6[2], l_bwe6[3]}, l_ba6, l_d6};
     
     // =========================================================================
     // 系統狀態輸出邏輯

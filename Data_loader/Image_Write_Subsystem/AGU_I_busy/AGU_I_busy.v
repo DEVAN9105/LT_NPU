@@ -25,7 +25,7 @@ module AGU_I_busy (
 
     // --- 狀態介面 ---
     output reg         tile_done,        // 單行處理完成訊號
-    output reg         o_busy,           // 模組忙碌狀態指示
+    output reg         o_busy,           // 🌟 改回 reg：利用 D型觸發器的自然延遲
     output wire        o_ready           // 背壓訊號 (輸出至 Preprocessing)
 );
 
@@ -37,10 +37,6 @@ module AGU_I_busy (
     reg [5:0] beat_cnt;          // 內部計數器 (0~63)
     reg       wait_for_start;    // 等待啟動狀態旗標
     reg       active_buffer_sel; // 當前鎖定之 Buffer 選擇
-
-    // --- 上升緣偵測邏輯 ---
-    reg [1:0] start_shift;
-    wire      start_pulse = ~start_shift[1] & start_shift[0]; // 偵測 i_layer_start 上升緣
 
     // --- 背壓控制 ---
     assign o_ready = !wait_for_start && rst_n;
@@ -63,9 +59,8 @@ module AGU_I_busy (
         if (!rst_n) begin
             // 1. 非同步重置
             beat_cnt          <= 6'd0;
-            wait_for_start    <= 1'b1; // 初始化為等待指令狀態
+            wait_for_start    <= 1'b1; 
             active_buffer_sel <= 1'b0;
-            start_shift       <= 2'b0;
             
             uram_addr         <= 7'd0;
             uram_we           <= 1'b0;
@@ -77,7 +72,6 @@ module AGU_I_busy (
             beat_cnt          <= 6'd0;
             wait_for_start    <= 1'b1; 
             active_buffer_sel <= 1'b0;
-            start_shift       <= 2'b0;
             
             uram_addr         <= 7'd0;
             uram_we           <= 1'b0;
@@ -87,22 +81,20 @@ module AGU_I_busy (
         end else begin
             // 3. 正常運作邏輯
             
-            // 3.1 邊緣偵測更新
-            start_shift <= {start_shift[0], i_layer_start};
-
-            // 3.2 參數更新
-            if (!wait_for_start || start_pulse) begin
+            // 3.1 參數更新 
+            if (!wait_for_start || i_layer_start) begin
                 active_buffer_sel <= next_active_buffer_sel;
             end
 
-            // 3.3 交握與資料寫入控制
+            // 3.2 交握與資料寫入控制
             if (wait_for_start) begin
-                uram_we <= 1'b0; // 等待期間關閉寫入
+                uram_we <= 1'b0; 
                 
-                if (start_pulse) begin
+                // 🌟 當前 Clock 看到外部 i_layer_start 為 1 時執行
+                if (i_layer_start) begin 
                     wait_for_start <= 1'b0; 
                     tile_done      <= 1'b0; 
-                    o_busy         <= 1'b1; // 啟動傳輸，拉高 Busy
+                    o_busy         <= 1'b1; // 🌟 賦值 1，會在「下一個 Clock 上升緣」對外生效！
                 end
             end else begin
                 // 資料接收與處理
@@ -115,8 +107,8 @@ module AGU_I_busy (
                     end else begin
                         // 單行傳輸完成
                         beat_cnt       <= 6'd0;
-                        tile_done      <= 1'b1; // 發送完成訊號
-                        wait_for_start <= 1'b1; // 進入等待狀態
+                        tile_done      <= 1'b1; 
+                        wait_for_start <= 1'b1; 
                         o_busy         <= 1'b0; // 傳輸結束，降下 Busy
                     end
                 end else begin
