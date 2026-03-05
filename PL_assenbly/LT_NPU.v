@@ -195,6 +195,21 @@ module LT_NPU(
     );
     ////////// Global Buffer Assembly end //////////
 
+    ////////// debug //////////
+    (* mark_debug = "true" *) wire [15:0] debug_core_control;
+    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_1;
+    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_2;
+    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_3;
+    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_4;
+    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_5;
+    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_6;
+    (* mark_debug = "true" *) wire [63:0] debug_w_storage_core_data_0;
+    (* mark_debug = "true" *) wire [31:0] debug_b_storage_core_data_0;
+    (* mark_debug = "true" *) wire [72:0] debug_core_tbo_store_bus;
+    (* mark_debug = "true" *) wire [7:0] debug_addr_cal;
+    ////////// debug end //////////
+
+
     ////////// Core_TBO_CIU Assembly //////////
     wire [71:0] stream_a_14, stream_a_45, stream_a_56, stream_a_63, stream_a_32, stream_a_21;
     wire [71:0] stream_b_12, stream_b_23, stream_b_36, stream_b_65, stream_b_54, stream_b_41;
@@ -241,7 +256,19 @@ module LT_NPU(
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
-        .core_busy(core_1_busy)
+        .core_busy(core_1_busy),
+        // debug
+        .debug_core_control(debug_core_control),
+        .debug_tbo_core_cal_data_1(debug_tbo_core_cal_data_1),
+        .debug_tbo_core_cal_data_2(debug_tbo_core_cal_data_2),
+        .debug_tbo_core_cal_data_3(debug_tbo_core_cal_data_3),
+        .debug_tbo_core_cal_data_4(debug_tbo_core_cal_data_4),
+        .debug_tbo_core_cal_data_5(debug_tbo_core_cal_data_5),
+        .debug_tbo_core_cal_data_6(debug_tbo_core_cal_data_6),
+        .debug_w_storage_core_data_0(debug_w_storage_core_data_0),
+        .debug_b_storage_core_data_0(debug_b_storage_core_data_0),
+        .debug_core_tbo_store_bus(debug_core_tbo_store_bus),
+        .debug_addr_cal(debug_addr_cal)
     );
 
     // Core 2

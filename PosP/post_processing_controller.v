@@ -34,7 +34,7 @@ module Post_processing_controller(
                         next_state = state;
                 end
             2'b10:
-                next_state = 2'b00;
+                next_state = state;
             default:
                 next_state = 2'b00;
         endcase

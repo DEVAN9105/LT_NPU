@@ -36,7 +36,19 @@ module Core_TBO_CIU(
     // B_storage
     input [74:0] weight_loader_b_storage_bus, // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
     // core busy
-    output core_busy
+    output core_busy,
+    ////////// debug //////////
+    output [15:0] debug_core_control,
+    output [63:0] debug_tbo_core_cal_data_1,
+    output [63:0] debug_tbo_core_cal_data_2,
+    output [63:0] debug_tbo_core_cal_data_3,
+    output [63:0] debug_tbo_core_cal_data_4,
+    output [63:0] debug_tbo_core_cal_data_5,
+    output [63:0] debug_tbo_core_cal_data_6,
+    output [63:0] debug_w_storage_core_data_0,
+    output [63:0] debug_b_storage_core_data_0,
+    output [72:0] debug_core_tbo_store_bus,
+    output [7:0] debug_addr_cal
     );
 
     ////////// CIU //////////
@@ -153,7 +165,19 @@ module Core_TBO_CIU(
         // store tile buffer
         .core_tbo_store_bus(core_tbo_store_bus), // {valid, addr, din}
         // core busy
-        .core_busy(core_busy)
+        .core_busy(core_busy),
+        // debug
+        .debug_core_control(debug_core_control),
+        .debug_tbo_core_cal_data_1(debug_tbo_core_cal_data_1),
+        .debug_tbo_core_cal_data_2(debug_tbo_core_cal_data_2),
+        .debug_tbo_core_cal_data_3(debug_tbo_core_cal_data_3),
+        .debug_tbo_core_cal_data_4(debug_tbo_core_cal_data_4),
+        .debug_tbo_core_cal_data_5(debug_tbo_core_cal_data_5),
+        .debug_tbo_core_cal_data_6(debug_tbo_core_cal_data_6),
+        .debug_w_storage_core_data_0(debug_w_storage_core_data_0),
+        .debug_b_storage_core_data_0(debug_b_storage_core_data_0),
+        .debug_core_tbo_store_bus(debug_core_tbo_store_bus),
+        .debug_addr_cal(debug_addr_cal)
     );
     ////////// Core end //////////
 
