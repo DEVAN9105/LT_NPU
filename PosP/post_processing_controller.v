@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+
 module Post_processing_controller(
     output reg [1:0] state,
     input CLK,
@@ -34,6 +35,8 @@ module Post_processing_controller(
                         next_state = state;
                 end
             2'b10:
+                next_state = 2'b11;
+            2'b11:
                 next_state = state;
             default:
                 next_state = 2'b00;
