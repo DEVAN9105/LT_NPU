@@ -64,7 +64,7 @@ module Controller_assembly(
     output [1:0] prep_control_bus, // {prep_en, prep_buffer_sel}
 
     ////////// PosP control and parameters //////////
-    output [32:0] posp_control_bus, // {posp_en[32], hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+    output posp_control_en,
 
     ////////// PL status //////////
     output PL_busy
@@ -98,7 +98,7 @@ module Controller_assembly(
     wire [10:0] lower_en_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
     wire [132:0] VLIW_num;
     wire lower_controller_busy;
-    assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, glb_output_en, glb_input_en, cycle_en, prep_control_bus[1], posp_control_bus[32]}
+    assign {core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6, glb_output_en, glb_input_en, cycle_en, prep_control_bus[1], posp_control_en}
         = lower_en_bus;
     reg [10:0] lower_busy_bus_buffer;
     always@(posedge CLK) begin
@@ -163,7 +163,6 @@ module Controller_assembly(
         .cycle_tile_size(cycle_tile_size),      // {cycle_tile_size[7:0]}
         .output_ch_to_Y_initial(output_ch_to_Y_initial),
         .input_ch_to_Y_initial(input_ch_to_Y_initial),
-        .posp_param(posp_control_bus[31:0]),           // {hand_th, tool_th, block_th, safe_th}
         // system status
         .PL_busy(PL_busy)                      // PL working, notify PS
     );

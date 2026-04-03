@@ -36,7 +36,6 @@ module Top_controller(
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
     output reg [10:0] output_ch_to_Y_initial,
     output reg [10:0] input_ch_to_Y_initial,
-    output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
     ////////// System status //////////
     output reg PL_busy                      // PL working, notify PS
 );
@@ -91,7 +90,6 @@ module Top_controller(
     localparam FUNC_buffer_initial   = 3'd2;
     localparam FUNC_core_param       = 3'd3;
     localparam FUNC_ch_order         = 3'd4;
-    localparam FUNC_posp_param       = 3'd5;
     // Class 1: DRAM
     localparam CLASS_dram            = 3'd1;
     localparam FUNC_get_instruction  = 3'd0;
@@ -235,7 +233,6 @@ module Top_controller(
             cycle_tile_size <= 0;
             output_ch_to_Y_initial <= 0;
             input_ch_to_Y_initial <= 0;
-            posp_param <= 32'd0;
         end
         else begin
             state <= next_state;
@@ -258,7 +255,6 @@ module Top_controller(
                     cycle_tile_size <= 0;
                     output_ch_to_Y_initial <= 0;
                     input_ch_to_Y_initial <= 0;
-                    posp_param <= 32'd0;
                 end
                 S_decode: begin
                     weight_loader_en <= 0;
@@ -282,9 +278,6 @@ module Top_controller(
                                 FUNC_ch_order: begin // Change_channel_order
                                     output_ch_to_Y_initial <= num_1[10:0];
                                     input_ch_to_Y_initial <= num_2[10:0];
-                                end
-                                FUNC_posp_param: begin // Change_postprocess_parameter
-                                    posp_param <= {num_1, num_2};
                                 end
                                 default: begin
                                     // none

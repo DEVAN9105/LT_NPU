@@ -18,6 +18,9 @@ module LT_NPU(
     input  wire         s_axis_image_tlast,
     output wire         s_axis_image_tready,
 
+    ////////// Thresholds //////////
+    input [31:0] posp_param_in, // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+
     ////////// output //////////
     output [3:0] inference_result
     );
@@ -58,7 +61,7 @@ module LT_NPU(
     // PreP control
     wire [1:0] prep_control_bus; // {prep_en, prep_buffer_sel}
     // PosP control
-    wire [32:0] posp_control_bus; // {posp_en[32], hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+    wire posp_control_en;
 
     ////////// dummy assign //////////
     assign instruction_loader_busy = 1'b0;
@@ -121,7 +124,7 @@ module LT_NPU(
         .prep_control_bus(prep_control_bus), // {prep_en, prep_buffer_sel}
 
         // PosP control and parameters
-        .posp_control_bus(posp_control_bus), // {posp_en[32], hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+        .posp_control_en(posp_control_en),
 
         // PL status
         .PL_busy(PL_busy)
@@ -428,13 +431,26 @@ module LT_NPU(
     ////////// Core_TBO_CIU Assembly end //////////
 
     ////////// Post-processing //////////
+    reg [31:0] posp_param;
+    always@(posedge CLK) begin
+        if(system_rst) begin
+            posp_param <= 32'd0;
+        end
+        else if(PS_en) begin
+            posp_param <= posp_param_in;
+        end
+        else begin
+            posp_param <= posp_param;
+        end
+    end
+
     Post_processing post_processing(
         // basic
         .CLK(CLK),
         .rst(PS_rst),
-        .en(posp_control_bus[32]),
+        .en(posp_control_en),
         // control bus
-        .input_label(posp_control_bus[31:0]), // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
+        .input_label(posp_param), // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
         // input data
         .input_data_valid(glb_posp_load_bus[72]),
         .input_data(glb_posp_load_bus[63:0]),
