@@ -22,7 +22,7 @@ module Top_controller(
     output reg [9:0] VLIW_length,
     // Weight Loader control
     output reg weight_loader_en,
-    output reg weight_loader_buffer_sel,
+    output reg [1:0] weight_loader_buffer_sel,
     output reg [11:0] weight_amount,
     output reg [6:0] bias_amount,
     // Instruction Loader control
@@ -32,7 +32,7 @@ module Top_controller(
     // param
     output reg [16:0] output_combined,      // {glb_out_mode, width_out, ch_out}
     output reg [16:0] input_combined,       // {glb_in_mode, width_in, ch_in}
-    output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
+    output reg [ 5:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
     output reg [10:0] output_ch_to_Y_initial,
     output reg [10:0] input_ch_to_Y_initial,
@@ -274,7 +274,7 @@ module Top_controller(
                                     input_combined  <= {num_1[1:0], num_2[14:0]};
                                 end
                                 FUNC_buffer_initial: begin // Change_GLB_parameter
-                                    double_buffer_sel  <= num_1[3:0];
+                                    double_buffer_sel  <= num_1[5:0];
                                 end
                                 FUNC_core_param: begin // Change_core_parameter
                                     cycle_tile_size <= num_1[7:0];
@@ -294,7 +294,7 @@ module Top_controller(
                         CLASS_dram: begin
                             case (op_func)
                                 FUNC_get_weight: begin // get_weight
-                                    weight_loader_buffer_sel <= num_2[8];
+                                    weight_loader_buffer_sel <= num_2[9:8];
                                     weight_amount <= num_1[11:0];
                                     bias_amount   <= num_2[6:0];
                                     weight_loader_en <= 1;

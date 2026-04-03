@@ -10,7 +10,7 @@ module Param_decoder(
     // IS
     input [16:0] output_combined, // {glb_out_mode, width_out, ch_out}
     input [16:0] input_combined, // {glb_in_mode, width_in, ch_in}
-    input [3:0] double_buffer_sel, // {output_glb, input_glb, W_storage, B_storage}
+    input [5:0] double_buffer_sel, // {output_glb, input_glb, W_storage[1:0], B_storage[1:0]}
     input [7:0] cycle_tile_size,
 
     ////////// CIU //////////
@@ -30,12 +30,12 @@ module Param_decoder(
     // control signal
     output [15:0] core_control, // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
     // AGU initial
-    output [27:0] core_AGU_initial_1, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_2, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_3, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_4, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_5, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_6, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_1, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_2, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_3, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_4, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_5, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_6, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     // tile size
     output [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
 
@@ -95,7 +95,7 @@ module Param_decoder(
         end
     end
     // AGU_W, AGU_B, AGU_G, AGU_T
-    reg [11:0] AGU_W_initial;
+    reg [12:0] AGU_W_initial;
     reg [7:0] AGU_B_initial;
     reg [13:0] input_AGU_G_initial, output_AGU_G_initial;
     reg [7:0] input_AGU_T_initial, output_AGU_T_initial;
@@ -116,19 +116,35 @@ module Param_decoder(
             input_AGU_G_initial = 14'd0 + VLIW_num[55:42];
         end
         // AGU_W
-        if(double_buffer_sel[1]) begin
-            AGU_W_initial = 12'd2048 + VLIW_num[125:114];
-        end
-        else begin
-            AGU_W_initial = 12'd0 + VLIW_num[125:114];
-        end
+        case(double_buffer_sel[3:2])
+            2'b11, 2'b10: begin
+                AGU_W_initial = 13'd4096 + {1'b0, VLIW_num[125:114]};
+            end
+            2'b01: begin
+                AGU_W_initial = 13'd2048 + {1'b0, VLIW_num[125:114]};
+            end
+            2'b00: begin
+                AGU_W_initial = 13'd0 + {1'b0, VLIW_num[125:114]};
+            end
+            default: begin
+                AGU_W_initial = 13'd0 + {1'b0, VLIW_num[125:114]};
+            end
+        endcase
         // AGU_B
-        if(double_buffer_sel[0]) begin
-            AGU_B_initial = 8'd128 + VLIW_num[113:106];
-        end
-        else begin
-            AGU_B_initial = 8'd0 + VLIW_num[113:106];
-        end
+        case(double_buffer_sel[1:0])
+            2'b11, 2'b10: begin
+                AGU_B_initial = 8'd128 + VLIW_num[113:106];
+            end
+            2'b01: begin
+                AGU_B_initial = 8'd64 + VLIW_num[113:106];
+            end
+            2'b00: begin
+                AGU_B_initial = 8'd0 + VLIW_num[113:106];
+            end
+            default: begin
+                AGU_B_initial = 8'd0 + VLIW_num[113:106];
+            end
+        endcase
         input_AGU_T_initial = VLIW_num[41:34];
         output_AGU_T_initial = VLIW_num[19:12];
     end

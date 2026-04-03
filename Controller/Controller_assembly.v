@@ -19,7 +19,7 @@ module Controller_assembly(
     output instruction_loader_en,
 
     ////////// Weight Loader control //////////
-    output [20:0] weight_loader_bus, // {en[20], double_buffer_sel[19], weight_amount[18:7], bias_amount[6:0]}
+    output [21:0] weight_loader_bus, // {en[21], double_buffer_sel[20:19], weight_amount[18:7], bias_amount[6:0]}
 
     ////////// Core control and parameters //////////
     // control signal
@@ -31,12 +31,12 @@ module Controller_assembly(
     output core_en_6,
     output [15:0] core_control, // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
     // AGU initial
-    output [27:0] core_AGU_initial_1, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_2, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_3, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_4, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_5, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-    output [27:0] core_AGU_initial_6, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_1, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_2, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_3, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_4, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_5, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    output [28:0] core_AGU_initial_6, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     // tile size
     output [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
 
@@ -131,7 +131,7 @@ module Controller_assembly(
     ////////// Top Controller //////////
     wire [16:0] output_combined;      // {glb_out_mode, width_out, ch_out}
     wire [16:0] input_combined;       // {glb_in_mode, width_in, ch_in}
-    wire [3:0] double_buffer_sel;    // {output_glb, input_glb, W_storage, B_storage}
+    wire [5:0] double_buffer_sel;    // {output_glb, input_glb, W_storage[1:0], B_storage[1:0]}
     wire [7:0] cycle_tile_size;      // {cycle_tile_size[7:0]}
     Top_controller top_controller(
         .CLK(CLK),
@@ -150,8 +150,8 @@ module Controller_assembly(
         .VLIW_initial(VLIW_initial),
         .VLIW_length(VLIW_length),
         // Weight Loader control
-        .weight_loader_en(weight_loader_bus[20]),
-        .weight_loader_buffer_sel(weight_loader_bus[19]),
+        .weight_loader_en(weight_loader_bus[21]),
+        .weight_loader_buffer_sel(weight_loader_bus[20:19]),
         .weight_amount(weight_loader_bus[18:7]),
         .bias_amount(weight_loader_bus[6:0]),
         // Instruction Loader control
@@ -159,7 +159,7 @@ module Controller_assembly(
         // parameters for Core, CIU, TBO, GLB, PreP, PosP
         .output_combined(output_combined),
         .input_combined(input_combined),
-        .double_buffer_sel(double_buffer_sel),    // {output_glb, input_glb, W_storage, B_storage}
+        .double_buffer_sel(double_buffer_sel),    // {output_glb, input_glb, W_storage[1:0], B_storage[1:0]}
         .cycle_tile_size(cycle_tile_size),      // {cycle_tile_size[7:0]}
         .output_ch_to_Y_initial(output_ch_to_Y_initial),
         .input_ch_to_Y_initial(input_ch_to_Y_initial),
@@ -194,12 +194,12 @@ module Controller_assembly(
 
         // Core
         .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_4(core_AGU_initial_4), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_5(core_AGU_initial_5), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_6(core_AGU_initial_6), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_4(core_AGU_initial_4), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_5(core_AGU_initial_5), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_6(core_AGU_initial_6), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
 
         // GLB operator

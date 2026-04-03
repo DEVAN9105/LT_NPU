@@ -6,7 +6,7 @@ module Core(
     ////////// control signal //////////
     input [15:0] core_control, // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
     ////////// AGU initial //////////
-    input [27:0] core_AGU_initial, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    input [28:0] core_AGU_initial, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     ////////// tile size //////////
     input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     ////////// cal tile buffer //////////
@@ -18,7 +18,7 @@ module Core(
     input [63:0] tbo_core_cal_data_5,
     input [63:0] tbo_core_cal_data_6,
     ////////// W_storage //////////
-    output [12:0] core_w_storage_bus, // {W_storage_en, Waddr[11:0]}
+    output [13:0] core_w_storage_bus, // {W_storage_en, Waddr[12:0]}
     input [63:0] w_storage_core_data_0,
     input [63:0] w_storage_core_data_1,
     input [63:0] w_storage_core_data_2,
@@ -61,7 +61,7 @@ module Core(
     wire [7:0] ch_in = core_tile_param[22:15];
     wire [6:0] width_out = core_tile_param[14:8];
     wire [7:0] ch_out = core_tile_param[7:0];
-    wire [11:0] AGU_W_initial = core_AGU_initial[27:16];
+    wire [12:0] AGU_W_initial = core_AGU_initial[28:16];
     wire [7:0] AGU_B_initial = core_AGU_initial[15:8];
     wire [7:0] AGU_O_initial = core_AGU_initial[7:0];
     ////////// input buffer end //////////
@@ -103,7 +103,7 @@ module Core(
     wire [7:0] addr_cal;
     wire [7:0] addr_store;
     wire [63:0] din_store;
-    wire [11:0] Waddr;
+    wire [12:0] Waddr;
     wire [7:0] baddr;
     assign core_tbo_cal_bus = {SR_0[4], addr_cal};
     assign core_w_storage_bus = {SR_0[5], Waddr};

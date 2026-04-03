@@ -29,10 +29,10 @@ module Core_TBO_CIU(
     input core_en,
     // control signal, AGU initial, tile size
     input [15:0] core_control,  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-    input [27:0] core_AGU_initial, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    input [28:0] core_AGU_initial, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     // W_storage
-    input [79:0] weight_loader_w_storage_bus, // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
+    input [80:0] weight_loader_w_storage_bus, // {en_0, en_1, en_2, en_3, addr[76:64], data[63:0]}
     // B_storage
     input [74:0] weight_loader_b_storage_bus, // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
     // core busy
@@ -139,7 +139,7 @@ module Core_TBO_CIU(
         // control signal
         .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
         // AGU initial
-        .core_AGU_initial(core_AGU_initial), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         // tile size
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         // cal tile buffer
@@ -186,56 +186,56 @@ module Core_TBO_CIU(
         .CLK(CLK),
         .rst(rst),
         // port a
-        .ena(weight_loader_w_storage_bus[79]),
-        .wea(weight_loader_w_storage_bus[79]),
-        .addra(weight_loader_w_storage_bus[75:64]),
+        .ena(weight_loader_w_storage_bus[80]),
+        .wea(weight_loader_w_storage_bus[80]),
+        .addra(weight_loader_w_storage_bus[76:64]),
         .dina(weight_loader_w_storage_bus[63:0]),
         // port b
-        .enb(core_w_storage_bus[12]),
+        .enb(core_w_storage_bus[13]),
         .regceb(1'b1),
-        .addrb(core_w_storage_bus[11:0]),
+        .addrb(core_w_storage_bus[12:0]),
         .doutb(w_storage_core_data[255:192])
     );
     W_storage w_storage_1(
         .CLK(CLK),
         .rst(rst),
         // port a
-        .ena(weight_loader_w_storage_bus[78]),
-        .wea(weight_loader_w_storage_bus[78]),
-        .addra(weight_loader_w_storage_bus[75:64]),
+        .ena(weight_loader_w_storage_bus[79]),
+        .wea(weight_loader_w_storage_bus[79]),
+        .addra(weight_loader_w_storage_bus[76:64]),
         .dina(weight_loader_w_storage_bus[63:0]),
         // port b
-        .enb(core_w_storage_bus[12]),
+        .enb(core_w_storage_bus[13]),
         .regceb(1'b1),
-        .addrb(core_w_storage_bus[11:0]),
+        .addrb(core_w_storage_bus[12:0]),
         .doutb(w_storage_core_data[191:128])
     );
     W_storage w_storage_2(
         .CLK(CLK),
         .rst(rst),
         // port a
-        .ena(weight_loader_w_storage_bus[77]),
-        .wea(weight_loader_w_storage_bus[77]),
-        .addra(weight_loader_w_storage_bus[75:64]),
+        .ena(weight_loader_w_storage_bus[78]),
+        .wea(weight_loader_w_storage_bus[78]),
+        .addra(weight_loader_w_storage_bus[76:64]),
         .dina(weight_loader_w_storage_bus[63:0]),
         // port b
-        .enb(core_w_storage_bus[12]),
+        .enb(core_w_storage_bus[13]),
         .regceb(1'b1),
-        .addrb(core_w_storage_bus[11:0]),
+        .addrb(core_w_storage_bus[12:0]),
         .doutb(w_storage_core_data[127:64])
     );
     W_storage w_storage_3(
         .CLK(CLK),
         .rst(rst),
         // port a
-        .ena(weight_loader_w_storage_bus[76]),
-        .wea(weight_loader_w_storage_bus[76]),
-        .addra(weight_loader_w_storage_bus[75:64]),
+        .ena(weight_loader_w_storage_bus[77]),
+        .wea(weight_loader_w_storage_bus[77]),
+        .addra(weight_loader_w_storage_bus[76:64]),
         .dina(weight_loader_w_storage_bus[63:0]),
         // port b
-        .enb(core_w_storage_bus[12]),
+        .enb(core_w_storage_bus[13]),
         .regceb(1'b1),
-        .addrb(core_w_storage_bus[11:0]),
+        .addrb(core_w_storage_bus[12:0]),
         .doutb(w_storage_core_data[63:0])
     );
     ////////// W_storage end //////////
