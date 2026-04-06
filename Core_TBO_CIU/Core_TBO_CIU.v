@@ -128,7 +128,7 @@ module Core_TBO_CIU(
 
     ////////// Core //////////
     // W_storage
-    wire [12:0] core_w_storage_bus; // {W_storage_en, Waddr[11:0]}
+    wire [13:0] core_w_storage_bus; // {W_storage_en, Waddr[12:0]}
     wire [255:0] w_storage_core_data; // {data_0, data_1, data_2, data_3}
     // B_storage
     wire [8:0] core_b_storage_bus; // {B_storage_en, baddr[7:0]}
@@ -151,7 +151,7 @@ module Core_TBO_CIU(
         .tbo_core_cal_data_5(tbo_core_cal_data_5),
         .tbo_core_cal_data_6(tbo_core_cal_data_6),
         // W_storage
-        .core_w_storage_bus(core_w_storage_bus), // {W_storage_en, Waddr[11:0]}
+        .core_w_storage_bus(core_w_storage_bus), // {W_storage_en, Waddr[12:0]}
         .w_storage_core_data_0(w_storage_core_data[255:192]),
         .w_storage_core_data_1(w_storage_core_data[191:128]),
         .w_storage_core_data_2(w_storage_core_data[127:64]),
