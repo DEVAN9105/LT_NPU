@@ -259,9 +259,9 @@ module LT_NPU(
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[76:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
-        .core_busy(core_1_busy),
+        .core_busy(core_1_busy)/*,
         // debug
-        /*.debug_core_control(debug_core_control),
+        .debug_core_control(debug_core_control),
         .debug_tbo_core_cal_data_1(debug_tbo_core_cal_data_1),
         .debug_tbo_core_cal_data_2(debug_tbo_core_cal_data_2),
         .debug_tbo_core_cal_data_3(debug_tbo_core_cal_data_3),
@@ -433,7 +433,7 @@ module LT_NPU(
     ////////// Post-processing //////////
     reg [31:0] posp_param;
     always@(posedge CLK) begin
-        if(system_rst) begin
+        if(PS_rst) begin
             posp_param <= 32'd0;
         end
         else if(PS_en) begin

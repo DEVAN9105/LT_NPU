@@ -102,14 +102,14 @@ module Param_decoder(
 
     always@(*) begin
         // output AGU_G
-        if(double_buffer_sel[3]) begin
+        if(double_buffer_sel[5]) begin
             output_AGU_G_initial = 14'd8192 + VLIW_num[33:20];
         end
         else begin
             output_AGU_G_initial = 14'd0 + VLIW_num[33:20];
         end
         // input AGU_G
-        if(double_buffer_sel[2]) begin
+        if(double_buffer_sel[4]) begin
             input_AGU_G_initial = 14'd8192 + VLIW_num[55:42];
         end
         else begin
