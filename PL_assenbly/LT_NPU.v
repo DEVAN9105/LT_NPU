@@ -199,7 +199,7 @@ module LT_NPU(
     ////////// Global Buffer Assembly end //////////
 
     ////////// debug //////////
-    (* mark_debug = "true" *) wire [15:0] debug_core_control;
+    /*(* mark_debug = "true" *) wire [15:0] debug_core_control;
     (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_1;
     (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_2;
     (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_3;
@@ -209,7 +209,7 @@ module LT_NPU(
     (* mark_debug = "true" *) wire [63:0] debug_w_storage_core_data_0;
     (* mark_debug = "true" *) wire [31:0] debug_b_storage_core_data_0;
     (* mark_debug = "true" *) wire [72:0] debug_core_tbo_store_bus;
-    (* mark_debug = "true" *) wire [7:0] debug_addr_cal;
+    (* mark_debug = "true" *) wire [7:0] debug_addr_cal;*/
     ////////// debug end //////////
 
 
@@ -261,7 +261,7 @@ module LT_NPU(
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_1_busy),
         // debug
-        .debug_core_control(debug_core_control),
+        /*.debug_core_control(debug_core_control),
         .debug_tbo_core_cal_data_1(debug_tbo_core_cal_data_1),
         .debug_tbo_core_cal_data_2(debug_tbo_core_cal_data_2),
         .debug_tbo_core_cal_data_3(debug_tbo_core_cal_data_3),
@@ -271,7 +271,7 @@ module LT_NPU(
         .debug_w_storage_core_data_0(debug_w_storage_core_data_0),
         .debug_b_storage_core_data_0(debug_b_storage_core_data_0),
         .debug_core_tbo_store_bus(debug_core_tbo_store_bus),
-        .debug_addr_cal(debug_addr_cal)
+        .debug_addr_cal(debug_addr_cal)*/
     );
 
     // Core 2

@@ -19,11 +19,10 @@ module tb_LT_NPU_Stage1();
     localparam Initial_Address = 0;
 
     reg CLK;
-    reg asynchronous_rst;
     
     initial begin
         CLK = 0;
-        forever #2.5 CLK = ~CLK; 
+        forever #1.6667 CLK = ~CLK; 
     end
 
     // =========================================================

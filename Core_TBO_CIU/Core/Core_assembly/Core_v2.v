@@ -32,7 +32,7 @@ module Core(
     ////////// store tile buffer //////////
     output [72:0] core_tbo_store_bus, // {valid, addr, din}
     ////////// core busy //////////
-    output core_busy,
+    output core_busy/*,
     ////////// debug //////////
     output [15:0] debug_core_control,
     output [63:0] debug_tbo_core_cal_data_1,
@@ -44,7 +44,7 @@ module Core(
     output [63:0] debug_w_storage_core_data_0,
     output [63:0] debug_b_storage_core_data_0,
     output [72:0] debug_core_tbo_store_bus,
-    output [7:0] debug_addr_cal
+    output [7:0] debug_addr_cal*/
     );
     
     ////////// mode define //////////
