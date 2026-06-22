@@ -47,11 +47,17 @@ module Processing_V1 (
     reg                s1_valid_a, s1_valid_b;
     reg [1:0]          s1_phase_ref;
 
-    // Stage 1a: Control & Intermediate Data
-    reg       reg_s1a_valid_a, reg_s1a_valid_b;
-    reg [1:0] reg_s1a_phase;
+    // 🌟 核心修改：新增 Pipeline Stage (乘法器暫存)
+    reg signed [24:0] p1_mult_y_298_a, p1_mult_u_100_a, p1_mult_u_516_a, p1_mult_v_208_a, p1_mult_v_409_a;
+    reg signed [24:0] p1_mult_y_298_b, p1_mult_u_100_b, p1_mult_u_516_b, p1_mult_v_208_b, p1_mult_v_409_b;
+    reg               p1_valid_a, p1_valid_b;
+    reg [1:0]         p1_phase_ref;
+
+    // Stage 1a: Summation Data
     reg signed [24:0] r_sum_a_reg, g_sum_a_reg, b_sum_a_reg;
     reg signed [24:0] r_sum_b_reg, g_sum_b_reg, b_sum_b_reg;
+    reg               p2_valid_a, p2_valid_b;
+    reg [1:0]         p2_phase_ref;
 
     // Stage 2: Outputs
     reg signed [24:0] s2_r_a, s2_g_a, s2_b_a;
@@ -74,7 +80,7 @@ module Processing_V1 (
     wire [7:0] in_y3 = s_axis_tdata[63:56];
 
     // =========================================================================
-    // 3. Stage 0: Sampling
+    // 3. Stage 0: Sampling (維持不變)
     // =========================================================================
     always @(posedge aclk or negedge aresetn) begin
         if (!aresetn) begin
@@ -99,30 +105,24 @@ module Processing_V1 (
                 x_clk_cnt <= x_clk_cnt + 1;
             end
 
-            // 🌟 垂直降採樣: mod3_cnt == 1 (取第 1, 4, 7... 行)
             if ((mod3_cnt == 2'd1) && (x_clk_cnt >= CNT_CROP_END) && (x_clk_cnt < CNT_ACTIVE_END)) begin
                 s1_phase_ref <= phase_cnt; 
                 case (phase_cnt)
                     2'd0: begin
-                        // 🌟 取中心點 1 (對應此拍的 y1)
                         s1_y_a <= {5'd0, in_y1}; s1_u_a <= {5'd0, in_u0}; s1_v_a <= {5'd0, in_v0};
-                        s1_valid_a <= 1;
-                        s1_valid_b <= 0; // 只取一個點
+                        s1_valid_a <= 1; s1_valid_b <= 0;
                         phase_cnt <= 2'd1;
                     end
                     2'd1: begin
-                        // 🌟 取中心點 2 (對應此拍的 y0) 與 中心點 3 (對應此拍的 y3)
                         s1_y_a <= {5'd0, in_y0}; s1_u_a <= {5'd0, in_u0}; s1_v_a <= {5'd0, in_v0};
                         s1_valid_a <= 1;
                         s1_y_b <= {5'd0, in_y3}; s1_u_b <= {5'd0, in_u2}; s1_v_b <= {5'd0, in_v2};
-                        s1_valid_b <= 1; // 取兩個點
+                        s1_valid_b <= 1;
                         phase_cnt <= 2'd2;
                     end
                     2'd2: begin
-                        // 🌟 取中心點 4 (對應此拍的 y2)
                         s1_y_a <= {5'd0, in_y2}; s1_u_a <= {5'd0, in_u2}; s1_v_a <= {5'd0, in_v2};
-                        s1_valid_a <= 1;
-                        s1_valid_b <= 0; // 只取一個點
+                        s1_valid_a <= 1; s1_valid_b <= 0;
                         phase_cnt <= 2'd0;
                     end
                 endcase
@@ -139,52 +139,58 @@ module Processing_V1 (
     end
 
     // =========================================================================
-    // 4. Stage 1: DSP Multiplication (維持不變)
+    // 4. 🌟 新增 Pipeline: Stage 1 (DSP Multiplication 暫存)
     // =========================================================================
-    (* use_dsp = "yes" *) wire signed [24:0] mult_y_298_a = s1_y_a * 298;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_u_100_a = s1_u_a * 100;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_u_516_a = s1_u_a * 516;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_v_208_a = s1_v_a * 208;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_v_409_a = s1_v_a * 409;
-
-    (* use_dsp = "yes" *) wire signed [24:0] mult_y_298_b = s1_y_b * 298;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_u_100_b = s1_u_b * 100;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_u_516_b = s1_u_b * 516;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_v_208_b = s1_v_b * 208;
-    (* use_dsp = "yes" *) wire signed [24:0] mult_v_409_b = s1_v_b * 409;
-
-    // =========================================================================
-    // Stage 1a: Summation Logic (維持不變)
-    // =========================================================================
-    (* use_dsp = "no" *) wire signed [24:0] w_r_sum_a = mult_y_298_a + mult_v_409_a + R_CONST;
-    (* use_dsp = "no" *) wire signed [24:0] w_g_sum_a = mult_y_298_a - mult_u_100_a - mult_v_208_a + G_CONST;
-    (* use_dsp = "no" *) wire signed [24:0] w_b_sum_a = mult_y_298_a + mult_u_516_a + B_CONST;
-
-    (* use_dsp = "no" *) wire signed [24:0] w_r_sum_b = mult_y_298_b + mult_v_409_b + R_CONST;
-    (* use_dsp = "no" *) wire signed [24:0] w_g_sum_b = mult_y_298_b - mult_u_100_b - mult_v_208_b + G_CONST;
-    (* use_dsp = "no" *) wire signed [24:0] w_b_sum_b = mult_y_298_b + mult_u_516_b + B_CONST;
-
     always @(posedge aclk or negedge aresetn) begin
         if (!aresetn) begin
-            reg_s1a_valid_a <= 0;
-            reg_s1a_valid_b <= 0;
+            p1_valid_a <= 0;
+            p1_valid_b <= 0;
+        end else if (m_axis_tready) begin
+            // 讓 Vivado 自動將這些乘法映射進 DSP48 且啟用內部暫存器 (MREG=1)
+            p1_mult_y_298_a <= s1_y_a * 298;
+            p1_mult_u_100_a <= s1_u_a * 100;
+            p1_mult_u_516_a <= s1_u_a * 516;
+            p1_mult_v_208_a <= s1_v_a * 208;
+            p1_mult_v_409_a <= s1_v_a * 409;
+
+            p1_mult_y_298_b <= s1_y_b * 298;
+            p1_mult_u_100_b <= s1_u_b * 100;
+            p1_mult_u_516_b <= s1_u_b * 516;
+            p1_mult_v_208_b <= s1_v_b * 208;
+            p1_mult_v_409_b <= s1_v_b * 409;
+
+            // 同步傳遞控制訊號
+            p1_valid_a <= s1_valid_a;
+            p1_valid_b <= s1_valid_b;
+            p1_phase_ref <= s1_phase_ref;
+        end
+    end
+
+    // =========================================================================
+    // Stage 1a: Summation Logic (加法器暫存)
+    // =========================================================================
+    always @(posedge aclk or negedge aresetn) begin
+        if (!aresetn) begin
+            p2_valid_a <= 0;
+            p2_valid_b <= 0;
             s2_valid_a <= 0;
             s2_valid_b <= 0;
         end else if (m_axis_tready) begin 
-            if (s1_valid_a) begin
-                r_sum_a_reg <= w_r_sum_a; 
-                g_sum_a_reg <= w_g_sum_a;
-                b_sum_a_reg <= w_b_sum_a;
+            // 這裡的加法只吃剛剛存好的 p1_mult 暫存器，大幅縮短 Combinational Path
+            if (p1_valid_a) begin
+                r_sum_a_reg <= p1_mult_y_298_a + p1_mult_v_409_a + R_CONST; 
+                g_sum_a_reg <= p1_mult_y_298_a - p1_mult_u_100_a - p1_mult_v_208_a + G_CONST;
+                b_sum_a_reg <= p1_mult_y_298_a + p1_mult_u_516_a + B_CONST;
             end
-            if (s1_valid_b) begin
-                r_sum_b_reg <= w_r_sum_b;
-                g_sum_b_reg <= w_g_sum_b;
-                b_sum_b_reg <= w_b_sum_b;
+            if (p1_valid_b) begin
+                r_sum_b_reg <= p1_mult_y_298_b + p1_mult_v_409_b + R_CONST;
+                g_sum_b_reg <= p1_mult_y_298_b - p1_mult_u_100_b - p1_mult_v_208_b + G_CONST;
+                b_sum_b_reg <= p1_mult_y_298_b + p1_mult_u_516_b + B_CONST;
             end
             
-            reg_s1a_valid_a <= s1_valid_a; 
-            reg_s1a_valid_b <= s1_valid_b;
-            reg_s1a_phase   <= s1_phase_ref;
+            p2_valid_a <= p1_valid_a; 
+            p2_valid_b <= p1_valid_b;
+            p2_phase_ref <= p1_phase_ref;
 
             s2_r_a <= r_sum_a_reg; 
             s2_g_a <= g_sum_a_reg;
@@ -194,14 +200,14 @@ module Processing_V1 (
             s2_g_b <= g_sum_b_reg;
             s2_b_b <= b_sum_b_reg;
             
-            s2_valid_a   <= reg_s1a_valid_a; 
-            s2_valid_b   <= reg_s1a_valid_b;
-            s2_phase_ref <= reg_s1a_phase;
+            s2_valid_a   <= p2_valid_a; 
+            s2_valid_b   <= p2_valid_b;
+            s2_phase_ref <= p2_phase_ref;
         end
     end
 
     // =========================================================================
-    // 5. Stage 2: Output Packing
+    // 5. Stage 2: Output Packing (維持不變)
     // =========================================================================
     function [15:0] clamp_to_8bit;
         input signed [24:0] val;
@@ -231,18 +237,13 @@ module Processing_V1 (
             if (s2_valid_a) begin
                 case (s2_phase_ref)
                     2'd0: begin
-                        // 🌟 只收到中心點 1 (pixel_a)，寫入暫存器等待
                         pending_pixel_reg <= pixel_a;
                         m_axis_tvalid <= 0; 
                     end
 
                     2'd1: begin
-                        // 🌟 收到中心點 2 (pixel_a) 與中心點 3 (pixel_b)
-                        // 把 {新的 pixel_a, 舊的暫存} 包裝成 128-bit 吐出去
                         m_axis_tdata  <= {pixel_a, pending_pixel_reg};
                         m_axis_tvalid <= 1;
-                        // 🌟 同一拍，把中心點 3 (pixel_b) 蓋掉舊暫存，留給下一拍用
-                        // (利用非阻塞 <=，m_axis_tdata 吃到的是更新前的 pending_pixel_reg)
                         pending_pixel_reg <= pixel_b;
 
                         if (out_x_cnt == 63) begin
@@ -259,8 +260,6 @@ module Processing_V1 (
                     end
 
                     2'd2: begin
-                        // 🌟 收到中心點 4 (pixel_a)
-                        // 把 {新的 pixel_a, 剛才存的中心點 3} 包裝成 128-bit 吐出去
                         m_axis_tdata  <= {pixel_a, pending_pixel_reg};
                         m_axis_tvalid <= 1;
                         

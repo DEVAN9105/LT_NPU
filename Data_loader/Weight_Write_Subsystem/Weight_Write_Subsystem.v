@@ -18,15 +18,15 @@ module Weight_Write_Subsystem (
 
     // --- 控制介面 ---
     input  wire [11:0] i_weight_len,
-    input  wire [6:0] i_bias_len,
+    input  wire [6:0]  i_bias_len,
     input  wire        i_layer_start,
-    input  wire        i_buffer_sel,
+    input  wire [1:0]  i_buffer_sel,     // 🌟 對應 AGU 更新：變更為 2-bit [1:0]
     input  wire        i_image_done,
 
     // --- 對齊後的廣播輸出介面 ---
     output reg  [63:0] o_aligned_data,
-    output wire [11:0] o_aligned_w_addr,
-    output wire [6:0]  o_aligned_b_addr,
+    output wire [12:0] o_aligned_w_addr, // 🌟 對應 AGU 更新：URAM 位址擴增為 13-bit [12:0]
+    output wire [6:0]  o_aligned_b_addr, // BRAM 位址維持 7-bit
     output wire [23:0] o_aligned_w_we_group,
     output wire [23:0] o_aligned_b_we_group,
     
@@ -34,7 +34,7 @@ module Weight_Write_Subsystem (
     output wire [4:0]  o_layer_cnt,
     output wire        o_layer_done,
     output wire        o_all_done,
-    output wire        o_busy           // 忙碌狀態指示
+    output wire        o_busy          // 忙碌狀態指示
 );
 
     // =========================================================================
@@ -67,10 +67,10 @@ module Weight_Write_Subsystem (
         .i_valid         (loader_valid), 
         .i_weight_len    (i_weight_len), 
         .i_bias_len      (i_bias_len),
-        .i_buffer_sel    (i_buffer_sel),
+        .i_buffer_sel    (i_buffer_sel),  // 🌟 自動推斷傳遞 2-bit 訊號
         .i_layer_start   (i_layer_start),
         .i_image_done    (i_image_done),
-        .o_uram_addr     (o_aligned_w_addr), 
+        .o_uram_addr     (o_aligned_w_addr), // 🌟 自動推斷接收 13-bit 位址
         .o_uram_we       (o_aligned_w_we_group),
         .o_bram_addr     (o_aligned_b_addr), 
         .o_bram_we       (o_aligned_b_we_group),

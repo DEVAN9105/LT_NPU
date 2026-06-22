@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 // =============================================================================
-// Module: AGU_W_busy (Controller Handshake Version)
+// Module: AGU_W_busy (Controller Handshake Version - 2-bit Ping-Pong)
 // Description: Weight and Bias Address Generation Unit
 //              Generates read/write addresses for Weight URAM and Bias BRAM.
 //              Uses level handshake for controller synchronization.
@@ -17,13 +17,13 @@ module AGU_W_busy(
     input  wire [6:0]  i_bias_len, 
     
     // --- 控制輸入 (交握訊號) ---
-    input  wire        i_buffer_sel,   // Buffer 選擇 (0 或 1)
+    input  wire [1:0]  i_buffer_sel,   // 🌟 變更為 2-bit (MSB:大Ping-Pong, LSB:小Ping-Pong)
     input  wire        i_layer_start,  // 啟動脈衝 (開始單層處理)
     input  wire        i_image_done,   // 全域重置訊號 (Frame 處理完畢)
 
     // --- 記憶體輸出 ---
-    (* MAX_FANOUT = 8 *) output reg [11:0] o_uram_addr,
-    (* MAX_FANOUT = 8 *) output reg [6:0]  o_bram_addr,
+    (* MAX_FANOUT = 8 *) output reg [12:0] o_uram_addr, // 🌟 變更為 13-bit
+    (* MAX_FANOUT = 8 *) output reg [6:0]  o_bram_addr, // BRAM 維持 7-bit 不變
     output reg [23:0] o_uram_we, 
     output reg [23:0] o_bram_we,
     
@@ -46,10 +46,8 @@ module AGU_W_busy(
     reg [11:0] internal_addr;
     reg [4:0]  layer_cnt;
     reg        is_bias_phase, all_done_reg;
-    reg        active_buffer_sel; 
+    reg [1:0]  active_buffer_sel;      // 🌟 內部暫存器同步擴增為 2-bit
     reg        wait_for_start;         // 等待啟動的狀態旗標
-
-    // 🌟 (已移除 start_shift 與 start_pulse，直接使用 i_layer_start)
 
     // --- 狀態訊號 ---
     reg [11:0] next_cnt_remain, next_active_w_len; 
@@ -58,7 +56,7 @@ module AGU_W_busy(
     reg [11:0] next_internal_addr;
     reg [4:0]  next_layer_cnt;
     reg        next_is_bias_phase, next_all_done_reg;
-    reg        next_active_buffer_sel;
+    reg [1:0]  next_active_buffer_sel; // 🌟 同步擴增為 2-bit
 
     wire block_done = (cnt_remain == 1);
 
@@ -140,7 +138,7 @@ module AGU_W_busy(
             internal_addr     <= 0;
             active_w_len      <= 0;
             active_b_len      <= 0;
-            active_buffer_sel <= 0;
+            active_buffer_sel <= 2'b00; // 🌟 變更為 2'b00
             wait_for_start    <= 1'b1; 
             
             o_uram_addr       <= 0;
@@ -162,7 +160,7 @@ module AGU_W_busy(
             internal_addr     <= 0;
             active_w_len      <= 0;
             active_b_len      <= 0;
-            active_buffer_sel <= 0;
+            active_buffer_sel <= 2'b00; // 🌟 變更為 2'b00
             wait_for_start    <= 1'b1; 
             
             o_uram_addr       <= 0;
@@ -179,17 +177,16 @@ module AGU_W_busy(
             
             // 3.1 閒置與交握狀態管理
             if (wait_for_start) begin
-                // 🌟 當前 Clock 看到外部 i_layer_start 為 1 時執行
                 if (i_layer_start) begin 
                     wait_for_start <= 1'b0; 
                     o_layer_done   <= 1'b0; 
-                    o_busy         <= 1'b1; // 🌟 賦值 1，會在「下一個 Clock 上升緣」對外生效
+                    o_busy         <= 1'b1; 
                 end
             end else begin
                 // 單層傳輸完畢的確認
                 if (i_valid && o_ready && block_done && bank_pointer[23] && is_bias_phase) begin
                     o_layer_done <= 1'b1;   
-                    o_busy       <= 1'b0;   // 傳輸完畢，降下 Busy
+                    o_busy       <= 1'b0;   
                     
                     if (layer_cnt < TOTAL_LAYERS - 1) begin
                         wait_for_start <= 1'b1; 
@@ -198,7 +195,6 @@ module AGU_W_busy(
             end
 
             // 3.2 內部狀態更新 
-            // 🌟 條件改為直接判斷 i_layer_start
             if (!wait_for_start || i_layer_start) begin
                 cnt_remain        <= next_cnt_remain;
                 bank_pointer      <= next_bank_pointer;
@@ -211,11 +207,32 @@ module AGU_W_busy(
                 active_buffer_sel <= next_active_buffer_sel;
             end
             
-            // 3.3 輸出與位址生成
+            // 3.3 輸出與位址生成 (🌟 核心修改區塊：大/小 Ping-Pong 映射)
             if (i_valid && o_ready && !all_done_reg && !wait_for_start) begin
                 
-                o_uram_addr <= (active_buffer_sel == 1'b1) ? (internal_addr + 12'd2048) : internal_addr;
-                o_bram_addr <= {active_buffer_sel, internal_addr[5:0]};
+                // --- URAM 位址生成 (13-bit) ---
+                if (active_buffer_sel[1]) begin
+                    // MSB = 1 (10 或 11)：大 Ping-Pong，從 4096 開始存
+                    o_uram_addr <= internal_addr + 13'd4096;
+                end else if (active_buffer_sel[0]) begin
+                    // MSB = 0, LSB = 1 (01)：小 Ping-Pong 的後半，從 2048 開始存
+                    o_uram_addr <= internal_addr + 13'd2048;
+                end else begin
+                    // MSB = 0, LSB = 0 (00)：小 Ping-Pong 的前半，從 0 開始存
+                    o_uram_addr <= {1'b0, internal_addr};
+                end
+                
+                // --- BRAM 位址生成 (7-bit) ---
+                if (active_buffer_sel[1]) begin
+                    // MSB = 1 (10 或 11)：大 Ping-Pong，從 64 開始存
+                    o_bram_addr <= internal_addr[6:0] + 7'd64;
+                end else if (active_buffer_sel[0]) begin
+                    // MSB = 0, LSB = 1 (01)：小 Ping-Pong 的後半，從 32 開始存
+                    o_bram_addr <= internal_addr[6:0] + 7'd32;
+                end else begin
+                    // MSB = 0, LSB = 0 (00)：小 Ping-Pong 的前半，從 0 開始存
+                    o_bram_addr <= internal_addr[6:0];
+                end
                 
                 o_uram_we   <= (!is_bias_phase) ? bank_pointer : 0;
                 o_bram_we   <= ( is_bias_phase) ? bank_pointer : 0;

@@ -1,90 +1,90 @@
 `timescale 1ns / 1ps
 
 // =============================================================================
-// 模組名稱: Input_Write_Subsystem
+// 模組名稱: Input_Write_Subsystem (Data_loader)
 // 描述: 輸入寫入子系統頂層模組。
 //       整合 AXI-Stream 接收器、影像內部緩衝 BRAM (Prep_buffer_sdp)，
 //       以及權重緩衝路由器 (WBR) 的菊花鏈架構。
 // =============================================================================
 
 module Data_loader (
-    input  wire         clk,
-    input  wire         rst_n,
+    input  wire        clk,
+    input  wire        rst_n,
 
     // ==========================================
     // 1. AXI-Stream 介面 (連接外部 DMA)
     // ==========================================
-    input  wire [63:0]  s_axis_image_tdata,
-    input  wire         s_axis_image_tvalid,
-    input  wire         s_axis_image_tlast,
-    output wire         s_axis_image_tready,
+    input  wire [63:0] s_axis_image_tdata,
+    input  wire        s_axis_image_tvalid,
+    input  wire        s_axis_image_tlast,
+    output wire        s_axis_image_tready,
 
-    input  wire [63:0]  s_axis_weight_tdata,
-    input  wire         s_axis_weight_tvalid,
-    output wire         s_axis_weight_tready,
+    input  wire [63:0] s_axis_weight_tdata,
+    input  wire        s_axis_weight_tvalid,
+    output wire        s_axis_weight_tready,
 
     // ==========================================
     // 2. 控制與狀態介面 (連接 Controller)
     // ==========================================
-    input  wire         i_image_start,
-    input  wire         i_weight_start,
+    input  wire        i_image_start,
+    input  wire        i_weight_start,
     
     // 獨立的乒乓緩衝區選擇訊號
-    input  wire         i_image_buffer_sel,
-    input  wire         i_weight_buffer_sel,
+    input  wire        i_image_buffer_sel,
+    input  wire [1:0]  i_weight_buffer_sel, // 🌟 配合 AGU 更新：加寬為 2-bit
     
-    input  wire         i_image_done,
+    input  wire        i_image_done,
     
     // 權重參數 (來自 Controller 的 weight_loader_bus)
-    input  wire [11:0]  i_weight_len,
-    input  wire [6:0]   i_bias_len,
+    input  wire [11:0] i_weight_len,
+    input  wire [6:0]  i_bias_len,
 
     // 狀態輸出
-    output wire         o_image_busy,
-    output wire         o_weight_busy,
-    output wire         o_image_tile_done,
-    output wire         o_weight_layer_done,
+    output wire        o_image_busy,
+    output wire        o_weight_busy,
+    output wire        o_image_tile_done,
+    output wire        o_weight_layer_done,
 
     // ==========================================
     // 3. 影像讀取介面 (連接後級 Global Buffer)
     // ==========================================
-    input  wire         i_prep_rd_en,    // 讀取致能
-    input  wire [7:0]   i_prep_rd_addr,  // 讀取位址
-    output wire         o_prep_rd_valid, // 讀取資料有效訊號 (經過 3 拍延遲對齊)
-    output wire [63:0]  o_prep_rd_data,  // 讀取資料 (經過管線化暫存)
+    input  wire        i_prep_rd_en,    // 讀取致能
+    input  wire [7:0]  i_prep_rd_addr,  // 讀取位址
+    output wire        o_prep_rd_valid, // 讀取資料有效訊號 (經過 3 拍延遲對齊)
+    output wire [63:0] o_prep_rd_data,  // 讀取資料 (經過管線化暫存)
 
     // ==========================================
     // 4. 權重與偏差輸出匯流排 (連接 6 個運算核心)
     // ==========================================
-    // 格式: {we[3:0], addr[11:0], data[63:0]} = 80-bit
-    output wire [79:0]  o_wgt_storage_bus_1,
-    output wire [79:0]  o_wgt_storage_bus_2,
-    output wire [79:0]  o_wgt_storage_bus_3,
-    output wire [79:0]  o_wgt_storage_bus_4,
-    output wire [79:0]  o_wgt_storage_bus_5,
-    output wire [79:0]  o_wgt_storage_bus_6,
+    // 🌟 更新格式: {we[3:0], addr[12:0], data[63:0]} = 81-bit
+    output wire [80:0] o_wgt_storage_bus_1,
+    output wire [80:0] o_wgt_storage_bus_2,
+    output wire [80:0] o_wgt_storage_bus_3,
+    output wire [80:0] o_wgt_storage_bus_4,
+    output wire [80:0] o_wgt_storage_bus_5,
+    output wire [80:0] o_wgt_storage_bus_6,
 
-    // 格式: {we[3:0], addr[6:0], data[63:0]} = 75-bit
-    output wire [74:0]  o_bias_storage_bus_1,
-    output wire [74:0]  o_bias_storage_bus_2,
-    output wire [74:0]  o_bias_storage_bus_3,
-    output wire [74:0]  o_bias_storage_bus_4,
-    output wire [74:0]  o_bias_storage_bus_5,
-    output wire [74:0]  o_bias_storage_bus_6
+    // 格式: {we[3:0], addr[6:0], data[63:0]} = 75-bit (Bias 維持不變)
+    output wire [74:0] o_bias_storage_bus_1,
+    output wire [74:0] o_bias_storage_bus_2,
+    output wire [74:0] o_bias_storage_bus_3,
+    output wire [74:0] o_bias_storage_bus_4,
+    output wire [74:0] o_bias_storage_bus_5,
+    output wire [74:0] o_bias_storage_bus_6
 );
 
     // =========================================================================
     // 內部訊號宣告
     // =========================================================================
     wire [63:0] wgt_g_data;
-    wire [11:0] wgt_g_w_addr;
+    wire [12:0] wgt_g_w_addr; // 🌟 擴寬為 13-bit
     wire [6:0]  wgt_g_b_addr;
     wire [23:0] wgt_g_w_we, wgt_g_b_we;
     wire        wgt_layer_done;
 
     // 菊花鏈轉發訊號 (L0 -> L1 -> L2 -> L3 -> L4 -> L5)
     wire [63:0] L1_d, L2_d, L3_d, L4_d, L5_d;
-    wire [11:0] L1_wa, L2_wa, L3_wa, L4_wa, L5_wa;
+    wire [12:0] L1_wa, L2_wa, L3_wa, L4_wa, L5_wa; // 🌟 擴寬為 13-bit
     wire [6:0]  L1_ba, L2_ba, L3_ba, L4_ba, L5_ba;
     wire [23:0] L1_wwe, L2_wwe, L3_wwe, L4_wwe, L5_wwe;
     wire [23:0] L1_bwe, L2_bwe, L3_bwe, L4_bwe, L5_bwe;
@@ -94,7 +94,7 @@ module Data_loader (
 
     // 各核心本地輸出訊號
     wire [63:0] l_d1, l_d2, l_d3, l_d4, l_d5, l_d6;
-    wire [11:0] l_wa1, l_wa2, l_wa3, l_wa4, l_wa5, l_wa6;
+    wire [12:0] l_wa1, l_wa2, l_wa3, l_wa4, l_wa5, l_wa6; // 🌟 擴寬為 13-bit
     wire [6:0]  l_ba1, l_ba2, l_ba3, l_ba4, l_ba5, l_ba6;
     wire [3:0]  l_wwe1, l_wwe2, l_wwe3, l_wwe4, l_wwe5, l_wwe6;
     wire [3:0]  l_bwe1, l_bwe2, l_bwe3, l_bwe4, l_bwe5, l_bwe6;
@@ -187,10 +187,10 @@ module Data_loader (
         .i_weight_len         (i_weight_len),
         .i_bias_len           (i_bias_len),
         .i_layer_start        (i_weight_start),
-        .i_buffer_sel         (i_weight_buffer_sel),
+        .i_buffer_sel         (i_weight_buffer_sel), // 🌟 完美對接 2-bit
         .i_image_done         (i_image_done),
         .o_aligned_data       (wgt_g_data),
-        .o_aligned_w_addr     (wgt_g_w_addr),
+        .o_aligned_w_addr     (wgt_g_w_addr),        // 🌟 完美對接 13-bit
         .o_aligned_b_addr     (wgt_g_b_addr),
         .o_aligned_w_we_group (wgt_g_w_we),
         .o_aligned_b_we_group (wgt_g_b_we),
@@ -214,6 +214,7 @@ module Data_loader (
     // 5. 輸出匯流排打包 (Bus Packaging)
     // =========================================================================
     // === Weight Storage Bus (wwe 順序反轉: 3 2 1 0 -> 0 1 2 3) ===
+    // 🌟 {4-bit WE, 13-bit ADDR, 64-bit DATA} = 81-bit 完美拼接
     assign o_wgt_storage_bus_1 = {{l_wwe1[0], l_wwe1[1], l_wwe1[2], l_wwe1[3]}, l_wa1, l_d1};
     assign o_wgt_storage_bus_2 = {{l_wwe2[0], l_wwe2[1], l_wwe2[2], l_wwe2[3]}, l_wa2, l_d2};
     assign o_wgt_storage_bus_3 = {{l_wwe3[0], l_wwe3[1], l_wwe3[2], l_wwe3[3]}, l_wa3, l_d3};

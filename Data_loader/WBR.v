@@ -15,7 +15,7 @@ module WBR (
     // [Input] 來自上一級 (或子系統總層)
     // ==========================================
     input  wire [63:0] i_data,
-    input  wire [11:0] i_w_addr,
+    input  wire [12:0] i_w_addr,     // 🌟 配合 AGU 更新：擴充為 13-bit
     input  wire [6:0]  i_b_addr,
     
     // 寫入控制 (24-bit 總線)
@@ -24,7 +24,7 @@ module WBR (
     
     // 狀態與交握訊號
     input  wire        i_layer_done,
-    input  wire        i_busy,          
+    input  wire        i_busy,         
 
     // ==========================================
     // [Output] 本地輸出 (供本層 Storage 使用)
@@ -33,7 +33,7 @@ module WBR (
     
     // 本地 Weight 寫入 (截取最低 4-bit)
     output reg  [3:0]  o_local_w_we,   
-    output reg  [11:0] o_local_w_addr,
+    output reg  [12:0] o_local_w_addr, // 🌟 配合 AGU 更新：擴充為 13-bit
     
     // 本地 Bias 寫入 (截取最低 4-bit)
     output reg  [3:0]  o_local_b_we,   
@@ -43,7 +43,7 @@ module WBR (
     // [Output] 轉發輸出 (供下一級 WBR 使用)
     // ==========================================
     output reg  [63:0] o_next_data,
-    output reg  [11:0] o_next_w_addr,
+    output reg  [12:0] o_next_w_addr,  // 🌟 配合 AGU 更新：擴充為 13-bit
     output reg  [6:0]  o_next_b_addr,
     
     // 轉發寫入控制 (已右移 4-bit)
@@ -52,21 +52,21 @@ module WBR (
     
     // 轉發狀態與交握訊號
     output reg         o_next_layer_done,
-    output reg         o_next_busy       
+    output reg         o_next_busy        
 );
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             // --- 復位本地輸出 ---
             o_local_data      <= 64'd0;
-            o_local_w_addr    <= 12'd0;
+            o_local_w_addr    <= 13'd0; // 🌟 重置數值改為 13'd0
             o_local_b_addr    <= 7'd0;
             o_local_w_we      <= 4'd0;
             o_local_b_we      <= 4'd0;
 
             // --- 復位轉發輸出 ---
             o_next_data       <= 64'd0;
-            o_next_w_addr     <= 12'd0;
+            o_next_w_addr     <= 13'd0; // 🌟 重置數值改為 13'd0
             o_next_b_addr     <= 7'd0;
             o_next_w_we_group <= 24'd0;
             o_next_b_we_group <= 24'd0;
