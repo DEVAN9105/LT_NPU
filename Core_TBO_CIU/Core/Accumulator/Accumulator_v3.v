@@ -270,7 +270,7 @@ module Accumulator(
     end
     ////////// Stage 3 end //////////
     
-    ////////// acc_result Truncate //////////
+    ////////// acc_result Truncate & Rounding //////////
     reg signed [15:0] acc_out_truncated;
     always@(*) begin
         if(accumulator_reg[47:23] != {25{accumulator_reg[23]}}) begin
@@ -283,10 +283,16 @@ module Accumulator(
             end
         end
         else begin
-            acc_out_truncated = accumulator_reg[23:8];
+            // rounding overflow protection
+            if(accumulator_reg[7] == 1'b1 && accumulator_reg[23:8] == 16'h7FFF) begin
+                acc_out_truncated = 16'h7FFF;
+            end
+            else begin
+                acc_out_truncated = accumulator_reg[23:8] + accumulator_reg[7];
+            end
         end
     end
-    ////////// acc_result Truncate end //////////
+    ////////// acc_result Truncate & Rounding end //////////
 
     ////////// Output register && ReLU //////////
     always@(posedge CLK) begin
